@@ -5,6 +5,8 @@ import { useAudioStore } from '@/store/audioStore';
 import { cn } from '@/lib/utils';
 import { getDeterministic3BandPeaks } from '@/lib/mixes';
 import { audioEngine } from '@/lib/AudioEngine';
+import { playNeedleDrop } from '@/lib/audioUtils';
+import { getBeatPhaseState } from '@/lib/proBeatgridEngine';
 
 interface SingleDeckWaveformProps {
   deckId: 1 | 2 | 3 | 4;
@@ -65,30 +67,6 @@ export function SingleDeckWaveform({
 
   const pixelsPerSecond = deck?.zoomLevel || 55;
 
-  const handleZoomIn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const currentZoom = deck?.zoomLevel || 55;
-    const newZoom = Math.min(140, currentZoom + 20);
-    useAudioStore.getState().setDeck(deckId, { zoomLevel: newZoom });
-  };
-
-  const handleZoomOut = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const currentZoom = deck?.zoomLevel || 55;
-    const newZoom = Math.max(25, currentZoom - 20);
-    useAudioStore.getState().setDeck(deckId, { zoomLevel: newZoom });
-  };
-
-  const handleSetDownbeat = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const audio = audioEngine.audioElements[deckId];
-    const currentProgress = audio ? audio.currentTime : (deck?.progress || 0);
-    useAudioStore.getState().setDeck(deckId, { 
-      firstBeatOffset: currentProgress,
-      mainCue: currentProgress
-    });
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -135,7 +113,12 @@ export function SingleDeckWaveform({
         return;
       }
 
-      // Optimize CPU usage: if not playing, not dragging, and state hasn't changed, skip redrawing
+      // Optimize CPU usage: skip redrawing if tab is in background or state is static
+      if (typeof document !== 'undefined' && document.hidden) {
+        frameId = requestAnimationFrame(render);
+        return;
+      }
+
       const stateKey = `${width}_${height}_${pixelsPerSecond}_${currentDeck.eqLow}_${currentDeck.eqMid}_${currentDeck.eqHi}_${currentDeck.volume}_${currentDeck.isLoopActive}_${currentDeck.mainCue}_${currentDeck.bpm}_${currentDeck.pitch}_${currentDeck.firstBeatOffset}`;
       if (!isCurrentlyPlaying && !drag && lastDrawnProgressRef.current === targetProgress && lastDrawnDeckStateRef.current === stateKey) {
         frameId = requestAnimationFrame(render);
@@ -151,14 +134,11 @@ export function SingleDeckWaveform({
         canvas.style.height = `${height}px`;
       }
 
-      ctx.clearRect(0, 0, width * dpr, height * dpr);
-
-      // Support High-DPI screen drawing scale
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      // 1. CHASSIS BACKGROUND (OLED ABSOLUTE BLACK)
-      ctx.fillStyle = '#000000'; 
+      // Dark background
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
 
       // High-Contrast Horizontal central splits
@@ -213,12 +193,6 @@ export function SingleDeckWaveform({
       const otherActiveDeckId = (deckId === 1 || deckId === 3) ? rightActiveDeckRef.current : leftActiveDeckRef.current;
       const otherDeck = useAudioStore.getState().decks[otherActiveDeckId];
       if (otherDeck && otherDeck.id !== 'locked' && currentDeck.id !== 'locked') {
-        const bpmCurrent = currentDeck.bpm * (1 + (currentDeck.pitch || 0) / 100);
-        const bpmOther = otherDeck.bpm * (1 + (otherDeck.pitch || 0) / 100);
-
-        const beatIntervalCurrent = 60 / bpmCurrent;
-        const beatIntervalOther = 60 / bpmOther;
-
         // Get actual progress of other deck (considering raw elements if loaded locally)
         let progressOther = otherDeck.progress || 0;
         if (!otherDeck.scMode) {
@@ -228,14 +202,15 @@ export function SingleDeckWaveform({
           }
         }
 
-        const phaseCurrent = ((rawProgress - (currentDeck.firstBeatOffset || 0)) % beatIntervalCurrent) / beatIntervalCurrent;
-        const phaseOther = ((progressOther - (otherDeck.firstBeatOffset || 0)) % beatIntervalOther) / beatIntervalOther;
+        const phaseCurrent = getBeatPhaseState(rawProgress, currentDeck.bpm || 120, currentDeck.firstBeatOffset || 0).beatPhase;
+        const phaseOther = getBeatPhaseState(progressOther, otherDeck.bpm || 120, otherDeck.firstBeatOffset || 0).beatPhase;
 
         const isBothPlaying = isCurrentlyPlaying && (otherDeck.isPlaying || (audioEngine.audioElements[otherActiveDeckId] && !audioEngine.audioElements[otherActiveDeckId]?.paused));
 
         if (isBothPlaying) {
-          const diff = Math.abs(phaseCurrent - phaseOther);
-          isSyncGlow = diff < 0.08 || Math.abs(diff - 1) < 0.08 || Math.abs(diff + 1) < 0.08;
+          let diff = Math.abs(phaseCurrent - phaseOther);
+          if (diff > 0.5) diff = 1.0 - diff;
+          isSyncGlow = diff < 0.08;
         }
       }
 
@@ -338,15 +313,32 @@ export function SingleDeckWaveform({
         for (let b = startBeat; b <= endBeat; b++) {
           const beatTime = offset + b * beatInterval;
           const x = beatTime * pixelsPerSecond;
+          const isPhraseBoundary = b % 16 === 0;
           const isMajorBar = b % 4 === 0;
-          ctx.strokeStyle = isMajorBar ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.22)';
-          ctx.lineWidth = isMajorBar ? 1.5 : 1;
+
+          if (isPhraseBoundary) {
+            ctx.strokeStyle = 'rgba(216, 22, 63, 0.75)'; // HENRY IX Red Phrase Line
+            ctx.lineWidth = 2;
+          } else if (isMajorBar) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.lineWidth = 1.5;
+          } else {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.lineWidth = 1;
+          }
+
           ctx.beginPath();
           ctx.moveTo(x, 0);
           ctx.lineTo(x, height);
           ctx.stroke();
 
-          if (isMajorBar && b >= 0) {
+          if (isPhraseBoundary && b >= 0) {
+            ctx.fillStyle = '#d8163f';
+            ctx.font = 'bold 8px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(`P${Math.floor(b / 16) + 1}`, x, 2);
+          } else if (isMajorBar && b >= 0) {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
             ctx.font = 'bold 7.5px monospace';
             ctx.textAlign = 'center';
@@ -368,11 +360,11 @@ export function SingleDeckWaveform({
           }
         }
 
-        // 2. Draw Waveform bands inside translated space
+        // 2. Draw Waveform bands inside translated space (RGB Tri-Band Palette)
         if (points.length > 0) {
-          // Low Band (Vivid Cyan/Blue foundation)
-          ctx.fillStyle = 'rgba(0, 162, 255, 0.4)';
-          ctx.strokeStyle = 'rgba(0, 190, 255, 0.85)';
+          // Low Band: Sub Bass / Kick (Crimson Red)
+          ctx.fillStyle = 'rgba(216, 22, 63, 0.5)';
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.9)';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(points[0].x, halfH);
@@ -386,9 +378,9 @@ export function SingleDeckWaveform({
           ctx.fill();
           ctx.stroke();
 
-          // Mid Band (Vivid Neon Orange)
-          ctx.fillStyle = 'rgba(255, 120, 0, 0.7)';
-          ctx.strokeStyle = 'rgba(255, 150, 0, 0.95)';
+          // Mid Band: Vocals / Synths (Pioneer Amber Gold)
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.65)';
+          ctx.strokeStyle = 'rgba(251, 191, 36, 0.95)';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(points[0].x, halfH);
@@ -402,8 +394,8 @@ export function SingleDeckWaveform({
           ctx.fill();
           ctx.stroke();
 
-          // High Band (Pure Bright White)
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+          // High Band: Hi-Hats / Transients (Cyber Cyan / Crisp White)
+          ctx.fillStyle = 'rgba(34, 211, 238, 0.85)';
           ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
           ctx.lineWidth = 0.8;
           ctx.beginPath();
@@ -647,6 +639,8 @@ export function SingleDeckWaveform({
     const currentDeck = deckRef.current;
     if (!currentDeck || currentDeck.id === 'locked') return;
 
+    playNeedleDrop();
+
     const audio = audioEngine.audioElements[deckId];
     const startTime = audio ? audio.currentTime : (currentDeck.progress || 0);
     const duration = audio ? audio.duration : (currentDeck.duration || 300);
@@ -686,37 +680,7 @@ export function SingleDeckWaveform({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[20px] md:min-h-[48px] max-h-[100px] bg-black rounded-none border border-zinc-900 overflow-hidden flex items-center justify-center select-none shrink-0 z-10">
-      {/* Zoom & Set Downbeat Toolbar */}
-      <div className="absolute top-1 right-1 z-20 flex items-center gap-1 bg-black px-1.5 py-0.5 rounded-none border border-zinc-900 pointer-events-auto">
-        <button
-          onClick={handleSetDownbeat}
-          className="px-1.5 py-0.5 rounded-none border border-amber-500/40 bg-amber-950/40 text-amber-400 hover:bg-amber-900/60 font-mono text-[7px] font-black uppercase leading-none cursor-pointer"
-          title="Set current playhead position as Beat 1 Downbeat"
-        >
-          SET BEAT 1
-        </button>
-        <div className="flex items-center gap-0.5 border-l border-zinc-800 pl-1">
-          <button
-            onClick={handleZoomOut}
-            className="w-4 h-4 rounded-none border border-zinc-800 bg-black text-zinc-400 hover:text-white flex items-center justify-center font-mono text-[9px] font-bold cursor-pointer"
-            title="Zoom Out Waveform"
-          >
-            -
-          </button>
-          <span className="text-[6.5px] font-mono text-zinc-400 font-bold px-0.5">
-            {deck?.zoomLevel || 55}px
-          </span>
-          <button
-            onClick={handleZoomIn}
-            className="w-4 h-4 rounded-none border border-zinc-800 bg-black text-zinc-400 hover:text-white flex items-center justify-center font-mono text-[9px] font-bold cursor-pointer"
-            title="Zoom In Waveform"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
+    <div className="relative w-full h-full min-h-[36px] md:min-h-[56px] bg-black rounded-none border border-zinc-900/80 overflow-hidden flex items-center justify-center select-none shrink-0 z-10">
       <canvas 
         ref={canvasRef} 
         className={cn("w-full h-full block touch-none", dragState ? 'cursor-grabbing' : 'cursor-grab')} 

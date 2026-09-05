@@ -11,7 +11,7 @@ import { midiEngine } from '@/lib/midiEngine';
 import { MIDILearnModal } from './MIDILearnModal';
 import { useUsbLibrary } from '@/lib/useUsbLibrary';
 import { setRecorder, RecordingState } from '@/lib/audioRecorder';
-import { playClick, playTick, playLockoutBlip } from '@/lib/audioUtils';
+import { playClick, playTick, playLockoutBlip, playNeedleDrop } from '@/lib/audioUtils';
 import { 
   formatTime, 
   formatPlayheadTime, 
@@ -26,14 +26,19 @@ import { VinylStack } from './VinylStack';
 import { SingleDeckWaveform } from './SingleDeckWaveform';
 import { DeckToolbar } from './DeckToolbar';
 import { DeckBrowserPanel } from './DeckBrowserPanel';
-import { DeckBadge, DeckId } from './DeckBadge';
+import { DeckBadge } from './DeckBadge';
 import { UsbDropzoneOverlay } from './UsbDropzoneOverlay';
 import { HardwareControllerView } from './HardwareControllerView';
+import { calculateSyncCorrection } from '@/lib/proBeatgridEngine';
 import dynamic from 'next/dynamic';
 
 const MobileDJDecks = dynamic(() => import('./MobileDJDecks').then(mod => mod.MobileDJDecks), { ssr: false });
 const CDJHardware = dynamic(() => import('./CDJHardware'), { ssr: false });
 const AudioVisualizerBackground = dynamic(() => import('./AudioVisualizerBackground'), { ssr: false });
+const StageVisualizerModal = dynamic(() => import('./StageVisualizerModal').then(m => m.StageVisualizerModal), { ssr: false });
+const SetRecordingModal = dynamic(() => import('./SetRecordingModal').then(m => m.SetRecordingModal), { ssr: false });
+const TrackIdLiveHUD = dynamic(() => import('./TrackIdLiveHUD').then(m => m.TrackIdLiveHUD), { ssr: false });
+const RhythmAccentPads = dynamic(() => import('./RhythmAccentPads').then(m => m.RhythmAccentPads), { ssr: false });
 
 interface MixArchiveProps {
   isDepth: boolean;
@@ -52,13 +57,22 @@ export default function MixArchive({
 }: MixArchiveProps) {
   // Read state directly from Zustand to avoid parent-driven renders
   const decks = useAudioStore(s => s.decks);
+  const setDeck = useAudioStore(s => s.setDeck);
   const setDecks = useAudioStore(s => s.setDecks);
   const crossfader = useAudioStore(s => s.crossfader);
   const setCrossfader = useAudioStore(s => s.setCrossfader);
   const leftActiveDeck = useAudioStore(s => s.leftActiveDeck);
+  const setLeftActiveDeck = useAudioStore(s => s.setLeftActiveDeck);
   const rightActiveDeck = useAudioStore(s => s.rightActiveDeck);
+  const setRightActiveDeck = useAudioStore(s => s.setRightActiveDeck);
   const detectedBpms = useAudioStore(s => s.detectedBpms || {});
   const setIsCDJView = useAudioStore(s => s.setIsCDJView);
+  const eqMode = useAudioStore(s => s.eqMode);
+  const setEqMode = useAudioStore(s => s.setEqMode);
+  const crossfaderCurve = useAudioStore(s => s.crossfaderCurve);
+  const setCrossfaderCurve = useAudioStore(s => s.setCrossfaderCurve);
+  const isSplitCue = useAudioStore(s => s.isSplitCue);
+  const setIsSplitCue = useAudioStore(s => s.setIsSplitCue);
 
   // Map local references and bindings directly to global audioEngine singleton
   const playTrack = audioEngine.playTrack.bind(audioEngine);
@@ -70,9 +84,12 @@ export default function MixArchive({
   const getQuantizedDelay = audioEngine.getQuantizedDelay.bind(audioEngine);
 
   const audioElementsRef = useRef(audioEngine.audioElements);
-  audioElementsRef.current = audioEngine.audioElements;
   const widgetRefs = useRef(audioEngine.widgetRefs);
-  widgetRefs.current = audioEngine.widgetRefs;
+
+  useEffect(() => {
+    audioElementsRef.current = audioEngine.audioElements;
+    widgetRefs.current = audioEngine.widgetRefs;
+  });
 
   const decksRef = useRef(decks);
   useEffect(() => { decksRef.current = decks; }, [decks]);
@@ -89,6 +106,13 @@ export default function MixArchive({
   const [isMIDIOpen, setIsMIDIOpen] = useState(false);
   const [midiDeviceName, setMIDIDeviceName] = useState<string>('');
   const [isGlitching, setIsGlitching] = useState(false);
+
+  const [masterBrowserFolder, setMasterBrowserFolder] = useState<string>('all');
+  const [isMasterCrateExpanded, setIsMasterCrateExpanded] = useState<boolean>(false);
+  const [isCrateCollapsed, setIsCrateCollapsed] = useState<boolean>(true);
+
+  const [isStageVisualizerOpen, setIsStageVisualizerOpen] = useState(false);
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
 
   const { connectUsbDrive, usbTracks, usbFolderName, isLoading: isUsbLoading } = useUsbLibrary();
   const [recordingState, setRecordingState] = useState<RecordingState>(setRecorder.getState());
@@ -455,42 +479,34 @@ export default function MixArchive({
               const masterDeck = decksRef.current[masterId];
               const masterAudio = audioElementsRef?.current?.[masterId];
               if (masterDeck && masterAudio && !masterAudio.paused) {
-                const activeBpmA = masterDeck.bpm * (1 + (masterDeck.pitch || 0) / 100);
+                const correction = calculateSyncCorrection(
+                  masterAudio.currentTime,
+                  masterDeck.bpm || 120,
+                  masterDeck.pitch || 0,
+                  masterDeck.firstBeatOffset || 0,
+                  audio.currentTime,
+                  deck.bpm || 120,
+                  deck.firstBeatOffset || 0
+                );
 
-                // 2. Dynamic Pitch Tracking: Automatically calculate and update pitch to track the master BPM
-                if (deck.bpm && !isNaN(deck.bpm)) {
-                  const targetPitch = ((activeBpmA / deck.bpm) - 1) * 100;
-                  const clampedPitch = Math.max(-16, Math.min(16, targetPitch));
-                  
-                  if (Math.abs(deck.pitch - clampedPitch) > 0.005) {
-                    useAudioStore.getState().setDeck(deckId, { pitch: clampedPitch });
-                    basePlaybackRate = 1 + clampedPitch / 100;
-                  }
+                // 2. Dynamic Pitch Tracking: Automatically update pitch to match master tempo
+                if (Math.abs((deck.pitch || 0) - correction.targetPitch) > 0.01) {
+                  useAudioStore.getState().setDeck(deckId, { pitch: correction.targetPitch });
+                  basePlaybackRate = 1 + correction.targetPitch / 100;
                 }
 
-                const beatInterval = 60 / activeBpmA;
-                const elapsedA = Math.max(0, masterAudio.currentTime - (masterDeck.firstBeatOffset || 0));
-                const elapsedB = Math.max(0, audio.currentTime - (deck.firstBeatOffset || 0));
-                
-                const phaseA = elapsedA % beatInterval;
-                const phaseB = elapsedB % beatInterval;
-                
-                let error = phaseA - phaseB;
-                if (error > beatInterval / 2) error -= beatInterval;
-                if (error < -beatInterval / 2) error += beatInterval;
-                
-                if (Math.abs(error) > 0.05) {
-                  // Hard snap if phase drift is very large (e.g. after scratching, seeking, or cue stutter release)
-                  const targetTime = audio.currentTime + error;
-                  const duration = audio.duration || deck.duration || 0;
-                  if (isFinite(duration) && targetTime >= 0 && targetTime <= duration) {
-                    audio.currentTime = targetTime;
+                // 3. Phase Synchronization
+                if ((deck.syncMode as string) !== 'BPM') {
+                  if (correction.needsHardSnap) {
+                    const targetTime = audio.currentTime + correction.timeErrorSeconds;
+                    const duration = audio.duration || deck.duration || 0;
+                    if (isFinite(duration) && targetTime >= 0 && targetTime <= duration) {
+                      audio.currentTime = targetTime;
+                    }
+                  } else if (correction.pllNudge !== 0) {
+                    audio.playbackRate = basePlaybackRate + correction.pllNudge;
+                    pllApplied = true;
                   }
-                } else if (Math.abs(error) > 0.003) {
-                  // Stronger nudge for fast, tight synchronization
-                  const nudge = Math.max(-0.03, Math.min(0.03, error * 1.8));
-                  audio.playbackRate = basePlaybackRate + nudge;
-                  pllApplied = true;
                 }
               }
             }
@@ -543,9 +559,36 @@ export default function MixArchive({
 
   const triggerHotCueRef = useRef(triggerHotCue);
   useEffect(() => { triggerHotCueRef.current = triggerHotCue; }, [triggerHotCue]);
+  const modalStatesRef = useRef({
+    isShortcutsModalOpen,
+    isMasterCrateExpanded,
+    isStageVisualizerOpen,
+    isRecordModalOpen,
+    isMIDIOpen,
+  });
+  useEffect(() => {
+    modalStatesRef.current = {
+      isShortcutsModalOpen,
+      isMasterCrateExpanded,
+      isStageVisualizerOpen,
+      isRecordModalOpen,
+      isMIDIOpen,
+    };
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const {
+        isShortcutsModalOpen: shortcutsOpen,
+        isMasterCrateExpanded: crateExpanded,
+        isStageVisualizerOpen: stageFxOpen,
+        isMIDIOpen: midiOpen,
+      } = modalStatesRef.current;
+
+      if (shortcutsOpen || crateExpanded || stageFxOpen || midiOpen) {
+        return;
+      }
+
       const activeEl = document.activeElement;
       if (activeEl) {
         const tagName = activeEl.tagName.toLowerCase();
@@ -554,7 +597,19 @@ export default function MixArchive({
         }
       }
 
-      // Read state dynamically from Zustand to avoid re-binding keydown listener on slider drag/deck changes
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        setIsCrateCollapsed(prev => !prev);
+        return;
+      }
+
+      if (e.key === 'v' || e.key === 'V') {
+        e.preventDefault();
+        setIsStageVisualizerOpen(prev => !prev);
+        return;
+      }
+
+      // Read state dynamically from Zustand
       const state = useAudioStore.getState();
       const currentCrossfader = state.crossfader;
 
@@ -578,97 +633,121 @@ export default function MixArchive({
       // DECK 1 (Primary Left)
       if (e.code === 'Space') {
         e.preventDefault();
-        togglePlayGlobalRef.current?.(1);
+        const togglePlayGlobal = togglePlayGlobalRef.current;
+        if (togglePlayGlobal) togglePlayGlobal(1);
       } else if (e.key === 'c' || e.key === 'C') {
         e.preventDefault();
-        triggerHotCueRef.current?.(1, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(1, 0.0, 0);
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         triggerSync(1, 2);
       } else if (e.key === '1') {
         e.preventDefault();
-        triggerHotCueRef.current?.(1, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(1, 0.0, 0);
       } else if (e.key === '2') {
         e.preventDefault();
-        triggerHotCueRef.current?.(1, 0.25, 1);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(1, 0.25, 1);
       } else if (e.key === '3') {
         e.preventDefault();
-        triggerHotCueRef.current?.(1, 0.5, 2);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(1, 0.5, 2);
       } else if (e.key === '4') {
         e.preventDefault();
-        triggerHotCueRef.current?.(1, 0.75, 3);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(1, 0.75, 3);
       }
 
       // DECK 2 (Primary Right)
       else if (e.key === 'Enter') {
         e.preventDefault();
-        togglePlayGlobalRef.current?.(2);
+        const togglePlayGlobal = togglePlayGlobalRef.current;
+        if (togglePlayGlobal) togglePlayGlobal(2);
       } else if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
-        triggerHotCueRef.current?.(2, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(2, 0.0, 0);
       } else if (e.key === 'd' || e.key === 'D') {
         e.preventDefault();
         triggerSync(2, 1);
       } else if (e.key === '7') {
         e.preventDefault();
-        triggerHotCueRef.current?.(2, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(2, 0.0, 0);
       } else if (e.key === '8') {
         e.preventDefault();
-        triggerHotCueRef.current?.(2, 0.25, 1);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(2, 0.25, 1);
       } else if (e.key === '9') {
         e.preventDefault();
-        triggerHotCueRef.current?.(2, 0.5, 2);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(2, 0.5, 2);
       } else if (e.key === '0') {
         e.preventDefault();
-        triggerHotCueRef.current?.(2, 0.75, 3);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(2, 0.75, 3);
       }
 
       // DECK 3 (Secondary Left)
       else if (e.key === 'q' || e.key === 'Q') {
         e.preventDefault();
-        togglePlayGlobalRef.current?.(3);
+        const togglePlayGlobal = togglePlayGlobalRef.current;
+        if (togglePlayGlobal) togglePlayGlobal(3);
       } else if (e.key === 'a' || e.key === 'A') {
         e.preventDefault();
-        triggerHotCueRef.current?.(3, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(3, 0.0, 0);
       } else if (e.key === 'w' || e.key === 'W') {
         e.preventDefault();
         triggerSync(3, 1);
       } else if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
-        triggerHotCueRef.current?.(3, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(3, 0.0, 0);
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
-        triggerHotCueRef.current?.(3, 0.25, 1);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(3, 0.25, 1);
       } else if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
-        triggerHotCueRef.current?.(3, 0.5, 2);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(3, 0.5, 2);
       } else if (e.key === 'y' || e.key === 'Y') {
         e.preventDefault();
-        triggerHotCueRef.current?.(3, 0.75, 3);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(3, 0.75, 3);
       }
 
       // DECK 4 (Secondary Right)
       else if (e.key === 'p' || e.key === 'P') {
         e.preventDefault();
-        togglePlayGlobalRef.current?.(4);
+        const togglePlayGlobal = togglePlayGlobalRef.current;
+        if (togglePlayGlobal) togglePlayGlobal(4);
       } else if (e.key === 'k' || e.key === 'K') {
         e.preventDefault();
-        triggerHotCueRef.current?.(4, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(4, 0.0, 0);
       } else if (e.key === 'o' || e.key === 'O') {
         e.preventDefault();
         triggerSync(4, 2);
       } else if (e.key === 'u' || e.key === 'U') {
         e.preventDefault();
-        triggerHotCueRef.current?.(4, 0.0, 0);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(4, 0.0, 0);
       } else if (e.key === 'i' || e.key === 'I') {
         e.preventDefault();
-        triggerHotCueRef.current?.(4, 0.25, 1);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(4, 0.25, 1);
       } else if (e.key === '[') {
         e.preventDefault();
-        triggerHotCueRef.current?.(4, 0.5, 2);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(4, 0.5, 2);
       } else if (e.key === ']') {
         e.preventDefault();
-        triggerHotCueRef.current?.(4, 0.75, 3);
+        const triggerHotCue = triggerHotCueRef.current;
+        if (triggerHotCue) triggerHotCue(4, 0.75, 3);
       }
 
       // Mixer Arrow crossfader controls
@@ -698,23 +777,6 @@ export default function MixArchive({
   };
 
   const activeVisualizer = getActiveVisualizerState();
-
-  const [masterBrowserFolder, setMasterBrowserFolder] = useState<string>('all');
-  const [targetDeckForBrowser, setTargetDeckForBrowser] = useState<DeckId>(1);
-  const [isMasterCrateExpanded, setIsMasterCrateExpanded] = useState<boolean>(false);
-  const [isCrateCollapsed, setIsCrateCollapsed] = useState<boolean>(true);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const targetTag = (e.target as HTMLElement)?.tagName;
-      if ((e.key === 'b' || e.key === 'B') && !['INPUT', 'TEXTAREA'].includes(targetTag)) {
-        setIsCrateCollapsed(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
 
 function StackedWaveformDeckItem({
   deckId,
@@ -792,7 +854,7 @@ function StackedWaveformDeckItem({
       onDrop={handleDrop}
       className={cn(
         "w-full flex items-stretch bg-black border border-zinc-900 rounded-none overflow-hidden h-full relative transition-all",
-        isMobile ? "h-[40px] min-h-[40px] shrink-0" : "min-h-[48px] max-h-[80px]",
+        isMobile ? "h-[50px] min-h-[50px] shrink-0" : "min-h-[60px] h-[80px]",
         isHovering && (isLockedForDrop ? "border-red-600 ring-1 ring-red-600" : "border-emerald-500 ring-1 ring-emerald-500")
       )}
       style={{ borderLeft: `3px solid ${themeColor}` }}
@@ -844,14 +906,40 @@ function StackedWaveformDeckItem({
         </div>
       </div>
 
-      {/* Right Info Panel */}
-      <div className="w-[60px] border-l border-zinc-900 bg-black/40 flex flex-col justify-center items-center p-1.5 shrink-0 select-none text-center">
+      {/* Right Info Panel with 4-Beat Phase Meter */}
+      <div className="w-[68px] border-l border-zinc-900 bg-black/40 flex flex-col justify-center items-center p-1.5 shrink-0 select-none text-center">
         <span className="text-[5.5px] text-zinc-600 uppercase tracking-widest font-black leading-none mb-0.5">BPM</span>
         <span className="font-black text-zinc-400 font-mono text-[9px] tracking-wide">
           {isLocked ? "130.00" : (deck.bpm * (1 + (deck.pitch || 0) / 100)).toFixed(1)}
         </span>
+        
+        {/* 4-Beat Bar Phase Blocks */}
+        <div className="flex items-center gap-0.5 mt-1" title="4-Beat Phase Meter">
+          {[0, 1, 2, 3].map((b) => {
+            const activeBpm = deck.bpm * (1 + (deck.pitch || 0) / 100);
+            const beatSec = 60 / (activeBpm || 120);
+            const beatInBar = isLocked ? 0 : Math.floor((((deck.progress || 0) - (deck.firstBeatOffset || 0)) / beatSec) % 4 + 4) % 4;
+            const isActive = isPlaying && beatInBar === b;
+            return (
+              <div
+                key={b}
+                className={cn(
+                  "w-1.5 h-1.5 border transition-all duration-75",
+                  isActive
+                    ? "border-transparent shadow-[0_0_5px_currentColor]"
+                    : "border-zinc-800 bg-zinc-950"
+                )}
+                style={{
+                  backgroundColor: isActive ? themeColor : undefined,
+                  color: themeColor
+                }}
+              />
+            );
+          })}
+        </div>
+
         <span className={cn(
-          "text-[6.5px] font-bold mt-1 px-1 rounded",
+          "text-[6px] font-bold mt-0.5 px-0.5 rounded",
           isPlaying ? "bg-primary/10 text-primary animate-pulse" : "text-zinc-600"
         )} style={{ color: isPlaying ? themeColor : undefined }}>
           {isPlaying ? "ACTIVE" : "STANDBY"}
@@ -894,6 +982,43 @@ function StackedWaveformDeckItem({
   const renderMixer = () => {
     return (
       <div className="rounded-none p-2.5 px-3 flex flex-col justify-between bg-black border border-zinc-900 min-h-[180px] h-full flex-grow relative transition-all duration-300 z-10 w-full">
+        {/* Top Mixer Mode Switchers: EQ Curve & Headphone Split Cue */}
+        <div className="flex items-center justify-between w-full border-b border-zinc-900/80 pb-1 text-[7px] font-mono select-none">
+          <div className="flex items-center gap-1">
+            <span className="text-zinc-500 font-bold uppercase">EQ:</span>
+            <button
+              onClick={() => {
+                playClick(850, 'sine', 0.015);
+                setEqMode(eqMode === 'ISOLATOR' ? 'CLASSIC' : 'ISOLATOR');
+              }}
+              className={cn(
+                "px-1.5 py-0.5 border text-[7px] font-black uppercase transition-colors cursor-pointer",
+                eqMode === 'ISOLATOR' ? "bg-primary/20 border-primary/40 text-primary" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+              )}
+              title="Toggle EQ Curve: ISOLATOR (-∞dB Kill) vs CLASSIC (-26dB Shelf)"
+            >
+              {eqMode}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-zinc-500 font-bold uppercase">CUE:</span>
+            <button
+              onClick={() => {
+                playClick(850, 'sine', 0.015);
+                setIsSplitCue(!isSplitCue);
+              }}
+              className={cn(
+                "px-1.5 py-0.5 border text-[7px] font-black uppercase transition-colors cursor-pointer",
+                isSplitCue ? "bg-amber-500/20 border-amber-500/40 text-amber-400" : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+              )}
+              title="Split Cue Monitoring (Master Left, Cue Right)"
+            >
+              {isSplitCue ? 'SPLIT ON' : 'STEREO'}
+            </button>
+          </div>
+        </div>
+
         {/* Mixer Channels Grid */}
         <div className={cn(
           "grid gap-1.5 md:gap-2.5 my-2 items-stretch justify-center z-10 flex-grow min-h-0 select-none",
@@ -902,7 +1027,8 @@ function StackedWaveformDeckItem({
           {(deckCount === 2 ? [1, 2] : [3, 1, 2, 4]).map(id => {
             const deck = decks[id];
             const isLocked = deck?.id === 'locked';
-            const isActive = (id <= 2 ? leftActiveDeck === id : rightActiveDeck === id);
+            const isLeft = (id === 1 || id === 3);
+            const isActive = isStacked ? (isLeft ? leftActiveDeck === id : rightActiveDeck === id) : true;
             
             const channelColor = 
               id === 1 ? 'rgba(211,15,49,1)' : // red
@@ -914,9 +1040,20 @@ function StackedWaveformDeckItem({
               <div 
                 key={id}
                 style={{ containerType: 'inline-size' }}
+                onClick={() => {
+                  if (isStacked) {
+                    if (isLeft && leftActiveDeck !== id) {
+                      setLeftActiveDeck(id as 1 | 3);
+                    } else if (!isLeft && rightActiveDeck !== id) {
+                      setRightActiveDeck(id as 2 | 4);
+                    }
+                  }
+                }}
                 className={cn(
                   "w-full flex flex-col items-center justify-between gap-2 py-2 px-1 rounded-none transition-all border bg-black h-full min-h-0",
-                  isActive ? "border-zinc-800 opacity-100" : "border-zinc-900 opacity-60 hover:opacity-90"
+                  isStacked && !isActive
+                    ? "border-zinc-900 opacity-60 hover:opacity-100 hover:border-zinc-700 cursor-pointer"
+                    : "border-zinc-800/80 opacity-100 hover:border-zinc-700"
                 )}
               >
                 <span 
@@ -1072,10 +1209,22 @@ function StackedWaveformDeckItem({
 
         {/* Master Crossfader */}
         <div className="w-full flex flex-col items-center gap-0.5 border-t border-zinc-900/80 pt-1 z-10 shrink-0 select-none">
-          <div className="flex justify-between w-full text-[6px] text-zinc-500 font-mono tracking-wider px-1 uppercase font-bold">
-            <span>1/2 DECK</span>
-            <span>CROSSFADER</span>
-            <span>3/4 DECK</span>
+          <div className="flex justify-between items-center w-full text-[6px] text-zinc-500 font-mono tracking-wider px-1 uppercase font-bold">
+            <span>1/3 L</span>
+            <button
+              onClick={() => {
+                playClick(900, 'sine', 0.02);
+                setCrossfaderCurve(crossfaderCurve === 'SMOOTH' ? 'FAST_CUT' : 'SMOOTH');
+              }}
+              className={cn(
+                "px-1 py-0.2 border text-[6px] font-black uppercase transition-colors cursor-pointer",
+                crossfaderCurve === 'FAST_CUT' ? "bg-primary/20 border-primary/40 text-primary" : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white"
+              )}
+              title="Crossfader Curve: SMOOTH (Equal-Power) vs FAST CUT (Scratch)"
+            >
+              CURVE: {crossfaderCurve === 'FAST_CUT' ? 'CUT' : 'SMOOTH'}
+            </button>
+            <span>2/4 R</span>
           </div>
 
           <Crossfader
@@ -1185,7 +1334,7 @@ function StackedWaveformDeckItem({
                           if (isPlaying && playingOnDecks.length > 0) {
                             playingOnDecks.forEach(id => togglePlayGlobal(id));
                           } else {
-                            playTrack(track, leftActiveDeck);
+                            playTrack(track, leftActiveDeck, true);
                           }
                           playClick(1000, 'sine', 0.04);
                         }}
@@ -1244,27 +1393,59 @@ function StackedWaveformDeckItem({
                       </div>
 
                       {track.tracklist ? (
-                        <div className="mt-3 border-t border-zinc-900 pt-3 max-h-36 overflow-y-auto custom-scrollbar flex flex-col gap-1 z-20 relative">
-                          <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest font-black mb-1 select-none">
-                            Tracklist (Click to Seek)
-                          </span>
-                          {parseTracklist(track.tracklist).map((item, idx) => (
-                            <div key={idx} className="text-[10px] text-zinc-400 font-mono flex gap-2 items-center leading-normal">
-                              {item.isTimestamp ? (
-                                <button
+                        <div className="mt-3 border-t border-zinc-900 pt-3 max-h-40 overflow-y-auto custom-scrollbar flex flex-col gap-1 z-20 relative">
+                          <div className="flex items-center justify-between text-[8px] font-mono text-zinc-500 uppercase tracking-widest font-black mb-1 select-none">
+                            <span>Track Chapters</span>
+                            <span className="text-[7px] text-zinc-600">Click to Needle-Drop</span>
+                          </div>
+                          {(() => {
+                            const parsedItems = parseTracklist(track.tracklist);
+                            const primaryDeckId = playingOnDecks.length > 0 ? playingOnDecks[0] : leftActiveDeck;
+                            const isThisLoaded = playingOnDecks.length > 0;
+                            const currentDeckProg = decks[primaryDeckId]?.progress || 0;
+
+                            return parsedItems.map((item, idx) => {
+                              const nextItem = parsedItems[idx + 1];
+                              const isItemActive = isThisLoaded && item.isTimestamp && currentDeckProg >= item.seconds && (!nextItem || (nextItem.isTimestamp && currentDeckProg < nextItem.seconds));
+
+                              return (
+                                <div 
+                                  key={idx} 
                                   onClick={(e) => {
-                                    e.stopPropagation();
-                                    const playingDeckId = playingOnDecks[0] || leftActiveDeck;
-                                    seekDeckToTime(playingDeckId, item.seconds);
+                                    if (item.isTimestamp) {
+                                      e.stopPropagation();
+                                      playNeedleDrop();
+                                      if (isThisLoaded) {
+                                        seekLocalBuffer(primaryDeckId, item.seconds);
+                                        if (!decks[primaryDeckId]?.isPlaying) {
+                                          togglePlayGlobal(primaryDeckId);
+                                        }
+                                      } else {
+                                        playTrack(track, leftActiveDeck);
+                                        setTimeout(() => {
+                                          seekLocalBuffer(leftActiveDeck, item.seconds);
+                                        }, 150);
+                                      }
+                                    }
                                   }}
-                                  className="text-primary hover:text-red-400 cursor-pointer font-bold select-none hover:underline shrink-0"
+                                  className={cn(
+                                    "text-[10px] font-mono flex gap-2 items-center leading-normal px-1.5 py-0.5 rounded transition-colors cursor-pointer group",
+                                    isItemActive ? "bg-primary/20 text-white border-l-2 border-primary" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+                                  )}
                                 >
-                                  {item.timestampText}
-                                </button>
-                              ) : null}
-                              <span className="truncate select-text">{item.text}</span>
-                            </div>
-                          ))}
+                                  {item.isTimestamp ? (
+                                    <span className={cn(
+                                      "font-bold select-none shrink-0 font-mono text-[9px]",
+                                      isItemActive ? "text-primary font-black animate-pulse" : "text-primary/70 group-hover:text-primary"
+                                    )}>
+                                      {isItemActive ? `▶ ${item.timestampText}` : item.timestampText}
+                                    </span>
+                                  ) : null}
+                                  <span className="truncate select-text">{item.text}</span>
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
                       ) : (
                         <div className="text-xs text-zinc-400 mt-2 line-clamp-2">
@@ -1518,6 +1699,14 @@ function StackedWaveformDeckItem({
                   setIsShortcutsModalOpen(true);
                   playClick(900, 'sine', 0.02);
                 }}
+                onOpenStageFX={() => {
+                  playClick(1000, 'sine', 0.03);
+                  setIsStageVisualizerOpen(true);
+                }}
+                onOpenRecordModal={() => {
+                  playClick(900, 'sine', 0.02);
+                  setIsRecordModalOpen(true);
+                }}
               />
             )}
           </div>
@@ -1647,113 +1836,155 @@ function StackedWaveformDeckItem({
                         (isActive || !isStacked) ? "flex" : "hidden"
                       )}
                     >
-                      {/* Top Deck LCD Display Header */}
+                      {/* Unified CDJ LCD & Waveform HUD */}
                       <div 
-                        className="bg-black border border-zinc-900 p-2 flex items-center justify-between gap-2 border-l-2 shrink-0 select-none font-mono" 
+                        className="bg-black border border-zinc-900 p-1.5 flex flex-col gap-1 w-full border-l-2 shrink-0 select-none font-mono transition-all rounded-none" 
                         style={{ borderLeftColor: themeColor }}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <DeckBadge deckId={id} variant="badge" isPlaying={deck?.isPlaying} isLoaded={!isLocked && !!deck?.title} />
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-[5.5px] text-zinc-500 uppercase tracking-widest font-black leading-none">LOADED TRACK</span>
-                            <span className="font-black truncate tracking-wider text-zinc-200 text-[9px] uppercase leading-none mt-0.5">
-                              {isLocked ? "LOCKED DECK (PREVIEW ONLY)" : deck?.title || "NO TRACK LOADED"}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <div className="hidden sm:flex flex-col text-right font-mono">
-                            <span className="text-[5.5px] text-zinc-500 uppercase font-bold leading-none">BPM / KEY</span>
-                            <span className="text-[8.5px] font-bold text-amber-400 leading-none mt-0.5">
-                              {isLocked ? "130.0 BPM" : `${(deck?.bpm * (1 + (deck?.pitch || 0) / 100)).toFixed(1)} BPM`}
-                            </span>
+                        {/* LCD Top Row: Deck Badge + Title + BPM + Status + Load Button */}
+                        <div className="flex items-center justify-between gap-1.5 min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <DeckBadge deckId={id} variant="badge" isPlaying={deck?.isPlaying} isLoaded={!isLocked && !!deck?.title} />
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-black truncate tracking-wider text-zinc-200 text-[8.5px] md:text-[9.5px] uppercase leading-tight">
+                                {isLocked ? "LOCKED DECK (PREVIEW ONLY)" : deck?.title || "NO TRACK LOADED"}
+                              </span>
+                            </div>
                           </div>
 
-                          <button
-                            onClick={() => {
-                              playClick(900, 'sine', 0.02);
-                              setTargetDeckForBrowser(id);
-                              setIsMasterCrateExpanded(true);
-                            }}
-                            className="px-2 py-1 bg-zinc-900 hover:bg-primary hover:text-black border border-zinc-800 text-zinc-300 font-bold uppercase text-[7.5px] tracking-wider transition-colors cursor-pointer flex items-center gap-1"
-                          >
-                            <span>📁 LOAD</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Waveform */}
-                      <div className="shrink-0">
-                        {isStacked ? renderStackedWaveform(id) : (
-                          <div 
-                            className="bg-black border border-zinc-900 rounded-none p-2 md:p-2.5 flex flex-col gap-2 w-full shadow-md border-l-2 select-none" 
-                            style={{ borderLeftColor: themeColor }}
-                          >
-                            {/* LCD State Log Info Header (combined) */}
-                            <div className="w-full flex flex-col gap-1 font-mono text-[9px]">
-                              {/* LCD Status Indicators */}
-                              <div className="flex items-center justify-between text-zinc-500 text-[6.5px] tracking-widest border-b border-zinc-900 pb-1 uppercase font-black">
-                                <span>DECK_{id} STATE LOG</span>
-                                <span style={{ color: isLocked ? 'rgb(234,179,8)' : deck?.isPlaying ? themeColor : 'rgb(113,113,122)' }}>
-                                  {isLocked ? "ACCESS_LOCKED" : deck?.isPlaying ? "● PLAYING" : "■ PAUSED"}
-                                </span>
-                              </div>
-
-                              {/* Track Name */}
-                              <div className="flex flex-col mt-0.5">
-                                <span className="text-[5.5px] text-zinc-600 uppercase tracking-widest font-black mb-0.5 leading-none">TRACK NAME</span>
-                                <span className="font-black truncate tracking-wider text-zinc-300 font-mono uppercase text-[9.5px] leading-none">
-                                  {isLocked ? "LOCKED DECK (PREVIEW ONLY)" : deck?.title || "NO TRACK LOADED"}
-                                </span>
-                              </div>
-
-                              {/* Tempo, Playhead and Sync values */}
-                              <div className="grid grid-cols-3 gap-2 mt-1 border-t border-zinc-900/50 pt-1 select-none">
-                                <div className="flex flex-col">
-                                  <span className="text-[5px] text-zinc-600 uppercase tracking-widest font-bold leading-none mb-0.5">SPEED</span>
-                                  <span className="font-bold text-zinc-400 text-[8.5px] leading-none">
-                                    {isLocked ? "130.00 BPM" : `${(deck?.bpm * (1 + (deck?.pitch || 0) / 100)).toFixed(2)} BPM`}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col text-center">
-                                  <span className="text-[5px] text-zinc-600 uppercase tracking-widest font-bold leading-none mb-0.5">PLAYHEAD</span>
-                                  <span className="font-bold text-zinc-400 font-mono text-[8.5px] leading-none">
-                                    {isLocked ? "LOCKED" : formatPlayheadTime(deck?.progress || 0)}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col text-right">
-                                  <span className="text-[5px] text-zinc-600 uppercase tracking-widest font-bold leading-none mb-0.5">SYNC STATUS</span>
-                                  <span className={cn(
-                                    "font-black text-mono tracking-wide uppercase transition-colors duration-300 text-[8.5px] leading-none",
-                                    deck?.syncEnabled ? "text-emerald-400" : "text-zinc-600"
-                                  )}>
-                                    {deck?.syncEnabled ? "SYNCED" : "OFF"}
-                                  </span>
-                                </div>
-                              </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span 
+                              className="text-[7px] font-bold font-mono px-1 py-0.5 border border-zinc-800 uppercase"
+                              style={{ color: isLocked ? 'rgb(234,179,8)' : deck?.isPlaying ? themeColor : 'rgb(113,113,122)' }}
+                            >
+                              {isLocked ? "LOCKED" : deck?.isPlaying ? "● PLAY" : "■ PAUSE"}
+                            </span>
+                            <div className="hidden sm:flex flex-col text-right font-mono">
+                              <span className="text-[7.5px] font-bold text-amber-400 leading-none">
+                                {isLocked ? "130.0 BPM" : `${(deck?.bpm * (1 + (deck?.pitch || 0) / 100)).toFixed(1)} BPM`}
+                              </span>
                             </div>
 
-                            {/* Scrolling Waveform */}
-                            <div className="w-full relative bg-black/40 rounded p-1 border border-zinc-900/50 flex flex-col justify-center items-center">
-                              <div 
-                                className="text-[6.5px] font-mono tracking-widest font-black uppercase self-start mb-0.5 px-0.5"
-                                style={{ color: themeColor }}
+                            {/* 4-Beat Bar Phase Blocks */}
+                            <div className="flex items-center gap-0.5 px-1 py-1 border border-zinc-800 bg-zinc-950" title="4-Beat Bar Phase">
+                              {[0, 1, 2, 3].map((b) => {
+                                const activeBpm = deck?.bpm * (1 + (deck?.pitch || 0) / 100);
+                                const beatSec = 60 / (activeBpm || 120);
+                                const beatInBar = isLocked ? 0 : Math.floor((((deck?.progress || 0) - (deck?.firstBeatOffset || 0)) / beatSec) % 4 + 4) % 4;
+                                const isActive = deck?.isPlaying && beatInBar === b;
+                                return (
+                                  <div
+                                    key={b}
+                                    className={cn(
+                                      "w-1.5 h-2 border transition-all duration-75",
+                                      isActive
+                                        ? "border-transparent shadow-[0_0_6px_currentColor]"
+                                        : "border-zinc-800 bg-zinc-900"
+                                    )}
+                                    style={{
+                                      backgroundColor: isActive ? themeColor : undefined,
+                                      color: themeColor
+                                    }}
+                                  />
+                                );
+                              })}
+                            </div>
+                            
+                            {/* Set Beat 1 & Zoom Adjuster replacing old load button */}
+                            <div className="flex items-center gap-1 bg-black p-0.5 border border-zinc-800 shrink-0">
+                              <button
+                                onClick={() => {
+                                  playClick(880, 'sine', 0.04);
+                                  const audio = audioEngine.audioElements[id];
+                                  const currentPos = audio ? audio.currentTime : (deck?.progress || 0);
+                                  setDeck(id, { 
+                                    firstBeatOffset: currentPos,
+                                    mainCue: currentPos 
+                                  });
+                                }}
+                                className="px-1.5 py-0.5 rounded-none border border-amber-500/50 bg-amber-950/50 text-amber-400 hover:bg-amber-900 hover:text-white font-mono text-[7px] md:text-[7.5px] font-black uppercase leading-none cursor-pointer transition-all active:scale-95 shadow-[0_0_6px_rgba(245,158,11,0.35)]"
+                                title="Set current playhead position as Beat 1 Downbeat"
                               >
-                                WAVE DISPLAY
+                                SET BEAT 1
+                              </button>
+                              <div className="flex items-center gap-0.5 border-l border-zinc-800 pl-1">
+                                <button
+                                  onClick={() => {
+                                    playClick(600, 'sine', 0.015);
+                                    const curr = deck?.zoomLevel || 55;
+                                    setDeck(id, { zoomLevel: Math.max(25, curr - 15) });
+                                  }}
+                                  className="w-4 h-4 rounded-none border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-zinc-700 flex items-center justify-center font-mono text-[8px] font-black cursor-pointer leading-none"
+                                  title="Zoom Out Waveform"
+                                >
+                                  -
+                                </button>
+                                <span className="text-[6.5px] font-mono text-zinc-400 font-bold px-0.5 min-w-[22px] text-center">
+                                  {deck?.zoomLevel || 55}px
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    playClick(750, 'sine', 0.015);
+                                    const curr = deck?.zoomLevel || 55;
+                                    setDeck(id, { zoomLevel: Math.min(130, curr + 15) });
+                                  }}
+                                  className="w-4 h-4 rounded-none border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-white hover:border-zinc-700 flex items-center justify-center font-mono text-[8px] font-black cursor-pointer leading-none"
+                                  title="Zoom In Waveform"
+                                >
+                                  +
+                                </button>
                               </div>
-                              <SingleDeckWaveform 
-                                deckId={id} 
-                                deck={deck} 
-                                isDepth={isDepth} 
-                              />
                             </div>
                           </div>
-                        )}
+                        </div>
+
+                        {/* Track ID Live Transition HUD */}
+                        <TrackIdLiveHUD
+                          deckId={id}
+                          deck={deck}
+                          themeColor={themeColor}
+                          onSeek={(sec) => seekDeckToTime(id, sec)}
+                        />
+
+                        {/* Middle: Scrolling Waveform (Enlarged Height) */}
+                        <div className="w-full h-12 sm:h-14 md:h-16 lg:h-20 relative bg-black rounded-none border border-zinc-900 flex items-center justify-center overflow-hidden shadow-inner">
+                          {isStacked ? renderStackedWaveform(id) : (
+                            <SingleDeckWaveform 
+                              deckId={id} 
+                              deck={deck} 
+                              isDepth={isDepth} 
+                            />
+                          )}
+                        </div>
+
+                        {/* Bottom Row: Speed, Playhead, Sync Status */}
+                        <div className="grid grid-cols-3 gap-1 text-[7.5px] font-mono border-t border-zinc-900/60 pt-0.5 select-none">
+                          <div className="flex items-center gap-1 truncate">
+                            <span className="text-[5px] text-zinc-500 uppercase font-bold">SPD:</span>
+                            <span className="font-bold text-zinc-400">
+                              {isLocked ? "130.00" : `${(deck?.bpm * (1 + (deck?.pitch || 0) / 100)).toFixed(2)}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-[5px] text-zinc-500 uppercase font-bold">POS:</span>
+                            <span className="font-bold text-zinc-300 font-mono">
+                              {isLocked ? "LOCKED" : formatPlayheadTime(deck?.progress || 0)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-[5px] text-zinc-500 uppercase font-bold">SYNC:</span>
+                            <span className={cn(
+                              "font-black tracking-wide uppercase",
+                              deck?.syncEnabled ? "text-emerald-400" : "text-zinc-600"
+                            )}>
+                              {deck?.syncEnabled ? "ON" : "OFF"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Controls */}
-                      <div className="flex-1 min-h-0">
+                      <div className="flex-1 min-h-0 overflow-hidden">
                         {renderDeckControls(id)}
                       </div>
                     </motion.div>
@@ -1766,21 +1997,24 @@ function StackedWaveformDeckItem({
                 layout
                 transition={{ type: "spring", stiffness: 280, damping: 28 }}
                 style={{ gridArea: 'mixer' }} 
-                className="mixer-module block h-full min-h-0"
+                className="mixer-module block h-full min-h-0 overflow-hidden"
               >
                 {renderMixer()}
               </motion.div>
 
             </div>
 
+            {/* Analog Accent Rhythm Sampler (808/909) */}
+            <RhythmAccentPads themeColor="var(--color-primary)" />
+
             {/* Single Master Music Crate Browser (Collapsible) */}
             <div className={cn(
               "w-full shrink-0 border-t border-zinc-900 bg-black transition-all duration-300",
-              isCrateCollapsed ? "h-auto p-0" : "h-[36vh] max-h-[360px] min-h-[180px] p-1"
+              isCrateCollapsed ? "h-auto p-0" : "h-[28vh] max-h-[270px] min-h-[150px] p-1"
             )}>
               <DeckBrowserPanel
                 deckCount={deckCount}
-                activeDeckId={targetDeckForBrowser || 1}
+                activeDeckId={leftActiveDeck || 1}
                 mixGroups={effectiveMixGroups}
                 browserFolder={masterBrowserFolder}
                 onFolderSelect={(folder) => setMasterBrowserFolder(folder)}
@@ -1963,6 +2197,12 @@ function StackedWaveformDeckItem({
 
       {/* WebMIDI Hardware Link & Mapping Modal */}
       <MIDILearnModal isOpen={isMIDIOpen} onClose={() => setIsMIDIOpen(false)} />
+
+      {/* Stage Mode: Audio-Reactive Fullscreen Visualizer Modal */}
+      <StageVisualizerModal isOpen={isStageVisualizerOpen} onClose={() => setIsStageVisualizerOpen(false)} />
+
+      {/* Master Mix Cassette Recording Modal */}
+      <SetRecordingModal isOpen={isRecordModalOpen} onClose={() => setIsRecordModalOpen(false)} />
     </section>
   );
 }
