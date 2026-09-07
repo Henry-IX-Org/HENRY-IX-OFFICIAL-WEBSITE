@@ -233,7 +233,7 @@ export default function StudioShell({ children }: StudioShellProps) {
         <div className="flex-1 flex flex-col min-w-0 bg-[#0c0d10] relative">
           
           {/* Top App Bar */}
-          <header className="h-13 border-b border-white/[0.06] bg-[#14151a] flex items-center justify-between px-4 flex-shrink-0 z-10">
+          <header className="h-14 border-b border-white/[0.06] bg-[#14151a] flex items-center justify-between px-4 flex-shrink-0 z-40 relative">
             <div className="text-zinc-400 text-xs flex items-center gap-2.5">
               <span className="w-2 h-2 bg-[#10b981] rounded-full" />
               <span className="font-semibold text-zinc-100 tracking-tight">HENRY IX STUDIO</span>
@@ -255,16 +255,50 @@ export default function StudioShell({ children }: StudioShellProps) {
 
               {/* Notification Center Popover Trigger */}
               <NotificationCenter 
-                onAction={(action) => {
+                onAction={(action, payload) => {
                   const addToast = useStudioStore.getState().addToast;
                   if (action === 'view-bag') {
                     setActiveView('gigs-checklist');
                     setRequestedDrawerTab('checklist');
+                    setRightDrawerOpen(true);
                     addToast({ title: 'SMART BAG CHECKLIST', message: 'Showing active gig hardware checklist.', type: 'info' });
+                  } else if (action === 'view-gig') {
+                    setActiveView('gigs-hub');
+                    setRequestedDrawerTab('logistics');
+                    setRightDrawerOpen(true);
+                    addToast({ title: 'GIG HUB & LOGISTICS', message: 'Opening tour itinerary and call-times.', type: 'info' });
                   } else if (action === 'triage-assets') {
                     setActiveView('assets-vault');
                     setRequestedDrawerTab('assets');
+                    setRightDrawerOpen(true);
                     addToast({ title: 'ASSET VAULT', message: 'Showing newly synced Google Drive clips.', type: 'info' });
+                  } else if (action === 'view-tracks') {
+                    setActiveView('music-all');
+                    setRequestedDrawerTab('dj-utility');
+                    setRightDrawerOpen(true);
+                    addToast({ title: 'MUSIC LIBRARY', message: 'Showing verified Notion tracks collection.', type: 'info' });
+                  } else if (action === 'view-setlist') {
+                    setActiveView('music-set-planning');
+                    setRequestedDrawerTab('setlist');
+                    setRightDrawerOpen(true);
+                    addToast({ title: 'SET PLANNING', message: 'Showing active dual-workbench setlist.', type: 'info' });
+                  } else if (action === 'connect-obs') {
+                    setActiveView('streaming-live');
+                    setRequestedDrawerTab('stream-telemetry');
+                    setRightDrawerOpen(true);
+                    addToast({ title: 'OBS BROADCAST', message: 'Stream console and telemetry monitor active.', type: 'info' });
+                  } else if (action === 'open-scanner') {
+                    setActiveView('gigs-scanner');
+                    setRequestedDrawerTab('admissions');
+                    setRightDrawerOpen(true);
+                    addToast({ title: 'DOOR SCANNER', message: 'Guestlist QR check-in engaged.', type: 'info' });
+                  } else if (action === 'open-settings') {
+                    setSettingsOpen(true);
+                  } else if (action === 'open-copilot') {
+                    setRightDrawerOpen(true);
+                    setRequestedDrawerTab('copilot');
+                  } else if (action === 'play-track' && payload) {
+                    useStudioStore.getState().playTrack(payload);
                   } else if (action === 'revert-fee' || action === 'keep-iphone') {
                     addToast({
                       title: 'NOTION SYNC RESOLVED',

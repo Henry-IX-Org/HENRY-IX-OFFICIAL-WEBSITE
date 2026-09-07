@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { StudioUserProfile } from '@/lib/studioAuth';
+import { playNotificationChime } from '@/lib/studioAudioFeedback';
 
 export interface CuePoint {
   letter: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
@@ -84,6 +85,28 @@ export interface StudioToast {
   type: 'success' | 'warning' | 'info' | 'error';
   timestamp: number;
 }
+ 
+export type NotificationCategory = 'Logistics' | 'Sync' | 'System' | 'Streaming' | 'Audio';
+
+export interface StudioNotificationAction {
+  label: string;
+  action: string;
+  primary?: boolean;
+  payload?: any;
+}
+
+export interface StudioNotification {
+  id: string;
+  category: NotificationCategory;
+  title: string;
+  body: string;
+  timestamp: number;
+  read: boolean;
+  items?: string[];
+  actions?: StudioNotificationAction[];
+  priority?: 'high' | 'normal' | 'low';
+  source?: string;
+}
 
 export interface StudioSettings {
   theme: 'oled' | 'zinc' | 'light' | 'system';
@@ -109,6 +132,8 @@ export interface StudioState {
   rightDrawerOpen: boolean;
   drawerWidth: number;
   toasts: StudioToast[];
+  notifications: StudioNotification[];
+  doNotDisturb: boolean;
   
   // Audio Player State
   // Audio Player & Queue State
@@ -155,6 +180,14 @@ export interface StudioState {
   setDrawerWidth: (width: number) => void;
   addToast: (toast: Omit<StudioToast, 'id' | 'timestamp'>) => void;
   removeToast: (id: string) => void;
+
+  // Notification Actions
+  addNotification: (notification: Omit<StudioNotification, 'id' | 'timestamp' | 'read'> & { id?: string; timestamp?: number; read?: boolean }) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  dismissNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  setDoNotDisturb: (dnd: boolean) => void;
 
   // Audio Actions
   playTrack: (track: StudioTrack) => void;
@@ -381,6 +414,62 @@ const DEFAULT_BAG_ITEMS: BagItem[] = [
 
 const DEFAULT_POSTS: InstagramPost[] = [];
 
+const DEFAULT_NOTIFICATIONS: StudioNotification[] = [
+  {
+    id: 'notif-logistics-init',
+    category: 'Logistics',
+    title: 'Upcoming Tour Logistics',
+    body: 'Corner New Cross (Night 1) call-time at 22:30. Hardware items flagged for pre-departure verification.',
+    timestamp: Date.now() - 1000 * 60 * 12,
+    read: false,
+    priority: 'high',
+    items: ['1/4" Screw-on Gold Jack Adapter', 'Zoom H4n Recorder + RCA Booth Cable'],
+    actions: [
+      { label: 'View Checklist', action: 'view-bag', primary: true },
+      { label: 'Dismiss', action: 'dismiss', primary: false },
+    ],
+  },
+  {
+    id: 'notif-sync-init',
+    category: 'Sync',
+    title: 'Notion & R2 Cloud Synced',
+    body: 'Verified live connection to Notion Master Music Library (8,700+ tracks) and Cloudflare R2 audio mirror.',
+    timestamp: Date.now() - 1000 * 60 * 45,
+    read: false,
+    priority: 'normal',
+    actions: [
+      { label: 'Explore Tracks', action: 'view-tracks', primary: true },
+      { label: 'Dismiss', action: 'dismiss', primary: false },
+    ],
+  },
+  {
+    id: 'notif-audio-init',
+    category: 'Audio',
+    title: 'CDJ-3000 Engine Calibrated',
+    body: '3-band color waveform renderer and Phase Vocoder pitch shift engine calibrated at 60 FPS.',
+    timestamp: Date.now() - 1000 * 60 * 90,
+    read: true,
+    priority: 'low',
+    actions: [
+      { label: 'Set Planning', action: 'view-setlist', primary: true },
+      { label: 'Dismiss', action: 'dismiss', primary: false },
+    ],
+  },
+  {
+    id: 'notif-stream-init',
+    category: 'Streaming',
+    title: 'OBS WebSocket Ready',
+    body: 'Dual-mode local (ws://localhost:4455) & Cloudflare tunnel bridge ready for live broadcast.',
+    timestamp: Date.now() - 1000 * 60 * 180,
+    read: true,
+    priority: 'normal',
+    actions: [
+      { label: 'Broadcast Console', action: 'connect-obs', primary: true },
+      { label: 'Dismiss', action: 'dismiss', primary: false },
+    ],
+  },
+];
+
 export const useStudioStore = create<StudioState>()(
   persist(
     (set, get) => ({
@@ -392,6 +481,8 @@ export const useStudioStore = create<StudioState>()(
       rightDrawerOpen: true,
       drawerWidth: 380,
       toasts: [],
+      notifications: DEFAULT_NOTIFICATIONS,
+      doNotDisturb: false,
 
       // Async loading flags
       isLoadingTracks: false,
@@ -468,6 +559,60 @@ export const useStudioStore = create<StudioState>()(
       },
 
       removeToast: (id) => set(state => ({ toasts: state.toasts.filter(t => t.id !== id) })),
+
+      // Notification Actions
+      addNotification: (notif) => {
+        const id = notif.id || 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const newNotif: StudioNotification = {
+          id,
+          timestamp: notif.timestamp || Date.now(),
+          read: notif.read ?? false,
+          category: notif.category || 'System',
+          title: notif.title,
+          body: notif.body,
+          items: notif.items,
+          actions: notif.actions,
+          priority: notif.priority || 'normal',
+          source: notif.source,
+        };
+
+        set((state) => {
+          const filtered = state.notifications.filter((n) => n.id !== newNotif.id);
+          return {
+            notifications: [newNotif, ...filtered].slice(0, 50),
+          };
+        });
+
+        if (!get().doNotDisturb && typeof window !== 'undefined') {
+          playNotificationChime();
+        }
+      },
+
+      markNotificationRead: (id) => {
+        set((state) => ({
+          notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        }));
+      },
+
+      markAllNotificationsRead: () => {
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        }));
+      },
+
+      dismissNotification: (id) => {
+        set((state) => ({
+          notifications: state.notifications.filter((n) => n.id !== id),
+        }));
+      },
+
+      clearAllNotifications: () => {
+        set({ notifications: [] });
+      },
+
+      setDoNotDisturb: (dnd) => {
+        set({ doNotDisturb: dnd });
+      },
 
       // Audio Actions & Queue Engine
       setIsQueueOpen: (open) => set({ isQueueOpen: open }),
@@ -796,6 +941,13 @@ export const useStudioStore = create<StudioState>()(
           message: 'Saved HENRY_IX_REKORDBOX_SETLIST.xml ready for USB sync.',
           type: 'success',
         });
+        get().addNotification({
+          category: 'System',
+          title: 'Rekordbox XML Exported',
+          body: 'Universal DJ setlist XML saved. Ready for CDJ-3000 USB export.',
+          priority: 'normal',
+          actions: [{ label: 'View Tracks', action: 'view-tracks', primary: true }],
+        });
       },
 
       // Gigs Actions
@@ -890,6 +1042,13 @@ export const useStudioStore = create<StudioState>()(
             title: 'EMERGENCY CACHE PURGED',
             message: 'Global Cloudflare R2 & Next.js edge nodes invalidated (<5s SLA).',
             type: 'error',
+          });
+          get().addNotification({
+            category: 'System',
+            title: 'Cloudflare R2 Emergency Purge',
+            body: 'Emergency cache purge signal processed for public edge nodes.',
+            priority: 'high',
+            actions: [{ label: 'Triage in Assets', action: 'triage-assets', primary: true }],
           });
         } catch {
           get().addToast({
@@ -1059,6 +1218,8 @@ export const useStudioStore = create<StudioState>()(
         settings: state.settings,
         bagItems: state.bagItems,
         instagramGrid: state.instagramGrid,
+        notifications: state.notifications,
+        doNotDisturb: state.doNotDisturb,
       }),
     }
   )
