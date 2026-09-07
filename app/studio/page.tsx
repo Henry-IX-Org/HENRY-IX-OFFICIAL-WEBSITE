@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import StudioShell from '@/components/studio/StudioShell';
+import BrandLogo from '@/components/studio/BrandLogo';
 import { useStudioStore } from '@/store/studioStore';
 import { 
   Mail, 
@@ -12,9 +13,12 @@ import {
   User,
   Shield,
   LogIn,
-  UserPlus
+  UserPlus,
+  KeyRound
 } from 'lucide-react';
 import { playTactileClick, playNotificationChime } from '@/lib/studioAudioFeedback';
+import type { StudioRole } from '@/lib/studioPermissions';
+import { ALL_STUDIO_ROLES, ROLE_METADATA } from '@/lib/studioPermissions';
 
 type AuthView = 'sign-in' | 'register';
 
@@ -27,7 +31,8 @@ export default function StudioPage() {
   const [signInEmail, setSignInEmail] = useState('henryixdj@gmail.com');
   const [regName, setRegName] = useState('Henry IX');
   const [regEmail, setRegEmail] = useState('henryixdj@gmail.com');
-  const [regRole, setRegRole] = useState<'owner' | 'manager' | 'media' | 'viewer'>('owner');
+  const [regRole, setRegRole] = useState<StudioRole>('owner');
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
 
   // UI State
   const [isLoading, setIsLoading] = useState(false);
@@ -37,13 +42,29 @@ export default function StudioPage() {
 
   const escPressTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Check active session on mount
+  // Check active session on mount & inspect invite query param
   useEffect(() => {
     fetchCurrentSession().then((user) => {
       if (user) {
         setIsAuthenticated(true);
       }
     });
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const invite = params.get('invite');
+      const role = params.get('role') as StudioRole | null;
+      if (invite) {
+        setInviteToken(invite);
+        setAuthView('register');
+        if (role && ALL_STUDIO_ROLES.includes(role)) {
+          setRegRole(role);
+          setRegName('');
+          setRegEmail('');
+        }
+        setStatusMessage(`Team invite token detected: Role set to ${role ? ROLE_METADATA[role]?.title : 'Team Operator'}`);
+      }
+    }
   }, [fetchCurrentSession]);
 
   // Emergency Panic Blackout (Hold Esc 1.5s)
@@ -151,6 +172,7 @@ export default function StudioPage() {
           name: cleanName,
           email: cleanEmail,
           role: regRole,
+          inviteToken: inviteToken || undefined,
         }),
       });
       const data = (await res.json()) as any;
@@ -199,9 +221,12 @@ export default function StudioPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#090A0E] text-zinc-100 font-sans px-4 py-12 select-none">
       
+      {/* Official IX Monogram Brand Logo */}
+      <BrandLogo size={56} showText={false} className="mb-4" />
+
       {/* Brand Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800">
+      <div className="text-center mb-7">
+        <div className="inline-flex items-center gap-2 mb-2.5 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800">
           <span className="w-1.5 h-1.5 rounded-full bg-[#D8163F]" />
           <span className="text-[11px] font-mono tracking-wider text-zinc-400 uppercase font-semibold">
             HENRY IX
@@ -212,15 +237,15 @@ export default function StudioPage() {
         <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">
           {authView === 'sign-in' ? 'Sign in to your workspace' : 'Create an operator account'}
         </h1>
-        <p className="text-xs text-zinc-400 mt-1.5">
+        <p className="text-xs text-zinc-400 mt-1">
           {authView === 'sign-in'
-            ? 'Access your music collection, gigs, and streaming hub'
-            : 'Set up credentials to access Henry IX Studio tools'}
+            ? 'Access your audio collections, gig logistics, and streaming desk'
+            : 'Set up credentials to access Henry IX Studio tools under your role'}
         </p>
       </div>
 
       {/* Main Card Container */}
-      <div className="w-full max-w-[400px] bg-[#121318] border border-zinc-800/90 rounded-xl p-6 sm:p-7 shadow-2xl">
+      <div className="w-full max-w-[420px] bg-[#121318] border border-zinc-800/90 rounded-xl p-6 sm:p-7 shadow-2xl">
         
         {/* View Switcher Tabs */}
         <div className="grid grid-cols-2 p-1 bg-[#0B0C0F] border border-zinc-800/80 rounded-lg mb-6 text-xs">
@@ -375,29 +400,42 @@ export default function StudioPage() {
                 required
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
-                placeholder="henryixdj@gmail.com"
+                placeholder="operator@henryix.com"
                 className="w-full px-3 py-2 bg-[#17181F] border border-zinc-800 rounded-lg text-white text-xs placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">Assigned Role</label>
+              <label className="text-xs font-medium text-zinc-300 flex items-center justify-between">
+                <span>Assigned Role</span>
+                {inviteToken && (
+                  <span className="text-[10px] font-mono text-[#D8163F] uppercase tracking-wider flex items-center gap-1">
+                    <KeyRound size={11} />
+                    <span>Locked by Invite</span>
+                  </span>
+                )}
+              </label>
               <select
                 value={regRole}
-                onChange={(e) => setRegRole(e.target.value as any)}
-                className="w-full px-3 py-2 bg-[#17181F] border border-zinc-800 rounded-lg text-white text-xs focus:border-zinc-500 focus:outline-none transition-colors"
+                disabled={Boolean(inviteToken)}
+                onChange={(e) => setRegRole(e.target.value as StudioRole)}
+                className="w-full px-3 py-2 bg-[#17181F] border border-zinc-800 rounded-lg text-white text-xs focus:border-zinc-500 focus:outline-none transition-colors disabled:opacity-60"
               >
-                <option value="owner">Owner / Resident DJ</option>
-                <option value="manager">Tour & Booking Manager</option>
-                <option value="media">Media & Visuals Director</option>
-                <option value="viewer">Guest Sound Engineer</option>
+                {ALL_STUDIO_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_METADATA[r].title} [{ROLE_METADATA[r].badge}]
+                  </option>
+                ))}
               </select>
+              <p className="text-[11px] text-zinc-500 font-mono leading-relaxed mt-1">
+                {ROLE_METADATA[regRole]?.description}
+              </p>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-[#D8163F] hover:bg-[#c21337] active:bg-[#a8102f] text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm mt-1"
+              className="w-full py-2.5 px-4 bg-[#D8163F] hover:bg-[#c21337] active:bg-[#a8102f] text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm mt-2"
             >
               {isLoading ? (
                 <RefreshCw size={14} className="animate-spin" />

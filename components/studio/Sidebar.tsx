@@ -35,6 +35,8 @@ import {
   Music,
   ExternalLink
 } from 'lucide-react';
+import { useStudioStore } from '@/store/studioStore';
+import { canAccessModule, ROLE_METADATA } from '@/lib/studioPermissions';
 
 export interface SidebarProps {
   collapsed: boolean;
@@ -71,8 +73,12 @@ export default function Sidebar({
   },
   onTogglePlay,
 }: SidebarProps) {
+  const currentUser = useStudioStore((s) => s.currentUser);
+  const role = currentUser?.role || 'owner';
+  const operatorName = currentUser?.name || 'HENRY IX';
+  const roleMeta = ROLE_METADATA[role];
+  const isOwner = role === 'owner';
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [currentRole, setCurrentRole] = useState<'Owner' | 'Manager' | 'Media' | 'Viewer'>('Owner');
 
   // Track expanded state for modules & folders
   const [expandedTrees, setExpandedTrees] = useState<Record<string, boolean>>({
@@ -122,15 +128,15 @@ export default function Sidebar({
             <button 
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               className="flex items-center gap-2 text-zinc-200 hover:text-white text-xs overflow-hidden group focus:outline-none w-full text-left py-1"
-              title="Switch Workspace Profile"
+              title="Operator Identity & Permissions"
             >
-              <div className="w-5 h-5 rounded-md bg-[#E53558]/15 border border-[#E53558]/30 text-[#E53558] font-bold text-[10px] flex items-center justify-center flex-shrink-0">
+              <div className="w-5 h-5 rounded-md bg-[#D8163F]/15 border border-[#D8163F]/30 text-[#D8163F] font-bold text-[10px] flex items-center justify-center flex-shrink-0">
                 IX
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate font-semibold text-xs text-zinc-100">HENRY IX</span>
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase">({currentRole})</span>
+                  <span className="truncate font-semibold text-xs text-zinc-100">{operatorName}</span>
+                  <span className="text-[10px] font-mono text-[#D8163F] uppercase">({roleMeta?.badge || role})</span>
                 </div>
               </div>
               <ChevronDown size={12} className="text-zinc-500 group-hover:text-zinc-300 transition-transform flex-shrink-0" />
@@ -138,25 +144,31 @@ export default function Sidebar({
 
             {/* Profile Dropdown Menu */}
             {profileDropdownOpen && (
-              <div className="absolute top-11 left-0 w-56 bg-[#1b1c22] border border-white/[0.08] rounded-xl shadow-2xl p-1.5 z-50 text-xs space-y-0.5 backdrop-blur-xl">
-                <div className="px-2.5 py-1.5 text-[10px] text-zinc-500 font-mono tracking-wider uppercase border-b border-white/[0.06]">
-                  WORKSPACE PERMISSIONS
+              <div className="absolute top-11 left-0 w-60 bg-[#1b1c22] border border-white/[0.08] rounded-xl shadow-2xl p-2 z-50 text-xs space-y-1 backdrop-blur-xl animate-in fade-in">
+                <div className="px-2 py-1 border-b border-white/[0.06] pb-2">
+                  <div className="text-xs font-semibold text-white truncate">{operatorName}</div>
+                  <div className="text-[10px] font-mono text-zinc-400 truncate">
+                    {currentUser?.emails?.find(e => e.isPrimary)?.email || currentUser?.emails?.[0]?.email || 'Active Operator'}
+                  </div>
+                  <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#D8163F]/10 border border-[#D8163F]/20 text-[10px] font-mono text-[#D8163F] font-semibold">
+                    <ShieldCheck size={11} />
+                    <span>{roleMeta?.title || role.toUpperCase()}</span>
+                  </div>
                 </div>
-                {(['Owner', 'Manager', 'Media', 'Viewer'] as const).map(role => (
+
+                {isOwner && (
                   <button
-                    key={role}
                     onClick={() => {
-                      setCurrentRole(role);
                       setProfileDropdownOpen(false);
+                      openSettings();
                     }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors ${
-                      currentRole === role ? 'bg-white/[0.08] text-white font-medium' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
-                    }`}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-zinc-300 hover:bg-white/[0.05] hover:text-white transition-colors text-xs font-medium"
                   >
-                    <span>{role}</span>
-                    {currentRole === role && <ShieldCheck size={13} className="text-[#E53558]" />}
+                    <Settings size={13} className="text-zinc-400" />
+                    <span>Team & Permissions</span>
                   </button>
-                ))}
+                )}
+
                 <div className="border-t border-white/[0.06] pt-1 mt-1">
                   <button
                     onClick={async () => {
@@ -181,7 +193,7 @@ export default function Sidebar({
             className="text-zinc-400 hover:text-white mx-auto flex-shrink-0 focus:outline-none"
             title="Expand Sidebar"
           >
-            <div className="w-6 h-6 rounded-md bg-[#E53558]/15 border border-[#E53558]/30 text-[#E53558] font-bold text-[10px] flex items-center justify-center">
+            <div className="w-6 h-6 rounded-md bg-[#D8163F]/15 border border-[#D8163F]/30 text-[#D8163F] font-bold text-[10px] flex items-center justify-center">
               IX
             </div>
           </button>
@@ -219,6 +231,7 @@ export default function Sidebar({
       <div className="flex-1 overflow-y-auto custom-scrollbar py-2.5 px-1.5 space-y-2.5">
         
         {/* MODULE 01: STREAMING */}
+        {canAccessModule(role, 'streaming-live') && (
         <div>
           <button
             onClick={() => toggleTree('01')}
@@ -266,8 +279,10 @@ export default function Sidebar({
             </div>
           )}
         </div>
+        )}
 
         {/* MODULE 02: MUSIC */}
+        {canAccessModule(role, 'music-all') && (
         <div>
           <button
             onClick={() => toggleTree('02')}
@@ -401,8 +416,10 @@ export default function Sidebar({
             </div>
           )}
         </div>
+        )}
 
         {/* MODULE 03: ASSETS */}
+        {canAccessModule(role, 'assets-vault') && (
         <div>
           <button
             onClick={() => toggleTree('03')}
@@ -457,8 +474,10 @@ export default function Sidebar({
             </div>
           )}
         </div>
+        )}
 
         {/* MODULE 04: GIGS & LOGISTICS */}
+        {(canAccessModule(role, 'gigs-hub') || canAccessModule(role, 'gigs-scanner')) && (
         <div>
           <button
             onClick={() => toggleTree('04')}
@@ -482,46 +501,58 @@ export default function Sidebar({
 
           {!collapsed && expandedTrees['04'] && (
             <div className="pl-3.5 pr-0.5 mt-1 space-y-0.5">
-              <button
-                onClick={() => handleSelectView('gigs-hub')}
-                className={getItemClass('gigs-hub')}
-              >
-                <Calendar size={13} className={activeView === 'gigs-hub' ? 'text-[#f59e0b]' : 'text-zinc-400'} />
-                <span className="truncate">Tour Dates & Call-Times</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('gigs-daysheet')}
-                className={getItemClass('gigs-daysheet')}
-              >
-                <Activity size={13} className={activeView === 'gigs-daysheet' ? 'text-[#3b82f6]' : 'text-zinc-400'} />
-                <span className="truncate">Lockscreen Day Sheet</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('gigs-checklist')}
-                className={getItemClass('gigs-checklist')}
-              >
-                <CheckSquare size={13} className={activeView === 'gigs-checklist' ? 'text-[#10b981]' : 'text-zinc-400'} />
-                <span className="truncate">Smart DJ Bag Checklist</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('gigs-finance')}
-                className={getItemClass('gigs-finance')}
-              >
-                <DollarSign size={13} className={activeView === 'gigs-finance' ? 'text-[#E53558]' : 'text-zinc-400'} />
-                <span className="truncate">HMRC Invoice & Tax</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('gigs-scanner')}
-                className={getItemClass('gigs-scanner')}
-              >
-                <QrCode size={13} className={activeView === 'gigs-scanner' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
-                <span className="truncate">Guestlist & Scanner</span>
-              </button>
+              {canAccessModule(role, 'gigs-hub') && (
+                <button
+                  onClick={() => handleSelectView('gigs-hub')}
+                  className={getItemClass('gigs-hub')}
+                >
+                  <Calendar size={13} className={activeView === 'gigs-hub' ? 'text-[#f59e0b]' : 'text-zinc-400'} />
+                  <span className="truncate">Tour Dates & Call-Times</span>
+                </button>
+              )}
+              {canAccessModule(role, 'gigs-daysheet') && (
+                <button
+                  onClick={() => handleSelectView('gigs-daysheet')}
+                  className={getItemClass('gigs-daysheet')}
+                >
+                  <Activity size={13} className={activeView === 'gigs-daysheet' ? 'text-[#3b82f6]' : 'text-zinc-400'} />
+                  <span className="truncate">Lockscreen Day Sheet</span>
+                </button>
+              )}
+              {canAccessModule(role, 'gigs-checklist') && (
+                <button
+                  onClick={() => handleSelectView('gigs-checklist')}
+                  className={getItemClass('gigs-checklist')}
+                >
+                  <CheckSquare size={13} className={activeView === 'gigs-checklist' ? 'text-[#10b981]' : 'text-zinc-400'} />
+                  <span className="truncate">Smart DJ Bag Checklist</span>
+                </button>
+              )}
+              {canAccessModule(role, 'gigs-finance') && (
+                <button
+                  onClick={() => handleSelectView('gigs-finance')}
+                  className={getItemClass('gigs-finance')}
+                >
+                  <DollarSign size={13} className={activeView === 'gigs-finance' ? 'text-[#D8163F]' : 'text-zinc-400'} />
+                  <span className="truncate">HMRC Invoice & Tax</span>
+                </button>
+              )}
+              {canAccessModule(role, 'gigs-scanner') && (
+                <button
+                  onClick={() => handleSelectView('gigs-scanner')}
+                  className={getItemClass('gigs-scanner')}
+                >
+                  <QrCode size={13} className={activeView === 'gigs-scanner' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
+                  <span className="truncate">Guestlist & Scanner</span>
+                </button>
+              )}
             </div>
           )}
         </div>
+        )}
 
         {/* MODULE 05: SOCIAL */}
+        {canAccessModule(role, 'social-scout') && (
         <div>
           <button
             onClick={() => toggleTree('05')}
@@ -576,6 +607,7 @@ export default function Sidebar({
             </div>
           )}
         </div>
+        )}
 
       </div>
 

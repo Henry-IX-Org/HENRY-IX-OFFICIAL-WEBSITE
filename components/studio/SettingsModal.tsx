@@ -22,10 +22,13 @@ import {
   Trash2,
   CheckCircle2,
   Fingerprint,
-  Plus
+  Plus,
+  Users
 } from 'lucide-react';
 import { useStudioStore } from '@/store/studioStore';
 import type { StudioUserProfile, LinkedEmail } from '@/lib/studioAuth';
+import ConnectedAccountsTab from './settings/ConnectedAccountsTab';
+import TeamManagementTab from './settings/TeamManagementTab';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -37,6 +40,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
   const tabs = [
     { id: 'appearance', label: 'Appearance & Theme', icon: Sliders },
     { id: 'accounts', label: 'Connected Accounts', icon: ExternalLink },
+    { id: 'team', label: 'Team & Operators', icon: Users },
     { id: 'audio', label: 'Audio & Devices', icon: Music },
     { id: 'copilot', label: 'AI Copilot & Prompts', icon: Cpu },
     { id: 'sync', label: 'Cloud & Library Sync', icon: Cloud },
@@ -645,113 +649,14 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                 </div>
               )}
 
-              {/* TAB 2: CONNECTED ACCOUNTS */}
+              {/* TAB 2: CONNECTED ACCOUNTS (TWO-TIER ARCHITECTURE) */}
               {activeTab === 'accounts' && (
-                <div className="space-y-6">
-                  <div className="border-b border-white/[0.08] pb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white tracking-tight">Connected Accounts & APIs</h3>
-                      <p className="text-xs text-zinc-400 mt-1">Real-time status board for all music streaming, cloud storage, and broadcast services.</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        fetchAccounts();
-                        addToast({ title: 'REFRESHING SERVICES', message: 'Pinging all connected endpoints...', type: 'info' });
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-[#1b1c22] border border-white/[0.08] hover:border-white/[0.15] text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors font-medium"
-                      title="Ping and refresh API links"
-                    >
-                      <RefreshCw size={12} className={loadingAccounts ? 'animate-spin' : ''} />
-                      <span>Ping All</span>
-                    </button>
-                  </div>
+                <ConnectedAccountsTab />
+              )}
 
-                  {/* Section 1: Music Streaming Services */}
-                  <div className="space-y-3">
-                    <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider flex items-center gap-2 font-mono">
-                      <Music size={13} className="text-[#E53558]" />
-                      <span>Streaming Music Accounts</span>
-                    </div>
-
-                    {(accountsList.length > 0 ? accountsList.filter(a => a.category === 'streaming_music') : [
-                      { id: 'spotify', name: 'Spotify Web API & SDK', status: 'CONNECTED', ping: '48ms', detail: 'Developer Client Connected • Web Playback SDK Ready' },
-                      { id: 'soundcloud', name: 'SoundCloud API', status: 'CONNECTED', ping: '42ms', detail: 'API Credentials Verified • Dubplates & Sets Sync Ready' },
-                      { id: 'tidal', name: 'Tidal Developer Portal', status: 'CONNECTED', ping: '35ms', detail: 'Hi-Res Lossless FLAC API Linked • PKCE Auth Configured' },
-                      { id: 'youtube', name: 'YouTube Music / Google Cloud', status: 'PENDING_SETUP', ping: '---', detail: 'Link via henry ix website GCP Project (YouTube Data API v3)' },
-                      { id: 'apple', name: 'Apple Music (MusicKit JS)', status: 'STANDBY', ping: '---', detail: 'Standby (£79/yr Apple Developer Program required for MusicKit key)' },
-                      { id: 'beatport', name: 'Beatport Streaming API', status: 'MANUAL_KEY_INPUT', ping: '---', detail: 'Developer Program Review (Enter direct Bearer token)' },
-                    ]).map((acc: any) => {
-                      const isOnline = acc.status === 'CONNECTED' || acc.status === 'STREAMING' || acc.status === 'ACTIVE';
-                      const isStandby = acc.status === 'STANDBY' || acc.status === 'PENDING_SETUP';
-                      return (
-                        <div key={acc.id || acc.name} className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-white flex items-center gap-2 flex-wrap">
-                              <span>{acc.name}</span>
-                              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                                isOnline 
-                                  ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
-                                  : isStandby 
-                                  ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/20'
-                                  : 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
-                              }`}>
-                                {isOnline ? '✓ ' : '● '}{acc.status} ({acc.ping})
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-zinc-400 font-mono mt-1">{acc.detail}</div>
-                            {acc.scopes && (
-                              <div className="text-[10px] text-zinc-500 font-mono mt-1">
-                                SCOPES: {acc.scopes.join(' • ')}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <button 
-                              onClick={() => handleAccountReauth(acc.name)}
-                              className="px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.1] text-xs font-medium transition-colors"
-                            >
-                              {isOnline ? 'Test Ping' : 'Configure'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Section 2: Cloud Storage & System Services */}
-                  <div className="space-y-3 pt-4 border-t border-white/[0.08]">
-                    <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider flex items-center gap-2 font-mono">
-                      <Cloud size={13} className="text-cyan-400" />
-                      <span>Cloud Storage & System Infrastructure</span>
-                    </div>
-
-                    {(accountsList.length > 0 ? accountsList.filter(a => a.category !== 'streaming_music') : [
-                      { id: 'dropbox', name: 'Dropbox Cloud Audio API', status: 'STREAMING', ping: '28ms', detail: 'Direct Rekordbox Master Link (8,717 Tracks Synchronized)' },
-                      { id: 'google_drive', name: 'Google Workspace & Drive', status: 'ACTIVE', ping: '24ms', detail: 'henry-ix-drive-sync@henryix-website.iam.gserviceaccount.com' },
-                      { id: 'resend', name: 'Resend Email API', status: 'ACTIVE', ping: '52ms', detail: 'broadcasts@henryix.com / Tour Identity Gate' },
-                    ]).map((acc: any) => (
-                      <div key={acc.id || acc.name} className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-white flex items-center gap-2 flex-wrap">
-                            <span>{acc.name}</span>
-                            <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                              ✓ {acc.status} ({acc.ping})
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-zinc-400 font-mono mt-1">{acc.detail}</div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button 
-                            onClick={() => handleAccountReauth(acc.name)}
-                            className="px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.1] text-xs font-medium transition-colors"
-                          >
-                            Re-Auth
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {/* TAB: TEAM & OPERATOR MANAGEMENT */}
+              {activeTab === 'team' && (
+                <TeamManagementTab />
               )}
 
               {/* TAB 3: AUDIO & DEVICES */}

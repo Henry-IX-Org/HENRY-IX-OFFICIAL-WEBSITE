@@ -1,8 +1,13 @@
 // Multi-Identity Studio Authentication & Account Linking Engine
-// Supports any user, multi-email linking, phone SMS verification, passkeys, Google, Apple, and TOTP 2FA.
+// Supports any user, multi-email linking, phone SMS verification, passkeys, Google, Apple, TOTP 2FA, and RBAC roles.
 
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Resend } from 'resend';
+import type { StudioRole } from './studioPermissions';
+
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 
 export interface LinkedEmail {
   email: string;
@@ -36,10 +41,19 @@ export interface ConnectedOAuthAccount {
   connectedAt?: string;
 }
 
+export interface UserConnectedService {
+  id: 'spotify' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs';
+  name: string;
+  connected: boolean;
+  accountName?: string;
+  connectedAt?: string;
+  detail?: string;
+}
+
 export interface StudioUserProfile {
   id: string;
   name: string;
-  role: 'owner' | 'manager' | 'media' | 'viewer';
+  role: StudioRole;
   emails: LinkedEmail[];
   phone: LinkedPhone | null;
   google: ConnectedOAuthAccount | null;
@@ -50,6 +64,10 @@ export interface StudioUserProfile {
     secret?: string;
     verifiedAt?: string;
   };
+  connectedServices?: UserConnectedService[];
+  active?: boolean;
+  invitedBy?: string;
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,9 +80,44 @@ interface PendingOtp {
   expiresAt: number;
 }
 
-// In-Memory Storage Cache (Fast path)
-const memoryUsers = new Map<string, StudioUserProfile>();
-const pendingOtps = new Map<string, PendingOtp>();
+export interface StudioInvite {
+  token: string;
+  role: StudioRole;
+  email?: string;
+  createdBy: string;
+  createdAt: string;
+  expiresAt: number;
+  used: boolean;
+}
+
+export interface MasterService {
+  id: 'notion' | 'r2' | 'resend' | 'obs' | 'spotify' | 'soundcloud';
+  name: string;
+  category: 'core' | 'storage' | 'communications' | 'broadcast' | 'streaming';
+  connected: boolean;
+  detail: string;
+  lastToggledAt?: string;
+}
+
+// Global Storage Cache (Ensures singleton state across Next.js API routes in dev and prod)
+const globalScope = globalThis as unknown as {
+  __henryix_memoryUsers?: Map<string, StudioUserProfile>;
+  __henryix_pendingOtps?: Map<string, PendingOtp>;
+  __henryix_memoryInvites?: Map<string, StudioInvite>;
+  __henryix_masterServicesState?: Record<string, boolean>;
+};
+
+const memoryUsers = (globalScope.__henryix_memoryUsers ??= new Map<string, StudioUserProfile>());
+const pendingOtps = (globalScope.__henryix_pendingOtps ??= new Map<string, PendingOtp>());
+const memoryInvites = (globalScope.__henryix_memoryInvites ??= new Map<string, StudioInvite>());
+const masterServicesState = (globalScope.__henryix_masterServicesState ??= {
+  notion: true,
+  r2: true,
+  resend: true,
+  obs: true,
+  spotify: true,
+  soundcloud: true,
+});
 
 // Default Master Owner Profile for Henry IX
 const DEFAULT_OWNER_ID = 'usr_henryix_master';
@@ -102,6 +155,13 @@ const defaultOwner: StudioUserProfile = {
   totp: {
     enabled: false,
   },
+  connectedServices: [
+    { id: 'spotify', name: 'Spotify Artist Profile', connected: true, accountName: 'HENRY IX (Verified Artist)', detail: 'Catalog sync & playlist curation active' },
+    { id: 'soundcloud', name: 'SoundCloud Pro', connected: true, accountName: 'henryixdj', detail: 'Live set & dubplate sync active' },
+    { id: 'google_drive', name: 'Google Workspace', connected: true, accountName: 'henryixdj@gmail.com', detail: 'Drive sync daemon running' },
+    { id: 'obs', name: 'Main Studio OBS', connected: true, accountName: 'ws://localhost:4455', detail: 'OBS WebSocket v5 connected' },
+  ],
+  active: true,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-09-07T12:00:00.000Z',
 };
@@ -183,7 +243,7 @@ export async function getUserByEmail(email: string): Promise<StudioUserProfile |
   const cleanEmail = email.trim().toLowerCase();
 
   // 1. Search in memory
-  for (const user of memoryUsers.values()) {
+  for (const user of Array.from(memoryUsers.values())) {
     if (user.emails.some(e => e.email.toLowerCase() === cleanEmail)) {
       return user;
     }
@@ -199,7 +259,7 @@ export async function getUserByEmail(email: string): Promise<StudioUserProfile |
 
 export async function getUserByPhone(phone: string): Promise<StudioUserProfile | null> {
   const cleanPhone = phone.replace(/\s+/g, '');
-  for (const user of memoryUsers.values()) {
+  for (const user of Array.from(memoryUsers.values())) {
     if (user.phone && user.phone.number.replace(/\s+/g, '') === cleanPhone) {
       return user;
     }
@@ -208,7 +268,7 @@ export async function getUserByPhone(phone: string): Promise<StudioUserProfile |
 }
 
 export async function getUserByPasskey(credentialId: string): Promise<StudioUserProfile | null> {
-  for (const user of memoryUsers.values()) {
+  for (const user of Array.from(memoryUsers.values())) {
     if (user.passkeys.some(p => p.credentialId === credentialId)) {
       return user;
     }
@@ -218,7 +278,7 @@ export async function getUserByPasskey(credentialId: string): Promise<StudioUser
 
 export async function getUserByOAuth(provider: 'google' | 'apple', identifier: string): Promise<StudioUserProfile | null> {
   const cleanId = identifier.trim().toLowerCase();
-  for (const user of memoryUsers.values()) {
+  for (const user of Array.from(memoryUsers.values())) {
     const account = user[provider];
     if (account?.connected) {
       if (account.email?.toLowerCase() === cleanId || account.sub === cleanId) {
@@ -237,7 +297,35 @@ export async function saveUser(user: StudioUserProfile): Promise<StudioUserProfi
   return user;
 }
 
-export async function getOrCreateUserByEmail(email: string, name?: string): Promise<StudioUserProfile> {
+export async function listAllUsers(): Promise<StudioUserProfile[]> {
+  const users = Array.from(memoryUsers.values());
+  if (!users.some(u => u.id === DEFAULT_OWNER_ID)) {
+    users.unshift(defaultOwner);
+  }
+  return users;
+}
+
+export async function updateUserRole(userId: string, newRole: StudioRole): Promise<StudioUserProfile | null> {
+  const user = await getUserById(userId);
+  if (!user) return null;
+  user.role = newRole;
+  return await saveUser(user);
+}
+
+export async function deactivateUser(userId: string): Promise<boolean> {
+  if (userId === DEFAULT_OWNER_ID) return false; // Never deactivate owner
+  const user = await getUserById(userId);
+  if (!user) return false;
+  user.active = false;
+  await saveUser(user);
+  return true;
+}
+
+export async function getOrCreateUserByEmail(
+  email: string, 
+  name?: string,
+  preferredRole?: StudioRole
+): Promise<StudioUserProfile> {
   const cleanEmail = email.trim().toLowerCase();
   const existing = await getUserByEmail(cleanEmail);
   if (existing) return existing;
@@ -245,10 +333,14 @@ export async function getOrCreateUserByEmail(email: string, name?: string): Prom
   const isOwnerEmail = cleanEmail === 'henryixdj@gmail.com' || cleanEmail === 'henry@henryix.com';
   const newUserId = isOwnerEmail ? DEFAULT_OWNER_ID : `usr_${Math.random().toString(36).substring(2, 10)}_${Date.now().toString(36)}`;
   
+  const assignedRole: StudioRole = isOwnerEmail 
+    ? 'owner' 
+    : (preferredRole || 'guest_operator');
+
   const newUser: StudioUserProfile = {
     id: newUserId,
     name: name || (isOwnerEmail ? 'Henry IX' : cleanEmail.split('@')[0]),
-    role: isOwnerEmail ? 'owner' : 'viewer',
+    role: assignedRole,
     emails: [
       {
         email: cleanEmail,
@@ -263,11 +355,165 @@ export async function getOrCreateUserByEmail(email: string, name?: string): Prom
     apple: null,
     passkeys: [],
     totp: { enabled: false },
+    connectedServices: [
+      { id: 'spotify', name: 'Spotify Account', connected: false, detail: 'Personal playlist & track import' },
+      { id: 'soundcloud', name: 'SoundCloud Profile', connected: false, detail: 'Personal sets & mix links' },
+      { id: 'google_drive', name: 'Google Drive', connected: false, detail: 'Show footage & artwork sync' },
+      { id: 'obs', name: 'Local OBS WebSocket', connected: false, detail: 'Personal laptop OBS stream control' },
+    ],
+    active: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
   return await saveUser(newUser);
+}
+
+// -------------------------------------------------------------
+// Per-User Connected Services Management
+// -------------------------------------------------------------
+export async function toggleUserConnectedService(
+  userId: string,
+  serviceId: 'spotify' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs',
+  connected: boolean,
+  accountName?: string
+): Promise<StudioUserProfile | null> {
+  const user = await getUserById(userId);
+  if (!user) return null;
+
+  if (!user.connectedServices) {
+    user.connectedServices = [];
+  }
+
+  const existing = user.connectedServices.find(s => s.id === serviceId);
+  if (existing) {
+    existing.connected = connected;
+    if (accountName) existing.accountName = accountName;
+    existing.connectedAt = connected ? new Date().toISOString() : undefined;
+  } else {
+    user.connectedServices.push({
+      id: serviceId,
+      name: serviceId.toUpperCase(),
+      connected,
+      accountName,
+      connectedAt: connected ? new Date().toISOString() : undefined,
+    });
+  }
+
+  return await saveUser(user);
+}
+
+// -------------------------------------------------------------
+// Master Studio Services Management (Owner Controlled)
+// -------------------------------------------------------------
+export function getMasterServices(): MasterService[] {
+  return [
+    {
+      id: 'notion',
+      name: 'Notion 8,700+ Music & Bookings DB',
+      category: 'core',
+      connected: masterServicesState.notion ?? true,
+      detail: masterServicesState.notion 
+        ? 'Connected to Notion Library (36b39285...) & Sets (00c67473...)' 
+        : 'DISCONNECTED BY OWNER — Notion queries paused',
+    },
+    {
+      id: 'r2',
+      name: 'Cloudflare R2 Bucket Vault',
+      category: 'storage',
+      connected: masterServicesState.r2 ?? true,
+      detail: masterServicesState.r2
+        ? 'Connected to bucket websiteassets (S3 API Active)'
+        : 'DISCONNECTED BY OWNER — Asset upload/purge frozen',
+    },
+    {
+      id: 'resend',
+      name: 'Resend Email & SMS Dispatch',
+      category: 'communications',
+      connected: masterServicesState.resend ?? true,
+      detail: masterServicesState.resend
+        ? 'Connected (broadcasts@henryix.com)'
+        : 'DISCONNECTED BY OWNER — Outbound dispatches paused',
+    },
+    {
+      id: 'obs',
+      name: 'OBS WebSocket v5 Bridge',
+      category: 'broadcast',
+      connected: masterServicesState.obs ?? true,
+      detail: masterServicesState.obs
+        ? 'Bridge enabled (ws://localhost:4455 / Cloudflare tunnel fallback)'
+        : 'DISCONNECTED BY OWNER — Broadcast remote severed',
+    },
+    {
+      id: 'spotify',
+      name: 'Spotify Artist API',
+      category: 'streaming',
+      connected: masterServicesState.spotify ?? true,
+      detail: masterServicesState.spotify
+        ? 'Connected • Web Playback SDK Active'
+        : 'DISCONNECTED BY OWNER',
+    },
+    {
+      id: 'soundcloud',
+      name: 'SoundCloud Pro API',
+      category: 'streaming',
+      connected: masterServicesState.soundcloud ?? true,
+      detail: masterServicesState.soundcloud
+        ? 'Connected • Dubplates & Sets Sync Active'
+        : 'DISCONNECTED BY OWNER',
+    },
+  ];
+}
+
+export function toggleMasterService(serviceId: string, enabled: boolean): boolean {
+  if (serviceId in masterServicesState) {
+    masterServicesState[serviceId] = enabled;
+    return true;
+  }
+  return false;
+}
+
+export function isMasterServiceConnected(serviceId: string): boolean {
+  return masterServicesState[serviceId] ?? true;
+}
+
+// -------------------------------------------------------------
+// Studio Operator Invite Tokens
+// -------------------------------------------------------------
+export function createInviteToken(role: StudioRole, email?: string, createdBy = 'Henry IX'): StudioInvite {
+  const token = `inv_${Math.random().toString(36).substring(2, 10)}_${Date.now().toString(36)}`;
+  const invite: StudioInvite = {
+    token,
+    role,
+    email: email ? email.trim().toLowerCase() : undefined,
+    createdBy,
+    createdAt: new Date().toISOString(),
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    used: false,
+  };
+  memoryInvites.set(token, invite);
+  return invite;
+}
+
+export function verifyInviteToken(token: string): StudioInvite | null {
+  const invite = memoryInvites.get(token);
+  if (!invite) return null;
+  if (invite.used) return null;
+  if (Date.now() > invite.expiresAt) return null;
+  return invite;
+}
+
+export function markInviteUsed(token: string): boolean {
+  const invite = memoryInvites.get(token);
+  if (!invite) return false;
+  invite.used = true;
+  return true;
+}
+
+export const consumeInviteToken = markInviteUsed;
+
+export function listInvites(): StudioInvite[] {
+  return Array.from(memoryInvites.values()).filter(i => !i.used && Date.now() <= i.expiresAt);
 }
 
 // -------------------------------------------------------------
@@ -299,7 +545,6 @@ export async function sendEmailVerificationCode(email: string, userId?: string):
   const resend = getResendClient();
   if (resend) {
     try {
-      // Branded HENRY IX retro-styled dark HTML email
       const html = `
         <div style="background-color: #000000; color: #ffffff; padding: 40px 20px; font-family: 'Courier New', monospace; text-align: center; border: 1px solid #D8163F;">
           <div style="color: #D8163F; font-size: 24px; font-weight: bold; letter-spacing: 4px; margin-bottom: 8px;">
@@ -322,7 +567,6 @@ export async function sendEmailVerificationCode(email: string, userId?: string):
         </div>
       `;
 
-      // Attempt sending from verified domain, fallback to onboarding@resend.dev
       try {
         await resend.emails.send({
           from: 'HENRY IX Studio <studio@henryix.com>',
@@ -342,7 +586,6 @@ export async function sendEmailVerificationCode(email: string, userId?: string):
       return { success: true };
     } catch (err: any) {
       console.warn('Resend dispatch notice:', err?.message || err);
-      // In dev or unconfigured domain, supply code preview so operator is never locked out
       return { success: true, codePreview: code };
     }
   }
@@ -368,7 +611,6 @@ export async function verifyEmailCode(email: string, code: string): Promise<{ su
     return { success: false, error: 'INVALID VERIFICATION CODE' };
   }
 
-  // Code is valid
   pendingOtps.delete(`email:${cleanEmail}`);
   return { success: true };
 }
@@ -376,7 +618,7 @@ export async function verifyEmailCode(email: string, code: string): Promise<{ su
 export async function sendPhoneVerificationCode(phone: string, userId?: string): Promise<{ success: boolean; codePreview?: string; error?: string }> {
   const cleanPhone = phone.replace(/\s+/g, '');
   const code = generateNumericOtp(6);
-  const expiresAt = Date.now() + 10 * 60 * 1000;
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
   pendingOtps.set(`phone:${cleanPhone}`, {
     code,
@@ -386,8 +628,11 @@ export async function sendPhoneVerificationCode(phone: string, userId?: string):
     expiresAt,
   });
 
-  // SMS Gateway / Twilio / Fallback preview
-  console.log(`[SMS DISPATCH] Sent to ${cleanPhone}: "HENRY IX STUDIO code: ${code}"`);
+  // Safe developer preview & SMS dispatch hook
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[HENRY IX STUDIO SMS GATE] Verification code for ${cleanPhone}: ${code}`);
+  }
+
   return { success: true, codePreview: code };
 }
 
@@ -397,16 +642,16 @@ export async function verifyPhoneCode(phone: string, code: string): Promise<{ su
   const record = pendingOtps.get(`phone:${cleanPhone}`);
 
   if (!record) {
-    return { success: false, error: 'NO PENDING SMS CODE FOUND FOR THIS NUMBER' };
+    return { success: false, error: 'NO PENDING CODE FOUND FOR THIS PHONE' };
   }
 
   if (Date.now() > record.expiresAt) {
     pendingOtps.delete(`phone:${cleanPhone}`);
-    return { success: false, error: 'SMS CODE HAS EXPIRED' };
+    return { success: false, error: 'VERIFICATION CODE HAS EXPIRED' };
   }
 
   if (record.code !== cleanCode) {
-    return { success: false, error: 'INVALID SMS CODE' };
+    return { success: false, error: 'INVALID VERIFICATION CODE' };
   }
 
   pendingOtps.delete(`phone:${cleanPhone}`);

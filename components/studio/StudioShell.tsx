@@ -9,6 +9,7 @@ import PersistentAudioPlayer, { PlayerDisplayState } from './PersistentAudioPlay
 import StudioRightDrawer, { RightDrawerTab } from './StudioRightDrawer';
 import StudioToasts from './StudioToasts';
 import { useStudioStore } from '@/store/studioStore';
+import { canAccessModule, ROLE_METADATA } from '@/lib/studioPermissions';
 
 // Module Component Imports
 import StreamingModule from './modules/StreamingModule';
@@ -43,6 +44,15 @@ export default function StudioShell({ children }: StudioShellProps) {
   const togglePlay = useStudioStore((s) => s.togglePlay);
   const playerState = useStudioStore((s) => s.playerState);
   const setPlayerState = useStudioStore((s) => s.setPlayerState);
+  const currentUser = useStudioStore((s) => s.currentUser);
+
+  // RBAC Access Guard: Ensure current operator is routed to an authorized module
+  useEffect(() => {
+    if (currentUser && !canAccessModule(currentUser.role, activeView)) {
+      const primary = ROLE_METADATA[currentUser.role]?.primaryView || 'gigs-hub';
+      setActiveView(primary);
+    }
+  }, [currentUser, activeView]);
 
   // Global Keyboard Shortcuts (Cmd/Ctrl + K, Cmd/Ctrl + B, Cmd/Ctrl + ,)
   useEffect(() => {
@@ -244,6 +254,22 @@ export default function StudioShell({ children }: StudioShellProps) {
             </div>
 
             <div className="flex items-center gap-2.5">
+              {/* Operator Presence Badge */}
+              {currentUser && (
+                <div 
+                  onClick={() => setSettingsOpen(true)}
+                  className="cursor-pointer hover:border-white/20 transition-all flex items-center gap-1.5 px-2.5 py-1 bg-[#1b1c22] border border-white/[0.08] rounded-lg text-xs font-mono shadow-sm"
+                  title="Signed in operator - click to view settings"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                  <span className="text-zinc-200 font-semibold truncate max-w-[120px]">{currentUser.name}</span>
+                  <span className="text-zinc-600">|</span>
+                  <span className="text-[10px] text-[#D8163F] font-bold">
+                    {ROLE_METADATA[currentUser.role]?.badge || currentUser.role.toUpperCase()}
+                  </span>
+                </div>
+              )}
+
               {/* Universal Quick Search Button */}
               <button 
                 onClick={() => setCommandPaletteOpen(true)}

@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrCreateUserByEmail, createSessionToken, saveUser } from '@/lib/studioAuth';
+import { 
+  getOrCreateUserByEmail, 
+  createSessionToken, 
+  saveUser, 
+  verifyInviteToken, 
+  consumeInviteToken 
+} from '@/lib/studioAuth';
+import type { StudioRole } from '@/lib/studioPermissions';
+import { ALL_STUDIO_ROLES } from '@/lib/studioPermissions';
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as any;
-    const { email, name, role } = body;
+    const { email, name, role, inviteToken } = body;
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email address required' }, { status: 400 });
@@ -14,18 +22,26 @@ export async function POST(req: NextRequest) {
     const cleanName = (name && typeof name === 'string' && name.trim()) 
       ? name.trim() 
       : (cleanEmail.split('@')[0] || 'Operator');
-    const cleanRole = (role === 'owner' || role === 'manager' || role === 'media' || role === 'viewer') 
-      ? role 
-      : 'owner';
+
+    let cleanRole: StudioRole = 'viewer';
+    if (inviteToken && typeof inviteToken === 'string') {
+      const invite = verifyInviteToken(inviteToken);
+      if (invite) {
+        cleanRole = invite.role;
+        consumeInviteToken(inviteToken);
+      }
+    } else if (role && ALL_STUDIO_ROLES.includes(role as StudioRole)) {
+      cleanRole = role as StudioRole;
+    }
 
     // Get or create user
     const user = await getOrCreateUserByEmail(cleanEmail, cleanName);
     
-    // Update role and name if explicitly specified
+    // Update role and name
     user.name = cleanName;
-    if (cleanRole) {
-      user.role = cleanRole;
-    }
+    user.role = cleanRole;
+    user.active = true;
+    user.lastLoginAt = new Date().toISOString();
     await saveUser(user);
 
     const token = await createSessionToken(user);
