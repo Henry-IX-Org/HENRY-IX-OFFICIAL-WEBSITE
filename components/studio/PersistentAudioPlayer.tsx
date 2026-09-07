@@ -46,14 +46,91 @@ export default function PersistentAudioPlayer({
   const [airplayActive, setAirplayActive] = useState(false);
   const [devicePickerOpen, setDevicePickerOpen] = useState(false);
 
-  // Web Audio Synth Engine
+  // Real Audio Streaming (Dropbox)
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isStreamingDropbox, setIsStreamingDropbox] = useState(false);
+
+  // Web Audio Synth Engine (Fallback)
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscRef = useRef<OscillatorNode | null>(null);
   const filterRef = useRef<BiquadFilterNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const beatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize Web Audio
+  // Determine stream URL for current track
+  const streamUrl = currentTrack.streamUrl || (currentTrack.id ? `/api/studio/stream?trackId=${currentTrack.id}` : null);
+
+  // Connect & load real Dropbox audio stream when track changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (streamUrl) {
+      audio.src = streamUrl;
+      audio.load();
+      setIsStreamingDropbox(true);
+    } else {
+      audio.removeAttribute('src');
+      setIsStreamingDropbox(false);
+    }
+  }, [streamUrl]);
+
+  // Sync volume and mute to audio element
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = isMuted ? 0 : volume;
+    audio.muted = isMuted;
+  }, [volume, isMuted]);
+
+  // Sync Play / Pause to audio element
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !isStreamingDropbox) return;
+
+    if (isPlaying) {
+      audio.play().catch((err) => {
+        console.warn('[Audio Stream Notice] Direct stream paused/fell back to synth:', err.message);
+        setIsStreamingDropbox(false);
+      });
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, isStreamingDropbox]);
+
+  // Sync time updates from real audio
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => {
+      if (isStreamingDropbox && !isNaN(audio.currentTime) && isPlaying) {
+        setCurrentTime(Math.floor(audio.currentTime));
+      }
+    };
+
+    const onEnded = () => {
+      if (isPlaying) togglePlay();
+      setCurrentTime(0);
+    };
+
+    const onError = () => {
+      console.warn('[Audio Stream Error] Falling back to Web Audio synth preview');
+      setIsStreamingDropbox(false);
+    };
+
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('error', onError);
+    };
+  }, [isStreamingDropbox, isPlaying, togglePlay, setCurrentTime]);
+
+  // Initialize Web Audio (for synth preview fallback)
   const initAudio = useCallback(() => {
     if (audioCtxRef.current) return;
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -76,9 +153,9 @@ export default function PersistentAudioPlayer({
     }
   }, [isMuted, volume]);
 
-  // Start / Stop Real Web Audio Synthesis
+  // Start / Stop Web Audio Synth (only runs if NOT streaming Dropbox)
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !isStreamingDropbox) {
       initAudio();
       const ctx = audioCtxRef.current;
       if (!ctx || !filterRef.current) return;
@@ -136,7 +213,7 @@ export default function PersistentAudioPlayer({
         clearInterval(beatIntervalRef.current);
       }
     };
-  }, [isPlaying, currentTrack.audioFrequency, currentTrack.bpm, pitchSemitones, initAudio]);
+  }, [isPlaying, isStreamingDropbox, currentTrack.audioFrequency, currentTrack.bpm, pitchSemitones, initAudio]);
 
   // Volume & Mute Updates
   useEffect(() => {
@@ -184,25 +261,50 @@ export default function PersistentAudioPlayer({
   const progressFraction = currentTrack.duration > 0 ? currentTime / currentTrack.duration : 0;
 
   const handleSeek = (newFraction: number) => {
-    setCurrentTime(Math.round(newFraction * currentTrack.duration));
+    const newSec = Math.round(newFraction * currentTrack.duration);
+    setCurrentTime(newSec);
+    if (audioRef.current && isStreamingDropbox) {
+      audioRef.current.currentTime = newSec;
+    }
   };
 
   const jumpSeconds = (delta: number) => {
-    setCurrentTime((prev) => Math.max(0, Math.min(currentTrack.duration, prev + delta)));
+    const newSec = Math.max(0, Math.min(currentTrack.duration, currentTime + delta));
+    setCurrentTime(newSec);
+    if (audioRef.current && isStreamingDropbox) {
+      audioRef.current.currentTime = newSec;
+    }
   };
 
   const handleCueClick = (cueTime: number) => {
     setCurrentTime(cueTime);
+    if (audioRef.current && isStreamingDropbox) {
+      audioRef.current.currentTime = cueTime;
+    }
     if (!isPlaying) togglePlay();
   };
 
   // If minimised, return null
   if (displayState === 'minimised') {
-    return null;
+    return (
+      <audio
+        ref={audioRef}
+        preload="auto"
+        crossOrigin="anonymous"
+        className="hidden"
+      />
+    );
   }
 
   return (
     <>
+      {/* Hidden HTML5 Audio Element for Direct Cloud Streaming */}
+      <audio
+        ref={audioRef}
+        preload="auto"
+        crossOrigin="anonymous"
+        className="hidden"
+      />
       {/* 1. FULLSCREEN CANVAS STATE */}
       {displayState === 'fullscreen' && (
         <div className="fixed inset-0 z-50 bg-black text-white flex flex-col justify-between p-8 font-mono animate-in fade-in duration-300 select-none">
@@ -401,10 +503,20 @@ export default function PersistentAudioPlayer({
                   {currentTrack.key}
                 </span>
               </div>
-              <div className="text-[10px] text-zinc-500 truncate flex items-center gap-1">
-                <span>{currentTrack.artist}</span>
+              <div className="text-[10px] text-zinc-500 truncate flex items-center gap-1.5">
+                <span className="truncate">{currentTrack.artist}</span>
                 <span>•</span>
-                <span className="text-cyan-400 text-[9px]">{currentTrack.bpm} BPM</span>
+                <span className="text-cyan-400 text-[9px] flex-shrink-0">{currentTrack.bpm} BPM</span>
+                {isStreamingDropbox ? (
+                  <span className="text-[8px] px-1 bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-bold flex items-center gap-1 flex-shrink-0">
+                    <span className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" />
+                    DROPBOX
+                  </span>
+                ) : (
+                  <span className="text-[8px] px-1 bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono flex-shrink-0">
+                    DSP SYNTH
+                  </span>
+                )}
               </div>
             </div>
           </div>

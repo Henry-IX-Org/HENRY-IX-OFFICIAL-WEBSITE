@@ -23,4 +23,4 @@ scratch_*.txt
 scratch/
 .vscode/
 service-account.json
-
+.wrangler/

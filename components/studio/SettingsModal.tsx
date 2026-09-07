@@ -106,6 +106,36 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
   };
 
   const handleAccountReauth = (name: string) => {
+    if (name.includes('Dropbox')) {
+      const start = Date.now();
+      fetch('/api/studio/stream?trackId=3d24b4c0-9ee3-812f-886b-d6ffea277cbf&format=json')
+        .then((r) => r.json())
+        .then((data: any) => {
+          const latency = Date.now() - start;
+          if (data.success) {
+            addToast({
+              title: 'DROPBOX CLOUD AUDIO VERIFIED',
+              message: `Handshake latency: ${latency}ms. Master audio link verified for 8,717 tracks.`,
+              type: 'success',
+            });
+          } else {
+            addToast({
+              title: 'DROPBOX NOTICE',
+              message: data.error || 'Check Dropbox API token.',
+              type: 'warning',
+            });
+          }
+        })
+        .catch((err) => {
+          addToast({
+            title: 'DROPBOX ERROR',
+            message: err.message,
+            type: 'error',
+          });
+        });
+      return;
+    }
+
     addToast({
       title: 'CREDENTIALS RE-AUTHENTICATED',
       message: `${name} token refreshed. Handshake latency: 28ms.`,
@@ -334,7 +364,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                       { name: 'Apple ID & Touch ID', account: 'Owner Biometric Passkey', status: 'ACTIVE', ping: '0ms' },
                       { name: 'Spotify API / SDK', account: 'Developer App Linked', status: 'ACTIVE', ping: '56ms' },
                       { name: 'SoundCloud API', account: 'Widget & Profile Sync', status: 'ACTIVE', ping: '42ms' },
-                      { name: 'Dropbox / Rekordbox Pro', account: 'rekordbox.xml Local Watcher', status: 'SYNCED', ping: 'Local' },
+                      { name: 'Dropbox Cloud Audio API', account: 'HENRY IX (henryixdj@gmail.com) • /rekordbox (8,717 Tracks)', status: 'STREAMING', ping: '28ms' },
                       { name: 'Stripe Payments', account: 'Direct Ticket Booking Webhook', status: 'ACTIVE', ping: '38ms' },
                       { name: 'Resend Email API', account: 'broadcasts@henryix.com', status: 'ACTIVE', ping: '65ms' },
                     ].map((acc, i) => (

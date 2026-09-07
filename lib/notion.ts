@@ -344,6 +344,7 @@ export interface NotionMusicTrack {
   year: number;
   rekordboxTrackId: string;
   notes: string;
+  fileLocation: string;
 }
 
 export interface NotionMusicLibraryPage {
@@ -384,6 +385,7 @@ export async function getNotionMusicLibrary(limit: number = 100): Promise<Notion
       year: getNotionNumber(p['Year']),
       rekordboxTrackId: getNotionText(p['Rekordbox Track ID']),
       notes: getNotionText(p['Notes']),
+      fileLocation: getNotionText(p['File Location']),
     };
   });
 }
@@ -454,6 +456,7 @@ export async function getNotionMusicLibraryPaged(options: {
       year: getNotionNumber(p['Year']),
       rekordboxTrackId: getNotionText(p['Rekordbox Track ID']),
       notes: getNotionText(p['Notes']),
+      fileLocation: getNotionText(p['File Location']),
     };
   });
 

@@ -76,6 +76,10 @@ export async function GET(req: NextRequest) {
           { letter: 'D', name: 'Second Hook', time: Math.round(duration * 0.7), color: '#eab308' },
           { letter: 'E', name: 'Mix Out', time: Math.round(duration * 0.9), color: '#f97316' },
         ],
+        fileLocation: t.fileLocation || undefined,
+        streamUrl: t.fileLocation
+          ? `/api/studio/stream?trackId=${t.id}&location=${encodeURIComponent(t.fileLocation)}`
+          : `/api/studio/stream?trackId=${t.id}`,
       };
     });
 

@@ -26,6 +26,8 @@ export interface StudioTrack {
   clearance?: 'Stream-Safe' | 'DMCA Risk';
   cues?: CuePoint[];
   audioFrequency?: number; // Base synth frequency for live preview
+  fileLocation?: string;
+  streamUrl?: string;
 }
 
 export interface StudioGig {
