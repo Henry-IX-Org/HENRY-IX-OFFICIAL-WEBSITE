@@ -77,7 +77,28 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    return NextResponse.json({ error: 'Invalid action. Supported: "send", "verify"' }, { status: 400 });
+    // 3. Instant Direct Email Login
+    if (action === 'login') {
+      const user = await getOrCreateUserByEmail(cleanEmail);
+      const token = await createSessionToken(user);
+      const response = NextResponse.json({
+        success: true,
+        user,
+        message: `Authenticated as ${user.name} (${user.role})`,
+      });
+
+      response.cookies.set('henryix_studio_session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: '/',
+      });
+
+      return response;
+    }
+
+    return NextResponse.json({ error: 'Invalid action. Supported: "login", "send", "verify"' }, { status: 400 });
   } catch (error: any) {
     console.error('Email auth error:', error);
     return NextResponse.json({ error: error?.message || 'Authentication failed' }, { status: 500 });

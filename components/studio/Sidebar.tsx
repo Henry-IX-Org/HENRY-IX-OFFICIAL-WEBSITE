@@ -584,7 +584,7 @@ export default function Sidebar({
         {collapsed ? (
           <button 
             onClick={onTogglePlay}
-            className="mx-auto w-8 h-8 rounded-full bg-[#E53558] text-white flex items-center justify-center hover:bg-[#f43f5e] shadow-sm shadow-[#E53558]/30 transition-all focus:outline-none"
+            className="mx-auto w-8 h-8 rounded-full bg-[#D8163F] text-white flex items-center justify-center hover:bg-[#c21337] active:scale-95 transition-all focus:outline-none"
             title={currentTrack.isPlaying ? 'Pause' : 'Play'}
           >
             {currentTrack.isPlaying ? <Pause size={12} /> : <Play size={12} className="ml-0.5" />}
@@ -593,7 +593,7 @@ export default function Sidebar({
           <div className="w-full flex items-center justify-between gap-2.5 text-xs">
             <button
               onClick={onTogglePlay}
-              className="w-7 h-7 rounded-full bg-[#E53558] hover:bg-[#f43f5e] text-white flex items-center justify-center shadow-sm shadow-[#E53558]/30 transition-all flex-shrink-0 focus:outline-none"
+              className="w-7 h-7 rounded-full bg-[#D8163F] hover:bg-[#c21337] active:scale-95 text-white flex items-center justify-center transition-all flex-shrink-0 focus:outline-none"
             >
               {currentTrack.isPlaying ? <Pause size={11} /> : <Play size={11} className="ml-0.5" />}
             </button>

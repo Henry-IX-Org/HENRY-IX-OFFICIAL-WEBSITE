@@ -164,7 +164,7 @@ export default function StudioRightDrawer({
           {!currentModuleTabs.some((t) => t.id === activeTab) && activeTab === 'copilot' && (
             <button
               onClick={() => setActiveTab('copilot')}
-              className="px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 bg-[#E53558] text-white font-medium shadow-sm shadow-[#E53558]/30 flex-shrink-0"
+              className="px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 bg-[#D8163F] text-white font-medium shadow-sm flex-shrink-0"
             >
               <Bot size={11} />
               <span>Copilot</span>
