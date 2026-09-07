@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getNotionAssets, NotionAsset } from '@/lib/notion';
 import { StudioAsset } from '@/components/studio/modules/AssetsModule';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,11 @@ function formatBytes(bytes?: number): string {
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+    }
+
     const s3 = getS3Client();
     const bucket = process.env.R2_BUCKET_NAME || 'websiteassets';
     const baseUrl =

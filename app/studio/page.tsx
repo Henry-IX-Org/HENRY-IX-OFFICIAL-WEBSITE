@@ -32,8 +32,10 @@ export default function StudioPage() {
 
   // Form Fields (Clean initial states without hardcoded values)
   const [signInEmail, setSignInEmail] = useState('');
+  const [signInPassword, setSignInPassword] = useState('');
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
   const [regRole, setRegRole] = useState<StudioRole>('manager');
   const [inviteToken, setInviteToken] = useState<string | null>(null);
 
@@ -128,6 +130,11 @@ export default function StudioPage() {
       return;
     }
 
+    if (!signInPassword) {
+      setErrorMessage('Please enter your account password');
+      return;
+    }
+
     if (!turnstileToken) {
       setErrorMessage('Please complete the security verification challenge to proceed.');
       return;
@@ -142,7 +149,12 @@ export default function StudioPage() {
       const res = await fetch('/api/studio/auth/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', email: emailToUse, turnstileToken }),
+        body: JSON.stringify({
+          action: 'login',
+          email: emailToUse,
+          password: signInPassword,
+          turnstileToken,
+        }),
       });
       const data = (await res.json()) as any;
 
@@ -183,6 +195,11 @@ export default function StudioPage() {
       return;
     }
 
+    if (!regPassword || regPassword.length < 6) {
+      setErrorMessage('Please choose a password with at least 6 characters');
+      return;
+    }
+
     if (!turnstileToken) {
       setErrorMessage('Please complete the security verification challenge to proceed.');
       return;
@@ -200,6 +217,7 @@ export default function StudioPage() {
         body: JSON.stringify({
           name: cleanName,
           email: cleanEmail,
+          password: regPassword,
           role: regRole,
           inviteToken: inviteToken || undefined,
           turnstileToken,
@@ -458,6 +476,21 @@ export default function StudioPage() {
                   </div>
                 </div>
 
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">Password</label>
+                  <div className="relative">
+                    <KeyRound size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <input
+                      type="password"
+                      required
+                      value={signInPassword}
+                      onChange={(e) => setSignInPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-9 pr-3 py-2 bg-[#17181F] border border-zinc-800 rounded-lg text-white text-xs placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
                 <TurnstileWidget
                   ref={turnstileRef}
                   action="studio_auth"
@@ -490,19 +523,22 @@ export default function StudioPage() {
                   </span>
                 </div>
 
-                {/* Quick 1-Click Access for Henry IX (Owner) */}
+                {/* Quick Fill for Henry IX (Owner) */}
                 <button
                   type="button"
-                  onClick={() => handleSignIn(undefined, 'henryixdj@gmail.com')}
+                  onClick={() => {
+                    playTactileClick();
+                    setSignInEmail('henryixdj@gmail.com');
+                  }}
                   disabled={isLoading}
                   className="w-full py-2.5 px-3 bg-[#17181F] hover:bg-[#1E1F28] border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
                     <User size={14} className="text-zinc-400" />
-                    <span>Continue as Henry IX</span>
+                    <span>Quick Fill: Henry IX</span>
                   </div>
                   <span className="text-[10px] font-mono text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/50">
-                    Owner
+                    henryixdj@gmail.com
                   </span>
                 </button>
 
@@ -549,6 +585,22 @@ export default function StudioPage() {
                     placeholder="marcus@corsicastudios.com"
                     className="w-full px-3 py-2 bg-[#17181F] border border-zinc-800 rounded-lg text-white text-xs placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
                   />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">Password</label>
+                  <div className="relative">
+                    <KeyRound size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="w-full pl-9 pr-3 py-2 bg-[#17181F] border border-zinc-800 rounded-lg text-white text-xs placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">

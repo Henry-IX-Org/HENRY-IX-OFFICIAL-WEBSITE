@@ -2,10 +2,22 @@ import React from 'react';
 import { Download, PlayCircle, Lock } from 'lucide-react';
 import AsciiDitherGlitch from '@/components/AsciiDitherGlitch';
 
+function safeCompare(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  let result = 0;
+  const length = Math.max(a.length, b.length);
+  for (let i = 0; i < length; i++) {
+    const charA = a.charCodeAt(i) || 0;
+    const charB = b.charCodeAt(i) || 0;
+    result |= (charA ^ charB);
+  }
+  return result === 0 && a.length === b.length;
+}
+
 export default async function PressKitPage({ params }: { params: Promise<{ key: string }> }) {
   const resolvedParams = await params;
-  // Verification of the promoter key (min length 4)
-  const isValid = resolvedParams?.key?.length >= 4;
+  const expectedKey = process.env.PROMOTER_EPK_KEY || 'henryix-epk-press-2026';
+  const isValid = Boolean(resolvedParams?.key && safeCompare(resolvedParams.key, expectedKey));
 
   if (!isValid) {
     return (
@@ -35,7 +47,7 @@ export default async function PressKitPage({ params }: { params: Promise<{ key: 
             <p className="font-mono text-sm text-zinc-400 mt-2 tracking-[0.3em]">ELECTRONIC PRESS KIT</p>
           </div>
           <a 
-            href="/api/epk/zip"
+            href={`/api/epk/zip?key=${encodeURIComponent(resolvedParams.key)}`}
             download="Henry_IX_Press_Kit_2026.zip"
             className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-black font-bold uppercase font-mono text-sm hover:bg-white hover:text-black transition-colors shadow-neon-glow"
           >

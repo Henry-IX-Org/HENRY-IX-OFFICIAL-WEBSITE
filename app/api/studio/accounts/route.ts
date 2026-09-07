@@ -1,6 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
+  const user = await authenticateStudioRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+  }
+
   const spotifyConfigured = Boolean(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET);
   const soundcloudConfigured = Boolean(process.env.SOUNDCLOUD_CLIENT_ID && process.env.SOUNDCLOUD_CLIENT_SECRET);
   const tidalConfigured = Boolean(process.env.TIDAL_CLIENT_ID && process.env.TIDAL_CLIENT_SECRET);

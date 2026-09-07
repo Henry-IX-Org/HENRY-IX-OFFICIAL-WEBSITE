@@ -3,6 +3,7 @@
 
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Resend } from 'resend';
+import type { NextRequest } from 'next/server';
 import type { StudioRole } from './studioPermissions';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -64,6 +65,8 @@ export interface StudioUserProfile {
     secret?: string;
     verifiedAt?: string;
   };
+  passwordHash?: string;
+  passwordSalt?: string;
   connectedServices?: UserConnectedService[];
   active?: boolean;
   invitedBy?: string;
@@ -659,9 +662,29 @@ export async function verifyPhoneCode(phone: string, code: string): Promise<{ su
 }
 
 // -------------------------------------------------------------
+// Cryptographic Password Hashing (Edge & Node compatible)
+// -------------------------------------------------------------
+export async function hashPassword(password: string, salt?: string): Promise<{ hash: string; salt: string }> {
+  const s = salt || Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('hex');
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + s);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  const hash = Buffer.from(digest).toString('hex');
+  return { hash, salt: s };
+}
+
+export async function verifyPassword(password: string, hash: string, salt: string): Promise<boolean> {
+  const computed = await hashPassword(password, salt);
+  return computed.hash === hash;
+}
+
+// -------------------------------------------------------------
 // Session Token & Cookie Handler (Edge & Node compatible)
 // -------------------------------------------------------------
-const SESSION_SECRET = process.env.CLOUDFLARE_API_TOKEN || 'henryix_studio_secure_session_secret_2026';
+const SESSION_SECRET =
+  process.env.STUDIO_SESSION_SECRET ||
+  process.env.CLOUDFLARE_API_TOKEN ||
+  'henryix_studio_secure_session_secret_2026';
 
 export async function createSessionToken(user: StudioUserProfile): Promise<string> {
   const payload = {
@@ -724,4 +747,17 @@ export async function verifySessionToken(token: string): Promise<StudioUserProfi
   } catch {
     return null;
   }
+}
+
+export async function authenticateStudioRequest(
+  req: NextRequest | { cookies: { get: (name: string) => { value?: string } | undefined }; headers: { get: (name: string) => string | null } }
+): Promise<StudioUserProfile | null> {
+  const cookieToken = req.cookies.get('henryix_studio_session')?.value;
+  const authHeader = req.headers.get('authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = cookieToken || bearerToken;
+  if (!token) return null;
+  const user = await verifySessionToken(token);
+  if (user && user.active !== false) return user;
+  return null;
 }

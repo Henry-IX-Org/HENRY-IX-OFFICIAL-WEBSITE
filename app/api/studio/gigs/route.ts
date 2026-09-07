@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNotionBookings, getNotionSets, createNotionBooking } from '@/lib/notion';
 import { StudioGig } from '@/store/studioStore';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+    }
+
     const [notionBookings, notionSets] = await Promise.all([
       getNotionBookings().catch(err => {
         console.warn('Error fetching Notion bookings:', err);
@@ -71,6 +77,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+    }
+
     const body: any = await req.json().catch(() => ({}));
     const {
       title,

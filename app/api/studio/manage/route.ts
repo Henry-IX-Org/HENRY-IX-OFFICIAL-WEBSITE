@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createNotionBookingLead } from '@/lib/notion';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,18 +18,17 @@ function safeCompare(a: string, b: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
     const body = (await req.json().catch(() => ({}))) as { type?: string; data?: any; secret?: string };
     const { type, data, secret } = body;
 
     const authHeader = req.headers.get('authorization');
     const providedSecret = secret || (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '');
     const configuredSecret = process.env.STUDIO_SECRET || process.env.LIVE_STATUS_SECRET;
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isSecretAuthorized = Boolean(configuredSecret && safeCompare(providedSecret, configuredSecret));
 
-    if (isProduction || configuredSecret) {
-      if (configuredSecret && !safeCompare(providedSecret, configuredSecret)) {
-        return NextResponse.json({ error: 'Unauthorized studio access' }, { status: 401 });
-      }
+    if (!user && !isSecretAuthorized) {
+      return NextResponse.json({ error: 'Unauthorized studio access: Valid session or secret required' }, { status: 401 });
     }
 
     if (!type || !data) {

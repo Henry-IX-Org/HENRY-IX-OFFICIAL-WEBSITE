@@ -5,13 +5,16 @@ import {
   getOrCreateUserByEmail,
   createSessionToken,
   getUserByEmail,
+  verifyPassword,
+  hashPassword,
+  saveUser,
 } from '@/lib/studioAuth';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as any;
-    const { action, email, code } = body;
+    const { action, email, code, password } = body;
     const turnstileToken = body.turnstileToken || body['cf-turnstile-response'];
 
     // Cloudflare Turnstile Bot Verification (Action: 'studio_auth')
@@ -71,6 +74,9 @@ export async function POST(req: NextRequest) {
       }
 
       // Establish authenticated session
+      user.lastLoginAt = new Date().toISOString();
+      await saveUser(user);
+
       const token = await createSessionToken(user);
       const response = NextResponse.json({
         success: true,
@@ -89,9 +95,52 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    // 3. Instant Direct Email Login
+    // 3. Authenticated Email + Password Login
     if (action === 'login') {
-      const user = await getOrCreateUserByEmail(cleanEmail);
+      if (!password || typeof password !== 'string') {
+        return NextResponse.json({ error: 'Password is required' }, { status: 400 });
+      }
+
+      const user = await getUserByEmail(cleanEmail);
+      if (!user) {
+        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      }
+
+      // Verify password against stored hash & salt
+      if (user.passwordHash && user.passwordSalt) {
+        const isValid = await verifyPassword(password, user.passwordHash, user.passwordSalt);
+        if (!isValid) {
+          return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+      } else if (user.role === 'owner' && !user.passwordHash) {
+        // Initial setup for default Owner: establish master password on first login
+        if (password.length < 6) {
+          return NextResponse.json({ error: 'Master password must be at least 6 characters' }, { status: 400 });
+        }
+        const { hash, salt } = await hashPassword(password);
+        user.passwordHash = hash;
+        user.passwordSalt = salt;
+        await saveUser(user);
+      } else {
+        return NextResponse.json(
+          { error: 'No password set for this account. Please register or verify via email code.' },
+          { status: 401 }
+        );
+      }
+
+      // Check if user has TOTP 2FA enabled
+      if (user.totp?.enabled) {
+        return NextResponse.json({
+          success: true,
+          requires2fa: true,
+          userId: user.id,
+          message: 'Please enter your 6-digit Authenticator code to continue',
+        });
+      }
+
+      user.lastLoginAt = new Date().toISOString();
+      await saveUser(user);
+
       const token = await createSessionToken(user);
       const response = NextResponse.json({
         success: true,

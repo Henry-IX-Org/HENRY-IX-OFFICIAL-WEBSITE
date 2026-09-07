@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   getOrCreateUserByEmail, 
+  getUserByEmail,
   createSessionToken, 
   saveUser, 
   verifyInviteToken, 
-  consumeInviteToken 
+  consumeInviteToken,
+  hashPassword,
 } from '@/lib/studioAuth';
 import type { StudioRole } from '@/lib/studioPermissions';
 import { ALL_STUDIO_ROLES } from '@/lib/studioPermissions';
@@ -13,7 +15,7 @@ import { verifyTurnstileToken } from '@/lib/turnstile';
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as any;
-    const { email, name, role, inviteToken } = body;
+    const { email, name, password, role, inviteToken } = body;
     const turnstileToken = body.turnstileToken || body['cf-turnstile-response'];
 
     // Cloudflare Turnstile Bot Verification (Action: 'studio_auth')
@@ -35,25 +37,50 @@ export async function POST(req: NextRequest) {
       ? name.trim() 
       : (cleanEmail.split('@')[0] || 'Operator');
 
+    // Security Gate 1: Prevent account hijacking / demotion of existing accounts
+    const existingUser = await getUserByEmail(cleanEmail);
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'An account with this email already exists. Please sign in instead.' },
+        { status: 409 }
+      );
+    }
+
+    // Security Gate 2: Enforce invite tokens for elevated roles (owner, manager, media, audio_engineer)
     let cleanRole: StudioRole = 'viewer';
     if (inviteToken && typeof inviteToken === 'string') {
       const invite = verifyInviteToken(inviteToken);
       if (invite) {
         cleanRole = invite.role;
         consumeInviteToken(inviteToken);
+      } else {
+        return NextResponse.json({ error: 'Invalid or expired invite token' }, { status: 400 });
       }
-    } else if (role && ALL_STUDIO_ROLES.includes(role as StudioRole)) {
-      cleanRole = role as StudioRole;
     }
 
-    // Get or create user
+    // Never allow public claiming of 'owner' role via registration
+    if (cleanRole === 'owner') {
+      cleanRole = 'viewer';
+    }
+
+    // Security Gate 3: Password setup
+    if (password && typeof password === 'string' && password.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    }
+
+    // Create user safely
     const user = await getOrCreateUserByEmail(cleanEmail, cleanName);
-    
-    // Update role and name
     user.name = cleanName;
     user.role = cleanRole;
     user.active = true;
     user.lastLoginAt = new Date().toISOString();
+
+    if (password && typeof password === 'string') {
+      const { hash, salt } = await hashPassword(password);
+      user.passwordHash = hash;
+      user.passwordSalt = salt;
+    }
+
     await saveUser(user);
 
     const token = await createSessionToken(user);

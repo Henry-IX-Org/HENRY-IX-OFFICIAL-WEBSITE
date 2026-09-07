@@ -1,10 +1,37 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import AdmZip from 'adm-zip';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+function safeCompare(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  let result = 0;
+  const length = Math.max(a.length, b.length);
+  for (let i = 0; i < length; i++) {
+    const charA = a.charCodeAt(i) || 0;
+    const charB = b.charCodeAt(i) || 0;
+    result |= (charA ^ charB);
+  }
+  return result === 0 && a.length === b.length;
+}
+
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const key = searchParams.get('key');
+    const expectedKey = process.env.PROMOTER_EPK_KEY || 'henryix-epk-press-2026';
+
+    const user = await authenticateStudioRequest(req);
+    const isKeyValid = Boolean(key && safeCompare(key, expectedKey));
+
+    if (!user && !isKeyValid) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Valid promoter key or studio session required' },
+        { status: 401 }
+      );
+    }
+
     const zip = new AdmZip();
 
     // 1. Artist Biography

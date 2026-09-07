@@ -1037,7 +1037,10 @@ export const useStudioStore = create<StudioState>()(
 
       triggerEmergencyPurge: async () => {
         try {
-          await fetch('/api/revalidate?secret=henryix_revalidate_secret&path=/');
+          const res = await fetch('/api/studio/assets/purge', { method: 'POST' });
+          if (!res.ok) {
+            throw new Error('Purge failed');
+          }
           get().addToast({
             title: 'EMERGENCY CACHE PURGED',
             message: 'Global Cloudflare R2 & Next.js edge nodes invalidated (<5s SLA).',
@@ -1052,8 +1055,8 @@ export const useStudioStore = create<StudioState>()(
           });
         } catch {
           get().addToast({
-            title: 'PURGE SIGNAL SENT',
-            message: 'Edge invalidation requested.',
+            title: 'PURGE FAILED',
+            message: 'Unable to trigger edge invalidation. Check permissions.',
             type: 'warning',
           });
         }

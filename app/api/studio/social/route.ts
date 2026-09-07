@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNotionContentCalendar, createNotionContentPost } from '@/lib/notion';
 import { InstagramPost } from '@/store/studioStore';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+    }
+
     const contentItems = await getNotionContentCalendar().catch(err => {
       console.warn('Error fetching Notion content calendar:', err);
       return [];
@@ -52,6 +58,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+    }
+
     const body: any = await req.json().catch(() => ({}));
     const {
       title,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNotionMusicLibraryPaged } from '@/lib/notion';
 import { StudioTrack } from '@/store/studioStore';
+import { authenticateStudioRequest } from '@/lib/studioAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,11 @@ function getHeatTag(bpm: number, energy: number): 'Peak Weapon' | 'Secret Dub' |
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await authenticateStudioRequest(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Valid studio session required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || undefined;
     const genre = searchParams.get('genre') || undefined;
