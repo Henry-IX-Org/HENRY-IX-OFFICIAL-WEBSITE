@@ -21,21 +21,19 @@ jobs:
         with:
           node-version: 24
           cache: 'npm'
-          cache-dependency-path: 'HENRY-IX-0d501ba52fc0b2b4580fab9f152f8ed34eb25b26/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install Dependencies
-        working-directory: ./HENRY-IX-0d501ba52fc0b2b4580fab9f152f8ed34eb25b26
         run: npm ci
 
       - name: Run Google Drive Sync
-        working-directory: ./HENRY-IX-0d501ba52fc0b2b4580fab9f152f8ed34eb25b26
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          SANITY_PROJECT_ID: 'r6mln4n3'
-          SANITY_DATASET: 'production'
-          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_ASSETS_DB_ID: ${{ secrets.NOTION_ASSETS_DB_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
         run: npx tsx scripts/sync-drive.ts
+

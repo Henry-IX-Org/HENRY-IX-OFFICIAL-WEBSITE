@@ -62,7 +62,7 @@ export default function MixUploaderPanel() {
 
       const data: any = await res.json();
       if (res.ok) {
-        setStatusMessage(`✅ MIX "${title}" PUBLISHED SUCCESSFULLY TO SANITY & FRONTEND CATALOG!`);
+        setStatusMessage(`✅ MIX "${title}" PUBLISHED SUCCESSFULLY TO NOTION & R2 EDGE CATALOG!`);
         setTitle('');
         setTracklist('');
       } else {
@@ -82,7 +82,7 @@ export default function MixUploaderPanel() {
           MIX CATALOG // AUDIO & ARTWORK UPLOADER
         </h2>
         <span className="text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 px-3 py-1 uppercase">
-          STORAGE: SANITY + R2
+          STORAGE: NOTION + R2
         </span>
       </div>
 

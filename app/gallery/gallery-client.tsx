@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getStorageUrl } from '@/lib/storage';
-import { safeSanityFetch } from '@/sanity/lib/client';
 import { playClick, playTick } from '@/lib/audioUtils';
 
 interface GalleryItem {
@@ -165,25 +164,21 @@ export default function GalleryClient() {
   const [selectedAlbumIndex, setSelectedAlbumIndex] = useState<number | null>(null);
   const [lightboxItemIndex, setLightboxItemIndex] = useState<number>(0);
 
-  // Load dynamic imagery from Sanity CMS & storage gracefully using Promise.allSettled
+  // Load dynamic imagery from Notion Website Assets & R2 edge storage
   useEffect(() => {
     async function loadDynamicGallery() {
       try {
-        const results = await Promise.allSettled([
-          safeSanityFetch<any[]>(`*[_type == "galleryImage"]`),
-          safeSanityFetch<any[]>(`*[_type == "mix" && (defined(artworkFile) || defined(artworkUrl))]`)
-        ]);
-
-        const galleryDocs = results[0].status === 'fulfilled' ? (results[0].value || []) : [];
-        const mixesDocs = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
+        const res = await fetch('/api/gallery');
+        const data: any = await res.json();
+        const galleryDocs = (data && data.items) || [];
 
         let dynamicMe: GalleryItem[] = [];
         let dynamicArtwork: GalleryItem[] = [];
         const albumMap: Record<string, GalleryItem[]> = {};
 
         if (Array.isArray(galleryDocs) && galleryDocs.length > 0) {
-          galleryDocs.forEach(d => {
-            const url = d.imageUrl ? d.imageUrl : (d.imageFile ? proxyUrl(getStorageUrl(d.imageFile)) : '');
+          galleryDocs.forEach((d: any) => {
+            const url = d.src ? proxyUrl(d.src) : '';
             if (!url) return;
             const title = (d.title || 'UNTITLED').toUpperCase();
             const item = { src: url, title };
@@ -201,15 +196,6 @@ export default function GalleryClient() {
             } else {
               dynamicMe.push(item);
             }
-          });
-        }
-
-        if (Array.isArray(mixesDocs) && mixesDocs.length > 0) {
-          mixesDocs.forEach(mix => {
-            const url = mix.artworkUrl ? mix.artworkUrl : (mix.artworkFile ? proxyUrl(getStorageUrl(mix.artworkFile)) : '');
-            if (!url) return;
-            const title = (mix.title || 'ARTWORK').toUpperCase();
-            dynamicArtwork.push({ src: url, title });
           });
         }
 

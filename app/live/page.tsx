@@ -1,6 +1,5 @@
 import LiveClient from './live-client';
 import { Metadata } from 'next';
-import { safeSanityFetch } from '@/sanity/lib/client';
 
 export const metadata: Metadata = {
   title: 'Live Transmission Broadcasts | HENRY IX',
@@ -19,23 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  let streams = [];
-  try {
-    streams = await safeSanityFetch<any[]>(`*[_type == "liveStream"] | order(_createdAt desc){
-      _id,
-      title,
-      playbackId,
-      viewerUserId,
-      status,
-      scheduledTime,
-      endedAt,
-      diagnosticsResolution,
-      diagnosticsLatency,
-      _createdAt
-    }`);
-  } catch (err) {
-    console.warn('Could not fetch live streams from Sanity:', err);
-  }
+  const streams: any[] = [];
 
   const activeStream = 
     streams.find((s: any) => s.status === 'live') || 

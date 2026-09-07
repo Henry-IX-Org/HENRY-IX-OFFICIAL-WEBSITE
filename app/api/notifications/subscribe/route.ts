@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from 'next-sanity';
+import { createNotionSubscriberLead } from '@/lib/notion';
+import { Resend } from 'resend';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,27 +22,24 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email ? String(email).trim().slice(0, 150) : null;
 
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'r6mln4n3';
-    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-    const token = process.env.SANITY_API_WRITE_TOKEN || process.env.SANITY_API_TOKEN;
-
-    if (token && cleanEmail) {
-      const writeClient = createClient({
-        projectId,
-        dataset,
-        apiVersion: '2023-01-01',
-        token,
-        useCdn: false,
+    if (cleanEmail) {
+      // 1. Save subscriber lead to Notion Bookings & Leads DB
+      await createNotionSubscriberLead(cleanEmail).catch(err => {
+        console.warn('[Subscribe API] Notion lead creation warning:', err);
       });
 
-      // Save email subscriber if provided
-      const existing = await writeClient.fetch<any>(`*[_type == "subscriber" && email == $email][0]`, { email: cleanEmail });
-      if (!existing) {
-        await writeClient.create({
-          _type: 'subscriber',
-          email: cleanEmail,
-          subscribedAt: new Date().toISOString(),
-        });
+      // 2. Optional: Add contact to Resend Audience if configured
+      if (process.env.RESEND_API_KEY && process.env.RESEND_AUDIENCE_ID) {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          await resend.contacts.create({
+            email: cleanEmail,
+            unsubscribed: false,
+            audienceId: process.env.RESEND_AUDIENCE_ID,
+          });
+        } catch (resendErr) {
+          console.warn('[Subscribe API] Resend contact creation warning:', resendErr);
+        }
       }
     }
 

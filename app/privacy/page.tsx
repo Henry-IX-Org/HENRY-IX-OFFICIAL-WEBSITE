@@ -111,8 +111,8 @@ export default function PrivacyPage() {
                 <span className="text-zinc-400 font-sans text-xs">Used for hosting edge web server functions, streaming audio mix files, and serving media assets securely under strict TLS encryption.</span>
               </div>
               <div className="border-l-2 border-cyan-400 pl-3 py-1">
-                <strong className="text-white block">Sanity.io CMS:</strong>
-                <span className="text-zinc-400 font-sans text-xs">Headless content management system used for dynamic mix archives, gallery image metadata, and live stream status.</span>
+                <strong className="text-white block">Notion API & Cloudflare R2:</strong>
+                <span className="text-zinc-400 font-sans text-xs">Relational command hub and edge object storage used for dynamic mix archives, gallery media metadata, and live stream status.</span>
               </div>
               <div className="border-l-2 border-emerald-400 pl-3 py-1">
                 <strong className="text-white block">SoundCloud API:</strong>

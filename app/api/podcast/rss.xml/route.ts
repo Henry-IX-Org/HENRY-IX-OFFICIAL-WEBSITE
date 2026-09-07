@@ -1,4 +1,5 @@
-import { safeSanityFetch } from '@/sanity/lib/client';
+import { getNotionSets } from '@/lib/notion';
+import { STATIC_MIX_GROUPS } from '@/lib/mixes';
 
 export const dynamic = 'force-dynamic';
 
@@ -6,21 +7,38 @@ export async function GET() {
   try {
     let episodes: any[] = [];
     try {
-      episodes = await safeSanityFetch<any[]>(`*[_type == "podcastEpisode"] | order(episodeNumber desc){
-        _id,
-        title,
-        slug,
-        seasonNumber,
-        episodeNumber,
-        summary,
-        audioUrl,
-        artworkUrl,
-        duration,
-        explicit,
-        publishedAt
-      }`);
+      const notionSets = await getNotionSets();
+      episodes = notionSets.map((set, idx) => ({
+        id: set.id,
+        title: set.name,
+        episodeNumber: notionSets.length - idx,
+        seasonNumber: 1,
+        summary: set.notes || `${set.name} - Recorded live at ${set.venue || 'London'}`,
+        audioUrl: set.soundcloudUrl || set.spotifyUrl || 'https://assets.henryix.com/podcast/latest.mp3',
+        artworkUrl: 'https://assets.henryix.com/Mix%20Covers/henry-ix-podcast-cover.jpg',
+        duration: '01:00:00',
+        explicit: false,
+        publishedAt: set.eventDate || new Date().toISOString(),
+      }));
     } catch (e) {
-      console.warn('Could not fetch podcast episodes from Sanity:', e);
+      console.warn('Could not fetch podcast episodes from Notion:', e);
+    }
+
+    if (episodes.length === 0) {
+      // Fallback to static mixes
+      const allStatic = STATIC_MIX_GROUPS.flatMap(g => g.mixes);
+      episodes = allStatic.map((m, idx) => ({
+        id: m.id || `ep-${idx + 1}`,
+        title: m.title,
+        episodeNumber: allStatic.length - idx,
+        seasonNumber: 1,
+        summary: `HENRY IX Transmission: ${m.title}. High-fidelity DJ mix featuring UK Garage, 140, and Techno.`,
+        audioUrl: m.url || 'https://assets.henryix.com/podcast/latest.mp3',
+        artworkUrl: (m as any).artworkUrl || 'https://assets.henryix.com/Mix%20Covers/henry-ix-podcast-cover.jpg',
+        duration: '00:58:00',
+        explicit: false,
+        publishedAt: '2026-07-16T00:00:00Z',
+      }));
     }
 
     const host = 'https://henryix.com';
@@ -41,7 +59,7 @@ export async function GET() {
       <description><![CDATA[${ep.summary || title}]]></description>
       <pubDate>${pubDate}</pubDate>
       <enclosure url="${audioUrl}" type="audio/mpeg" length="0" />
-      <guid isPermaLink="false">henryix-podcast-ep-${ep.episodeNumber || ep._id}</guid>
+      <guid isPermaLink="false">henryix-podcast-ep-${ep.episodeNumber || ep.id}</guid>
       <itunes:episode>${ep.episodeNumber || 1}</itunes:episode>
       <itunes:season>${ep.seasonNumber || 1}</itunes:season>
       <itunes:duration>${ep.duration || '00:45:00'}</itunes:duration>

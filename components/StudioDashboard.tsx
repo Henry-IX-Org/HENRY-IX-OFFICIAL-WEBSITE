@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import OBSStreamControl from './OBSStreamControl';
 import MixUploaderPanel from './MixUploaderPanel';
 import PodcastStudioPanel from './PodcastStudioPanel';
-import SocialSyncPanel from './SocialSyncPanel';
+import SocialModule from './studio/modules/SocialModule';
+import GigsModule from './studio/modules/GigsModule';
+import StudioRightDrawer from './studio/StudioRightDrawer';
 import GalleryAlbumOrganizer from './GalleryAlbumOrganizer';
 import { playClick } from '@/lib/audioUtils';
 
@@ -13,10 +15,11 @@ interface StudioDashboardProps {
   children?: React.ReactNode; // Embedded NextStudio component passed from page
 }
 
-type TabType = 'broadcast' | 'mixes' | 'podcast' | 'social' | 'gallery' | 'cms';
+type TabType = 'broadcast' | 'mixes' | 'podcast' | 'social' | 'gallery' | 'cms' | 'gigs';
 
 export default function StudioDashboard({ children }: StudioDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('broadcast');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleTabChange = (tab: TabType) => {
     playClick();
@@ -32,6 +35,9 @@ export default function StudioDashboard({ children }: StudioDashboardProps) {
         {/* Studio Top Skeuomorphic Console Banner */}
         <div className="bg-zinc-950 border-2 border-zinc-800 p-6 shadow-2xl relative overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+            <button onClick={() => setDrawerOpen(true)} className="absolute top-6 right-6 px-4 py-2 bg-black border border-[#D8163F] text-[#D8163F] text-xs font-bold shadow-[0_0_10px_rgba(216,22,63,0.3)] hover:bg-[#D8163F] hover:text-white transition-colors z-20">
+              OPEN CONTEXT DRAWER
+            </button>
             <div>
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-widest text-white uppercase font-avathe drop-shadow-[0_0_15px_rgba(216,22,63,0.4)] flex items-center space-x-4">
                 <span>HENRY IX // STUDIO CONTROL ROOM</span>
@@ -62,8 +68,8 @@ export default function StudioDashboard({ children }: StudioDashboardProps) {
               { id: 'mixes', label: '🎛 MIX MANAGER' },
               { id: 'podcast', label: '🎙 PODCAST HUB' },
               { id: 'social', label: '⚡ SOCIAL & EMAIL' },
+              { id: 'gigs', label: '📅 GIGS & TOURS' },
               { id: 'gallery', label: '📷 GALLERY ALBUMS' },
-              { id: 'cms', label: '🛠 SANITY CMS' },
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
@@ -95,22 +101,15 @@ export default function StudioDashboard({ children }: StudioDashboardProps) {
             {activeTab === 'broadcast' && <OBSStreamControl />}
             {activeTab === 'mixes' && <MixUploaderPanel />}
             {activeTab === 'podcast' && <PodcastStudioPanel />}
-            {activeTab === 'social' && <SocialSyncPanel />}
+            {activeTab === 'social' && <SocialModule />}
+            {activeTab === 'gigs' && <GigsModule />}
             {activeTab === 'gallery' && <GalleryAlbumOrganizer />}
-            {activeTab === 'cms' && (
-              <div className="bg-zinc-950 border-2 border-zinc-800 p-4 shadow-2xl">
-                <div className="border-b border-zinc-800 pb-3 mb-4 flex justify-between items-center text-xs font-mono">
-                  <span className="text-zinc-400 uppercase font-bold">EMBEDDED SANITY STUDIO DIRECT ACCESS</span>
-                  <span className="text-[#D8163F]">ROUTE: /STUDIO</span>
-                </div>
-                <div className="min-h-[700px] border border-zinc-800 bg-black">
-                  {children}
-                </div>
-              </div>
-            )}
           </motion.div>
         </AnimatePresence>
       </div>
+      <StudioRightDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
   );
 }
+
+

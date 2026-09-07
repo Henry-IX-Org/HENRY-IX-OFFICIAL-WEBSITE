@@ -9,6 +9,12 @@ Act as an expert frontend engineer, senior audio DSP programmer, and creative UI
 
 Focus on building a portfolio showcase, live streaming setups, ticket booking systems, event listings, and marketing integrations.
 
+### Strict Content Authenticity & UI Copy Rules
+* **Full AI Coding Autonomy:** The user does not code. AI independently handles all technical implementation, Next.js architecture, TypeScript, Tailwind CSS, API routes, audio DSP, and cloud infrastructure.
+* **Section Naming & Copy Consultation:** Whenever creating a new UI section, panel, button, or feature (e.g. naming a section "Mix Library"), ask Henry what he prefers to call it or present 2–3 curated options for him to approve.
+* **Central Copy & Media Configuration:** All visible UI copy, titles, descriptions, and track lists must route through `lib/siteContent.ts`, `lib/mixes.ts`, and Notion so Henry can edit text and audio in one central place without touching code logic.
+* **Zero Autonomous AI Media:** No synthetic AI music, AI-generated audio, or AI-rendered imagery may ever be published under the name HENRY IX without explicit human review and approval.
+
 ---
 
 ## 2. Visual Design System

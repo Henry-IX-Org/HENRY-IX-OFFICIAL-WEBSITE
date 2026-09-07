@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import './globals.css';
 import { AudioProvider } from '@/components/AudioProvider';
@@ -17,11 +16,10 @@ const ocra = localFont({
   adjustFontFallback: false,
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-ibm-plex',
-});
+// Local monospace font fallback (avoids build-time Google Fonts network TLS failures)
+const ibmPlexMono = {
+  variable: '',
+};
 
 export const viewport: Viewport = {
   themeColor: '#D8163F',
@@ -96,9 +94,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${avathe.variable} ${ocra.variable} ${ibmPlexMono.variable}`}>
       <head>
         <link rel="preconnect" href="https://pub-c7c5ff43a8ae174ad91e2668de0ad7f0.r2.dev" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://pub-c7c5ff43a8ae174ad91e2668de0ad7f0.r2.dev" />
-        <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+        <link rel="preconnect" href="https://assets.henryix.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://assets.henryix.com" />
         <link rel="preload" href="https://w.soundcloud.com/player/api.js" as="script" />
         <meta name="mobile-web-app-capable" content="yes" />
         <script

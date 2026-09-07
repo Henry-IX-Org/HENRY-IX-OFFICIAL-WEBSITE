@@ -6,6 +6,7 @@ import { playClick } from '@/lib/audioUtils';
 import { useAudioStore } from '@/store/audioStore';
 import { audioEngine } from '@/lib/AudioEngine';
 import { PlayheadScrubber } from '@/components/PlayheadScrubber';
+import { DECK_COLORS, DeckId } from '@/lib/theme';
 
 export function FloatingPlayer() {
   const pathname = usePathname();
@@ -57,15 +58,8 @@ export function FloatingPlayer() {
   // Hide on mixes page or if no deck loaded/available
   if (pathname === '/mixes' || !deck) return null;
 
-  // Symmetrical CDJ Deck Colors
-  const deckColors: Record<number, { border: string; bg: string; text: string; glow: string; badge: string }> = {
-    1: { border: 'border-red-500/60', bg: 'bg-red-500', text: 'text-red-400', glow: 'shadow-[0_0_12px_rgba(211,15,49,0.5)]', badge: 'bg-red-500/20 border-red-500/50 text-red-400' },
-    2: { border: 'border-cyan-400/60', bg: 'bg-cyan-400', text: 'text-cyan-400', glow: 'shadow-[0_0_12px_rgba(34,211,238,0.5)]', badge: 'bg-cyan-400/20 border-cyan-400/50 text-cyan-400' },
-    3: { border: 'border-emerald-400/60', bg: 'bg-emerald-400', text: 'text-emerald-400', glow: 'shadow-[0_0_12px_rgba(16,185,129,0.5)]', badge: 'bg-emerald-400/20 border-emerald-400/50 text-emerald-400' },
-    4: { border: 'border-yellow-400/60', bg: 'bg-yellow-400', text: 'text-yellow-400', glow: 'shadow-[0_0_12px_rgba(234,179,8,0.5)]', badge: 'bg-yellow-400/20 border-yellow-400/50 text-yellow-400' },
-  };
-
-  const activeColor = deckColors[selectedDeckId] || deckColors[1];
+  // Symmetrical CDJ Deck Colors from centralized theme
+  const activeColor = DECK_COLORS[selectedDeckId as DeckId]?.tailwind || DECK_COLORS[1].tailwind;
 
   return (
     <div
@@ -94,7 +88,7 @@ export function FloatingPlayer() {
             const isSel = selectedDeckId === id;
             const isDeckPlaying = decks[id]?.isPlaying;
             const isDeckReady = decks[id]?.isReady || decks[id]?.title;
-            const col = deckColors[id];
+            const col = DECK_COLORS[id as DeckId].tailwind;
 
             return (
               <button

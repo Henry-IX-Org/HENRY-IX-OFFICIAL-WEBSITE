@@ -20,4 +20,7 @@ studio-henryixwebsite/
 
 *.tsbuildinfo
 scratch_*.txt
+scratch/
+.vscode/
+service-account.json
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, HeadObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import { createClient } from '@sanity/client';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export const dynamic = 'force-dynamic';
@@ -175,13 +174,20 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const sanityClient = createClient({
-    projectId: process.env.SANITY_PROJECT_ID || 'r6mln4n3',
-    dataset: process.env.SANITY_DATASET || 'production',
-    apiVersion: '2023-01-01',
-    token: process.env.SANITY_WRITE_TOKEN,
-    useCdn: false,
-  });
+  // Sanity Detached: No-op stub for backward compatibility with Google Drive to R2 sync
+  const sanityClient: any = {
+    fetch: async (..._args: any[]): Promise<any> => null,
+    create: async (doc: any) => doc,
+    patch: (_id?: string) => {
+      const chain: any = {
+        set: (_patchData?: any) => chain,
+        setIfMissing: (_patchData?: any) => chain,
+        append: (_field?: string, _items?: any[]) => chain,
+        commit: async () => ({}),
+      };
+      return chain;
+    },
+  };
 
   // Native Cloudflare Context & Binding detection
   let ctx: any = null;

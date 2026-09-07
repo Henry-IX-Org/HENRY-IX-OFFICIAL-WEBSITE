@@ -2,7 +2,6 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  transpilePackages: ['sanity', '@sanity/vision', 'next-sanity'],
   reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
@@ -13,6 +12,12 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'assets.henryix.com',
+        port: '',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'picsum.photos',
@@ -68,26 +73,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  webpack(config) {
-    const webpack = require('webpack');
-    const path = require('path');
-
-    config.plugins.push(
-      new webpack.NormalModuleReplacementPlugin(
-        /^react$/,
-        (resource: any) => {
-          if (
-            resource.context &&
-            /[\\/](@sanity|sanity)[\\/]/.test(resource.context)
-          ) {
-            resource.request = path.resolve(__dirname, 'lib/react-shim.js');
-          }
-        }
-      )
-    );
-
-    return config;
-  },
 };
+
 
 export default nextConfig;
