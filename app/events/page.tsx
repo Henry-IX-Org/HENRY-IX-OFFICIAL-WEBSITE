@@ -49,8 +49,8 @@ export default async function Page() {
     'event': events.map((e: TourEvent) => ({
       '@type': 'MusicEvent',
       'name': e.title || `HENRY IX Live at ${e.venue}`,
-      'startDate': `${e.isoDate}T${e.startTime}:00Z`,
-      'endDate': `${e.isoDate}T${e.endTime}:00Z`,
+      'startDate': e.startIso,
+      'endDate': e.endIso,
       'eventStatus': 'https://schema.org/EventScheduled',
       'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
       'location': {

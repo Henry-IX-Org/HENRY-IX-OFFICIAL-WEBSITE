@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         promoterPhone: b.contactPhone || b.contactEmail || 'N/A',
         wifi: 'Venue_Guest / Guest2026',
         guestlistAllocated: 6,
-        ticketLink: 'https://ra.co',
+        ticketLink: b.ticketLink || 'https://ra.co',
         status,
         phase,
       };
@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
       contactEmail,
       contactPhone,
       notes,
+      ticketLink,
     } = body;
 
     if (!title) {
@@ -118,6 +119,7 @@ export async function POST(req: NextRequest) {
       contactEmail,
       contactPhone,
       notes,
+      ticketLink,
     });
 
     if (!result || result.object === 'error') {

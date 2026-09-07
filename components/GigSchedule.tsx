@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { playClick } from '@/lib/audioUtils';
 import { downloadICalFile, EventICalData } from '@/lib/icsGenerator';
 import { TourEvent, DEFAULT_TOUR_EVENTS } from '@/lib/tourEvents';
+import { siteContent } from '@/lib/siteContent';
 
 const SPRING_CONFIG = { type: 'spring' as const, stiffness: 300, damping: 20 };
 
@@ -129,8 +130,8 @@ export function GigSchedule({
       title: `HENRY IX Live @ ${gig.venue}`,
       description: `HENRY IX Live Performance at ${gig.venue}, ${gig.city}, ${gig.country}.\nDoors: ${gig.doorsTime} | Call: ${gig.callTime} | Set: ${gig.startTime} - ${gig.endTime}.\nStatus: ${gig.status}. Pass Serial: ${gig.ticketSerial}.\nTicket Link: ${gig.ticketLink}`,
       location: `${gig.venue}, ${gig.city}, ${gig.country}`,
-      startDate: `${gig.isoDate.replace(/-/g, '')}T${gig.startTime.replace(':', '')}00Z`,
-      endDate: `${gig.isoDate.replace(/-/g, '')}T${gig.endTime.replace(':', '')}00Z`,
+      startDate: gig.startIcal || `${gig.isoDate.replace(/-/g, '')}T${gig.startTime.replace(':', '')}00Z`,
+      endDate: gig.endIcal || `${gig.isoDate.replace(/-/g, '')}T${gig.endTime.replace(':', '')}00Z`,
       url: gig.ticketLink || 'https://henryix.com/events',
     };
     downloadICalFile(icalData);
@@ -163,8 +164,8 @@ export function GigSchedule({
       >
         <div className="flex items-center gap-3">
           <div className="w-3 h-3 bg-primary animate-pulse border border-primary/50 shadow-neon-glow" />
-          <h2 className="font-mono text-lg md:text-2xl tracking-[0.2em] font-black uppercase text-white">
-            03 / Tour Schedule & Live Gigs
+          <h2 className="font-avathe text-xl md:text-3xl tracking-widest font-bold uppercase text-white">
+            {siteContent.events.sectionTitle || '03 / Tour Schedule & Live Gigs'}
           </h2>
         </div>
         <div className={cn('h-[1px] flex-grow w-full md:w-auto md:ml-8', isDepth ? 'bg-zinc-900' : 'bg-zinc-800')} />
@@ -267,25 +268,6 @@ export function GigSchedule({
                 className="absolute top-0 left-0 right-0 h-[2px] z-10"
                 style={{ backgroundColor: deck.hex }}
               />
-
-              {/* PERFORATION NOTCHES & TEAR-OFF LINE (DESKTOP) */}
-              {/* Top Scalloped Notch Cutout */}
-              <div
-                className="hidden md:block absolute -top-3.5 right-[242px] w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none"
-                style={{ boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.8)' }}
-              />
-              {/* Bottom Scalloped Notch Cutout */}
-              <div
-                className="hidden md:block absolute -bottom-3.5 right-[242px] w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none"
-                style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)' }}
-              />
-              {/* Vertical Dashed Perforation Line */}
-              <div className="hidden md:block absolute top-0 bottom-0 right-[255px] w-[2px] border-r-2 border-dashed border-zinc-800 z-10 pointer-events-none" />
-
-              {/* PERFORATION NOTCHES (MOBILE) */}
-              <div className="md:hidden absolute -left-3.5 bottom-[220px] w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none" />
-              <div className="md:hidden absolute -right-3.5 bottom-[220px] w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none" />
-              <div className="md:hidden absolute left-0 right-0 bottom-[233px] h-[2px] border-b-2 border-dashed border-zinc-800 z-10 pointer-events-none" />
 
               {/* TICKET CONTAINER (Split between Main Body & Tear-off Stub) */}
               <div className="relative z-1 flex flex-col md:flex-row items-stretch justify-between">
@@ -409,6 +391,31 @@ export function GigSchedule({
 
                 {/* ─── RIGHT: RETRO TEAR-OFF STUB & VHS BARCODE ────────────────── */}
                 <div className="w-full md:w-[255px] bg-zinc-950/80 p-4 sm:p-5 flex flex-col justify-between items-center gap-3 shrink-0 border-t md:border-t-0 border-zinc-900 relative">
+                  {/* SKEUOMORPHIC PERFORATION SEAM & NOTCH CUTOUTS (AUTO-ALIGNED) */}
+                  {/* Desktop Scalloped Notches (Anchored to Stub Left Edge) */}
+                  <div
+                    className="hidden md:block absolute -top-3.5 -left-3.5 w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none"
+                    style={{ boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.8)' }}
+                  />
+                  <div
+                    className="hidden md:block absolute -bottom-3.5 -left-3.5 w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none"
+                    style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)' }}
+                  />
+                  {/* Desktop Vertical Dashed Perforation Line */}
+                  <div className="hidden md:block absolute top-0 bottom-0 left-0 w-[2px] -translate-x-1/2 border-l-2 border-dashed border-zinc-800 z-10 pointer-events-none" />
+
+                  {/* Mobile Scalloped Notches (Anchored to Stub Top Edge) */}
+                  <div
+                    className="md:hidden absolute -top-3.5 -left-3.5 w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none"
+                    style={{ boxShadow: 'inset -2px 0 4px rgba(0,0,0,0.8)' }}
+                  />
+                  <div
+                    className="md:hidden absolute -top-3.5 -right-3.5 w-7 h-7 rounded-full bg-black border border-zinc-800 z-20 pointer-events-none"
+                    style={{ boxShadow: 'inset 2px 0 4px rgba(0,0,0,0.8)' }}
+                  />
+                  {/* Mobile Horizontal Dashed Perforation Line */}
+                  <div className="md:hidden absolute top-0 left-0 right-0 h-[2px] -translate-y-1/2 border-t-2 border-dashed border-zinc-800 z-10 pointer-events-none" />
+
                   {/* Perforation Hint */}
                   <div className="w-full flex items-center justify-between text-[8px] text-zinc-600 font-bold tracking-widest uppercase">
                     <span>TEAR STUB</span>
@@ -436,7 +443,7 @@ export function GigSchedule({
                       className="w-full py-2.5 px-3 bg-primary hover:bg-[#b01032] text-black font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-neon-glow hover:shadow-neon-strong active:scale-[0.98]"
                     >
                       <Ticket className="w-3.5 h-3.5 shrink-0" />
-                      <span>RESIDENT ADVISOR / BUY</span>
+                      <span>{siteContent.events.ticketButton || 'RESIDENT ADVISOR / BUY'}</span>
                       <ExternalLink className="w-3 h-3 shrink-0" />
                     </a>
 

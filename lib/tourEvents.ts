@@ -26,6 +26,10 @@ export interface TourEvent {
   endTime: string;       // e.g. "04:00"
   callTime: string;      // e.g. "22:30"
   doorsTime: string;     // e.g. "22:00"
+  startIso: string;      // RFC-compliant start ISO e.g. "2026-09-12T23:00:00.000Z"
+  endIso: string;        // RFC-compliant end ISO with next-day rollover e.g. "2026-09-13T04:00:00.000Z"
+  startIcal: string;     // iCalendar DTSTART format e.g. "20260912T230000Z"
+  endIcal: string;       // iCalendar DTEND format e.g. "20260913T040000Z"
   status: 'TICKETS AVAILABLE' | 'SELLING FAST' | 'VIP ONLY' | 'CONFIRMED' | 'ON SALE' | 'SOLD OUT' | 'FREE' | string;
   lat: number;
   lng: number;
@@ -42,8 +46,75 @@ export interface TourEvent {
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
+/**
+ * Computes RFC 5545 and Schema.org compliant ISO and iCalendar timestamps.
+ * If the set crosses midnight (e.g. 23:00 to 04:00), end date accurately rolls over to the next day.
+ */
+export function getEventDateTimes(
+  isoDate: string,
+  startTime: string = '23:00',
+  endTime: string = '04:00'
+): {
+  startIso: string;
+  endIso: string;
+  startIcal: string;
+  endIcal: string;
+} {
+  const [y, m, d] = (isoDate || '2026-09-12').split('T')[0].split('-').map(Number);
+  const startParts = (startTime || '23:00').split(':').map(Number);
+  const endParts = (endTime || '04:00').split(':').map(Number);
+
+  const startH = isNaN(startParts[0]) ? 23 : startParts[0];
+  const startM = isNaN(startParts[1]) ? 0 : startParts[1];
+  const endH = isNaN(endParts[0]) ? 4 : endParts[0];
+  const endM = isNaN(endParts[1]) ? 0 : endParts[1];
+
+  const startDate = new Date(Date.UTC(y || 2026, (m || 1) - 1, d || 1, startH, startM, 0));
+
+  // Determine if set crosses midnight: end time is numerically <= start time
+  const crossesMidnight = endH < startH || (endH === startH && endM <= startM);
+  const endDate = new Date(
+    Date.UTC(
+      y || 2026,
+      (m || 1) - 1,
+      crossesMidnight ? (d || 1) + 1 : (d || 1),
+      endH,
+      endM,
+      0
+    )
+  );
+
+  const formatIcal = (date: Date) => {
+    const yr = date.getUTCFullYear();
+    const mo = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const da = String(date.getUTCDate()).padStart(2, '0');
+    const hr = String(date.getUTCHours()).padStart(2, '0');
+    const mi = String(date.getUTCMinutes()).padStart(2, '0');
+    const se = String(date.getUTCSeconds()).padStart(2, '0');
+    return `${yr}${mo}${da}T${hr}${mi}${se}Z`;
+  };
+
+  return {
+    startIso: startDate.toISOString(),
+    endIso: endDate.toISOString(),
+    startIcal: formatIcal(startDate),
+    endIcal: formatIcal(endDate),
+  };
+}
+
+function makeDefaultGig(data: Omit<TourEvent, 'startIso' | 'endIso' | 'startIcal' | 'endIcal'>): TourEvent {
+  const times = getEventDateTimes(data.isoDate, data.startTime, data.endTime);
+  return {
+    ...data,
+    startIso: times.startIso,
+    endIso: times.endIso,
+    startIcal: times.startIcal,
+    endIcal: times.endIcal,
+  };
+}
+
 export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
-  {
+  makeDefaultGig({
     id: 'gig-lon-01',
     title: 'MINISTRY OF SOUND (MAIN ROOM)',
     venue: 'MINISTRY OF SOUND (MAIN ROOM)',
@@ -67,8 +138,8 @@ export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
     promoter: 'Ministry of Sound Club',
     deckAccentIndex: 0, // Deck 1 Red
     source: 'verified',
-  },
-  {
+  }),
+  makeDefaultGig({
     id: 'gig-ibz-02',
     title: 'AMNESIA (TERRACE)',
     venue: 'AMNESIA (TERRACE)',
@@ -92,8 +163,8 @@ export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
     promoter: 'Amnesia Events Group',
     deckAccentIndex: 1, // Deck 2 Blue
     source: 'verified',
-  },
-  {
+  }),
+  makeDefaultGig({
     id: 'gig-ber-03',
     title: 'WATERGATE (FLOOR 1)',
     venue: 'WATERGATE (FLOOR 1)',
@@ -117,8 +188,8 @@ export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
     promoter: 'Watergate Club Berlin',
     deckAccentIndex: 2, // Deck 3 Green
     source: 'verified',
-  },
-  {
+  }),
+  makeDefaultGig({
     id: 'gig-ams-04',
     title: 'ADE (AMSTERDAM DANCE EVENT)',
     venue: 'ADE (AMSTERDAM DANCE EVENT)',
@@ -142,8 +213,8 @@ export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
     promoter: 'Amsterdam Dance Event',
     deckAccentIndex: 3, // Deck 4 Yellow
     source: 'verified',
-  },
-  {
+  }),
+  makeDefaultGig({
     id: 'gig-man-05',
     title: 'THE WAREHOUSE PROJECT',
     venue: 'THE WAREHOUSE PROJECT',
@@ -167,8 +238,8 @@ export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
     promoter: 'WHP Manchester',
     deckAccentIndex: 0, // Deck 1 Red
     source: 'verified',
-  },
-  {
+  }),
+  makeDefaultGig({
     id: 'gig-e1-06',
     title: 'E1 LONDON (WAREHOUSE)',
     venue: 'E1 LONDON (WAREHOUSE)',
@@ -192,7 +263,7 @@ export const DEFAULT_TOUR_EVENTS: TourEvent[] = [
     promoter: 'E1 Events',
     deckAccentIndex: 1, // Deck 2 Blue
     source: 'verified',
-  },
+  }),
 ];
 
 export function parseTourDate(dateInput: string | Date): {
@@ -211,7 +282,8 @@ export function parseTourDate(dateInput: string | Date): {
     if (dateInput.includes('T') || dateInput.includes('-')) {
       const parts = dateInput.split('T')[0].split('-').map(Number);
       if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-        dateObj = new Date(parts[0], parts[1] - 1, parts[2], 23, 0, 0);
+        // Noon (12:00) prevents DST or timezone boundary date drift
+        dateObj = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
       } else {
         dateObj = new Date(dateInput);
       }
@@ -254,21 +326,34 @@ export function parseVenueAndLocation(
   const venue = (rawVenue || '').trim() || 'TBA VENUE';
   const combined = `${venue} ${notes || ''}`.toUpperCase();
 
-  // Known iconic club and venue presets
+  // Known iconic electronic music club and venue presets
   const VENUE_ALIASES = [
     { match: 'AMNESIA', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.9567, lng: 1.4072 },
     { match: 'DC-10', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.8689, lng: 1.3917 },
+    { match: 'DC10', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.8689, lng: 1.3917 },
     { match: 'PACHA', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.9178, lng: 1.4429 },
+    { match: 'HÏ IBIZA', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.8876, lng: 1.4042 },
+    { match: 'HI IBIZA', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.8876, lng: 1.4042 },
+    { match: 'USHUAÏA', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.8864, lng: 1.4047 },
+    { match: 'USHUAIA', city: 'IBIZA', country: 'SPAIN', code: 'IBZ', lat: 38.8864, lng: 1.4047 },
     { match: 'WATERGATE', city: 'BERLIN', country: 'GERMANY', code: 'BER', lat: 52.5015, lng: 13.4447 },
     { match: 'BERGHAIN', city: 'BERLIN', country: 'GERMANY', code: 'BER', lat: 52.5111, lng: 13.4431 },
     { match: 'TRESOR', city: 'BERLIN', country: 'GERMANY', code: 'BER', lat: 52.5110, lng: 13.4194 },
     { match: 'WAREHOUSE PROJECT', city: 'MANCHESTER', country: 'UNITED KINGDOM', code: 'MAN', lat: 53.4770, lng: -2.2312 },
     { match: 'WHP', city: 'MANCHESTER', country: 'UNITED KINGDOM', code: 'MAN', lat: 53.4770, lng: -2.2312 },
     { match: 'ADE', city: 'AMSTERDAM', country: 'NETHERLANDS', code: 'AMS', lat: 52.3676, lng: 4.9041 },
+    { match: 'SHELTER', city: 'AMSTERDAM', country: 'NETHERLANDS', code: 'AMS', lat: 52.3833, lng: 4.9022 },
+    { match: 'AWAKENINGS', city: 'AMSTERDAM', country: 'NETHERLANDS', code: 'AMS', lat: 52.3900, lng: 4.7500 },
     { match: 'MINISTRY OF SOUND', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.4984, lng: -0.0998 },
     { match: 'FABRIC', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.5198, lng: -0.1023 },
     { match: 'E1', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.5113, lng: -0.0577 },
+    { match: 'PRINTWORKS', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.4975, lng: -0.0436 },
+    { match: 'DRUMSHEDS', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.6083, lng: -0.0381 },
+    { match: 'FOLD', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.5204, lng: 0.0075 },
+    { match: 'KOKO', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.5348, lng: -0.1388 },
     { match: 'ROUNDHOUSE', city: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.5431, lng: -0.1517 },
+    { match: 'SUB CLUB', city: 'GLASGOW', country: 'UNITED KINGDOM', code: 'GLA', lat: 55.8569, lng: -4.2543 },
+    { match: 'MOTION', city: 'BRISTOL', country: 'UNITED KINGDOM', code: 'BRS', lat: 51.4509, lng: -2.5744 },
   ];
 
   for (const v of VENUE_ALIASES) {
@@ -294,6 +379,7 @@ export function parseVenueAndLocation(
     { name: 'BARCELONA', country: 'SPAIN', code: 'BCN', lat: 41.3879, lng: 2.1699 },
     { name: 'NEW YORK', country: 'UNITED STATES', code: 'NYC', lat: 40.7128, lng: -74.0060 },
     { name: 'TOKYO', country: 'JAPAN', code: 'TYO', lat: 35.6762, lng: 139.6503 },
+    { name: 'GLASGOW', country: 'UNITED KINGDOM', code: 'GLA', lat: 55.8569, lng: -4.2543 },
     { name: 'LONDON', country: 'UNITED KINGDOM', code: 'LON', lat: 51.5074, lng: -0.1278 },
   ];
 
@@ -312,16 +398,27 @@ export function parseVenueAndLocation(
   }
 
   if (venue.includes(',')) {
-    const parts = venue.split(',');
-    const v = parts[0].trim();
-    const c = parts.slice(1).join(',').trim().toUpperCase();
+    const rawParts = venue.split(',').map((p) => p.trim()).filter(Boolean);
+    const v = rawParts[0] || venue;
+    let c = rawParts.length > 1 ? rawParts[1].toUpperCase() : 'LONDON';
+    let country = rawParts.length > 2 ? rawParts[2].toUpperCase() : 'UNITED KINGDOM';
+
+    if (c.endsWith(' UK') || c.endsWith(' GB')) {
+      c = c.replace(/\s+(UK|GB)$/, '').trim();
+      country = 'UNITED KINGDOM';
+    }
+    if (country === 'UK' || country === 'GB' || country === 'SCOTLAND' || country === 'ENGLAND' || country === 'WALES') {
+      country = 'UNITED KINGDOM';
+    }
+
+    const code = c.slice(0, 3).replace(/[^A-Z]/g, '') || 'LON';
     return {
       venue: v,
-      city: c || 'LONDON',
-      country: 'UNITED KINGDOM',
+      city: c,
+      country,
       lat: 51.5074,
       lng: -0.1278,
-      code: 'LON',
+      code,
     };
   }
 
@@ -397,6 +494,8 @@ export function mapNotionBookingToTourEvent(booking: NotionBooking, index: numbe
     }
   }
 
+  const times = getEventDateTimes(parsedDate.isoDate, startTime, endTime);
+
   return {
     id: booking.id,
     title: booking.title || `HENRY IX LIVE @ ${geo.venue}`,
@@ -413,6 +512,10 @@ export function mapNotionBookingToTourEvent(booking: NotionBooking, index: numbe
     endTime,
     callTime,
     doorsTime,
+    startIso: times.startIso,
+    endIso: times.endIso,
+    startIcal: times.startIcal,
+    endIcal: times.endIcal,
     status,
     lat: geo.lat,
     lng: geo.lng,
@@ -503,6 +606,8 @@ export async function fetchGoogleCalendarGigs(): Promise<TourEvent[] | null> {
         if (desc.toLowerCase().includes('sold out')) status = 'SOLD OUT';
         else if (desc.toLowerCase().includes('free')) status = 'FREE';
 
+        const times = getEventDateTimes(parsedDate.isoDate, '23:00', '04:00');
+
         return {
           id: ev.uid || `cal-${idx}`,
           title: ev.summary || `HENRY IX LIVE @ ${geo.venue}`,
@@ -519,6 +624,10 @@ export async function fetchGoogleCalendarGigs(): Promise<TourEvent[] | null> {
           endTime: '04:00',
           callTime: '22:30',
           doorsTime: '22:00',
+          startIso: times.startIso,
+          endIso: times.endIso,
+          startIcal: times.startIcal,
+          endIcal: times.endIcal,
           status,
           lat: geo.lat,
           lng: geo.lng,
@@ -540,6 +649,11 @@ export async function fetchGoogleCalendarGigs(): Promise<TourEvent[] | null> {
     return null;
   }
 }
+
+/**
+ * Fallback alias matching the original task specification
+ */
+export const fetchCalendarEvents = fetchGoogleCalendarGigs;
 
 export async function fetchPublicTourEvents(): Promise<{
   events: TourEvent[];
@@ -564,15 +678,18 @@ export async function fetchPublicTourEvents(): Promise<{
           Boolean(b.depositPaid);
         if (!isConfirmedOrContract) return false;
 
-        // Future / upcoming check
-        if (b.eventDate) {
-          const parts = b.eventDate.split('T')[0].split('-').map(Number);
-          if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
-            const gigDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
-            const now = new Date();
-            now.setHours(0, 0, 0, 0);
-            if (gigDate < now) return false;
-          }
+        // Future / upcoming check: must have a valid future date
+        if (!b.eventDate || !b.eventDate.trim()) {
+          return false;
+        }
+        const parts = b.eventDate.split('T')[0].split('-').map(Number);
+        if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+          const gigDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          if (gigDate < now) return false;
+        } else {
+          return false;
         }
         return true;
       });

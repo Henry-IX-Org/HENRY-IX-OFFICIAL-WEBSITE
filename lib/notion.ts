@@ -3,8 +3,8 @@
  * Central relational bridge connecting live Notion workspace databases to the public website and studio.
  */
 
-// Node TLS Support on Windows local development to prevent UNABLE_TO_VERIFY_LEAF_SIGNATURE
-if (process.env.NODE_ENV !== 'production') {
+// Node TLS Support on Windows local development & builds to prevent UNABLE_TO_VERIFY_LEAF_SIGNATURE
+if (process.env.NODE_ENV !== 'production' || process.platform === 'win32') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 
@@ -31,12 +31,17 @@ const cacheStore: Record<string, CacheEntry> = {};
 const CACHE_TTL_MS = 60 * 1000; // 1 minute fresh, stale-while-revalidate
 
 async function queryNotionAPI(endpoint: string, method: string = 'GET', body?: any): Promise<any> {
+  const apiKey = process.env.NOTION_API_KEY || NOTION_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    return null;
+  }
+
   const url = `https://api.notion.com/v1${endpoint}`;
   try {
     const res = await fetch(url, {
       method,
       headers: {
-        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Notion-Version': NOTION_VERSION,
         'Content-Type': 'application/json',
       },

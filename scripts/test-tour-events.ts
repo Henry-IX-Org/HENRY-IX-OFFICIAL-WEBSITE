@@ -11,6 +11,7 @@ import {
   generateTicketSerial,
   mapNotionBookingToTourEvent,
   fetchPublicTourEvents,
+  getEventDateTimes,
 } from '../lib/tourEvents';
 import { NotionBooking } from '../lib/notion';
 
@@ -52,7 +53,44 @@ async function runTests() {
   assert(geo4.city === 'AMSTERDAM', 'Notes mentioning Amsterdam resolves to AMSTERDAM');
   assert(geo4.code === 'AMS', 'City code is AMS');
 
-  // Test 3: Ticket Link Parsing
+  const geo5 = parseVenueAndLocation('DC10');
+  assert(geo5.city === 'IBIZA', 'DC10 without dash resolves to IBIZA');
+  assert(geo5.code === 'IBZ', 'DC10 code is IBZ');
+
+  const geo6 = parseVenueAndLocation('Sub Club, Glasgow, Scotland');
+  assert(geo6.city === 'GLASGOW', 'Sub Club Glasgow resolves city to GLASGOW without Scotland duplicating');
+  assert(geo6.country === 'UNITED KINGDOM', 'Country resolves to UNITED KINGDOM');
+  assert(geo6.code === 'GLA', 'City code is GLA');
+
+  // Test 3: RFC 5545 & Schema.org Midnight Rollover (Start < End guarantee)
+  const timesMidnight = getEventDateTimes('2026-09-12', '23:00', '04:00');
+  assert(timesMidnight.startIso === '2026-09-12T23:00:00.000Z', 'Midnight set start is 2026-09-12T23:00:00.000Z');
+  assert(timesMidnight.endIso === '2026-09-13T04:00:00.000Z', 'Midnight set end rolls over to 2026-09-13T04:00:00.000Z');
+  assert(timesMidnight.startIcal === '20260912T230000Z', 'iCal DTSTART is 20260912T230000Z');
+  assert(timesMidnight.endIcal === '20260913T040000Z', 'iCal DTEND is 20260913T040000Z');
+  assert(
+    new Date(timesMidnight.endIso).getTime() > new Date(timesMidnight.startIso).getTime(),
+    'RFC 5545 check: end date is strictly after start date'
+  );
+
+  // Test 4: Month and Year boundary rollovers
+  const timesMonthEnd = getEventDateTimes('2026-09-30', '23:00', '05:00');
+  assert(timesMonthEnd.endIso === '2026-10-01T05:00:00.000Z', 'Month-end rollover from Sep 30 to Oct 01');
+
+  const timesNewYear = getEventDateTimes('2026-12-31', '22:00', '06:00');
+  assert(timesNewYear.endIso === '2027-01-01T06:00:00.000Z', "New Year's Eve rollover from 2026 to 2027");
+
+  // Test 5: Default tour events have valid startIso < endIso
+  for (const gig of DEFAULT_TOUR_EVENTS) {
+    assert(
+      new Date(gig.endIso).getTime() > new Date(gig.startIso).getTime(),
+      `Default gig "${gig.title}" end date (${gig.endIso}) is after start date (${gig.startIso})`
+    );
+    assert(gig.startIcal.length === 16, `Default gig "${gig.title}" has valid DTSTART (${gig.startIcal})`);
+    assert(gig.endIcal.length === 16, `Default gig "${gig.title}" has valid DTEND (${gig.endIcal})`);
+  }
+
+  // Test 6: Ticket Link Parsing
   const mockBookingWithLink: NotionBooking = {
     id: 'b1',
     title: 'Show 1',
@@ -78,7 +116,7 @@ async function runTests() {
   const link2 = parseTicketLink(mockBookingDefault);
   assert(link2 === 'https://ra.co', 'Fallback default to https://ra.co');
 
-  // Test 4: Stage & Deposit filtering logic
+  // Test 7: Stage, Deposit & Date filtering logic
   const mockBookings: NotionBooking[] = [
     {
       id: 'b-conf',
@@ -141,6 +179,21 @@ async function runTests() {
       notes: '',
     },
     {
+      id: 'b-no-date',
+      title: 'Confirmed But No Date Yet',
+      venue: 'Club TBA',
+      client: 'Client X',
+      stage: 'Confirmed',
+      eventType: 'Club',
+      eventDate: '',
+      fee: 1000,
+      deposit: 500,
+      depositPaid: true,
+      contactEmail: '',
+      contactPhone: '',
+      notes: '',
+    },
+    {
       id: 'b-past',
       title: 'Past Gig',
       venue: 'Old Club',
@@ -165,14 +218,15 @@ async function runTests() {
       Boolean(b.depositPaid);
     if (!isConfirmedOrContract) return false;
 
-    if (b.eventDate) {
-      const parts = b.eventDate.split('T')[0].split('-').map(Number);
-      if (parts.length >= 3) {
-        const gigDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        if (gigDate < now) return false;
-      }
+    if (!b.eventDate || !b.eventDate.trim()) return false;
+    const parts = b.eventDate.split('T')[0].split('-').map(Number);
+    if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      const gigDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      if (gigDate < now) return false;
+    } else {
+      return false;
     }
     return true;
   });
@@ -182,17 +236,20 @@ async function runTests() {
   assert(filtered.some((b) => b.id === 'b-contract'), 'Included contract gig');
   assert(filtered.some((b) => b.id === 'b-dep-paid'), 'Included deposit-paid gig');
   assert(!filtered.some((b) => b.id === 'b-unconfirmed'), 'Excluded new unconfirmed lead');
+  assert(!filtered.some((b) => b.id === 'b-no-date'), 'Excluded confirmed gig with empty date');
   assert(!filtered.some((b) => b.id === 'b-past'), 'Excluded past gig');
 
-  // Test 5: Map Notion booking to TourEvent with custom times
+  // Test 8: Map Notion booking to TourEvent with custom times & RFC rollover
   const mapped = mapNotionBookingToTourEvent(mockBookings[0], 0);
   assert(mapped.startTime === '01:00', 'Extracted start time 01:00 from notes');
   assert(mapped.endTime === '03:00', 'Extracted end time 03:00 from notes');
   assert(mapped.callTime === '23:30', 'Extracted call time 23:30 from notes');
   assert(mapped.deckAccentIndex === 0, 'Deck accent index is 0 (Red)');
   assert(mapped.ticketSerial.startsWith('HIX-LON-'), 'Ticket serial starts with HIX-LON-');
+  assert(new Date(mapped.endIso).getTime() > new Date(mapped.startIso).getTime(), 'Mapped endIso is after startIso');
+  assert(mapped.startIcal.startsWith('20261010'), 'Mapped startIcal starts with date');
 
-  // Test 6: Fallback when Notion is empty / offline
+  // Test 9: Fallback when Notion is empty / offline
   const result = await fetchPublicTourEvents();
   assert(result.events.length > 0, `Returned ${result.events.length} events from fetchPublicTourEvents()`);
   assert(
@@ -201,6 +258,10 @@ async function runTests() {
   );
   assert(result.events[0].ticketLink.startsWith('http'), 'Ticket link is a valid URL');
   assert(result.events[0].ticketSerial.length > 5, 'Ticket serial is populated');
+  assert(
+    new Date(result.events[0].endIso).getTime() > new Date(result.events[0].startIso).getTime(),
+    'Public tour event endIso is after startIso'
+  );
 
   console.log('\n✨ ALL TESTS PASSED SUCCESSFULLY! ✨');
 }

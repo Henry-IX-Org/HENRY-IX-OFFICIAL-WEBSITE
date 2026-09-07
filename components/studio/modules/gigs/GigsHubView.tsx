@@ -40,6 +40,7 @@ export default function GigsHubView({
   const [gigPromoter, setGigPromoter] = useState('');
   const [gigEmail, setGigEmail] = useState('');
   const [gigPhone, setGigPhone] = useState('');
+  const [gigTicketLink, setGigTicketLink] = useState('');
   const [gigNotes, setGigNotes] = useState('');
 
   const handleCreateGig = async (e: React.FormEvent) => {
@@ -66,6 +67,7 @@ export default function GigsHubView({
           fee: Number(gigFee) || 0,
           contactEmail: gigEmail.trim() || undefined,
           contactPhone: gigPhone.trim() || undefined,
+          ticketLink: gigTicketLink.trim() || undefined,
           notes: gigNotes.trim() ? `Set Time: ${gigSetTime}. ${gigNotes.trim()}` : `Set Time: ${gigSetTime}`,
         }),
       });
@@ -85,6 +87,7 @@ export default function GigsHubView({
         setGigPromoter('');
         setGigEmail('');
         setGigPhone('');
+        setGigTicketLink('');
         setGigNotes('');
         await fetchRealGigs();
       } else {
@@ -267,6 +270,19 @@ export default function GigsHubView({
                   className="w-full rounded-lg bg-[#0c0d10] border border-white/10 px-3.5 py-2 text-white focus:outline-none focus:border-[#E53558] focus:ring-1 focus:ring-[#E53558]"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 font-medium mb-1 uppercase text-[10px] font-mono">
+                Resident Advisor / Ticket URL (Public Tickets Link)
+              </label>
+              <input
+                type="url"
+                placeholder="https://ra.co/events/..."
+                value={gigTicketLink}
+                onChange={(e) => setGigTicketLink(e.target.value)}
+                className="w-full rounded-lg bg-[#0c0d10] border border-white/10 px-3.5 py-2 text-white focus:outline-none focus:border-[#E53558] focus:ring-1 focus:ring-[#E53558]"
+              />
             </div>
 
             <div>
