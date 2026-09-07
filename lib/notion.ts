@@ -484,6 +484,7 @@ export interface NotionBooking {
   contactEmail: string;
   contactPhone: string;
   notes: string;
+  ticketLink?: string;
 }
 
 export async function getNotionBookings(): Promise<NotionBooking[]> {
@@ -493,6 +494,18 @@ export async function getNotionBookings(): Promise<NotionBooking[]> {
 
   return results.map((page: any): NotionBooking => {
     const p = page.properties || {};
+    const notesText = getNotionText(p['Notes']);
+    const ticketProp = getNotionText(
+      p['Ticket Link'] ||
+      p['Ticket URL'] ||
+      p['Tickets'] ||
+      p['RA Link'] ||
+      p['Link'] ||
+      p['URL']
+    );
+    const urlFromNotes = notesText.match(/https?:\/\/[^\s]+/)?.[0];
+    const ticketLink = ticketProp || urlFromNotes || undefined;
+
     return {
       id: page.id,
       title: getNotionText(p['Booking / Enquiry']) || 'Upcoming Gig',
@@ -506,7 +519,8 @@ export async function getNotionBookings(): Promise<NotionBooking[]> {
       depositPaid: getNotionCheckbox(p['Deposit Paid']),
       contactEmail: getNotionText(p['Contact Email']),
       contactPhone: getNotionText(p['Contact Phone']),
-      notes: getNotionText(p['Notes']),
+      notes: notesText,
+      ticketLink,
     };
   });
 }
@@ -652,6 +666,7 @@ export async function createNotionBooking(booking: {
   contactEmail?: string;
   contactPhone?: string;
   notes?: string;
+  ticketLink?: string;
 }) {
   // Validate Stage status against Notion schema: 'New lead' | 'Contacted' | 'Quoted' | 'Confirmed' | 'Completed' | 'Lost'
   const validStages = ['New lead', 'Contacted', 'Quoted', 'Confirmed', 'Completed', 'Lost'];
@@ -697,8 +712,13 @@ export async function createNotionBooking(booking: {
   if (booking.contactPhone) {
     properties['Contact Phone'] = { phone_number: booking.contactPhone };
   }
-  if (booking.notes) {
-    properties['Notes'] = { rich_text: [{ text: { content: booking.notes } }] };
+  
+  let finalNotes = booking.notes || '';
+  if (booking.ticketLink && !finalNotes.includes(booking.ticketLink)) {
+    finalNotes = finalNotes ? `${finalNotes}\nTickets: ${booking.ticketLink}` : `Tickets: ${booking.ticketLink}`;
+  }
+  if (finalNotes) {
+    properties['Notes'] = { rich_text: [{ text: { content: finalNotes } }] };
   }
 
   return await queryNotionAPI('/pages', 'POST', {
