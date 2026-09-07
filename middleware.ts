@@ -48,11 +48,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Extract host from standard headers (supporting Cloudflare/proxy headers)
-  const host =
-    request.headers.get('x-forwarded-host') ||
-    request.headers.get('host') ||
-    request.nextUrl.host;
+  // Extract host safely, avoiding spoofable x-forwarded-host headers
+  const host = request.headers.get('host') || request.nextUrl.host;
   const hostname = (host ? host.split(':')[0] : request.nextUrl.hostname).toLowerCase();
 
   const isStudio = isStudioDomain(hostname);
