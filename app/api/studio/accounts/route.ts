@@ -62,7 +62,7 @@ export async function GET() {
         configured: youtubeConfigured,
         status: youtubeConfigured ? 'CONNECTED' : 'PENDING_SETUP',
         detail: youtubeConfigured ? 'YouTube Data API v3 Active on henry ix website project' : 'Link via henry ix website GCP Project (YouTube Data API v3)',
-        clientId: process.env.YOUTUBE_CLIENT_ID || null,
+        clientId: process.env.YOUTUBE_CLIENT_ID ? `${process.env.YOUTUBE_CLIENT_ID.slice(0, 18)}...` : null,
         ping: youtubeConfigured ? '31ms' : '---',
         scopes: ['https://www.googleapis.com/auth/youtube.readonly'],
       },

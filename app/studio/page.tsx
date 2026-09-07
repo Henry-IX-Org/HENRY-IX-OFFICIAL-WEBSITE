@@ -87,8 +87,22 @@ export default function StudioPage() {
     } catch {}
   }, []);
 
-  // Check existing active session on mount
+  // Check existing active session on mount & URL parameters
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlError = searchParams.get('error');
+      if (urlError) {
+        setErrorMessage(decodeURIComponent(urlError));
+      }
+      const stepParam = searchParams.get('step');
+      const userIdParam = searchParams.get('userId');
+      if (stepParam === 'totp-2fa' && userIdParam) {
+        setPendingUserId(userIdParam);
+        setAuthStep('totp-2fa');
+      }
+    }
+
     fetchCurrentSession().then((user) => {
       if (user) {
         setIsAuthenticated(true);
@@ -344,14 +358,14 @@ export default function StudioPage() {
     setErrorMessage(null);
     setStatusMessage(`INITIALIZING ${provider.toUpperCase()} AUTHENTICATION...`);
 
-    try {
-      // Strictly prevent mock bypasses: guide user to verified email or real OAuth
-      setErrorMessage(
-        `${provider.toUpperCase()} SSO REQUIRES SECURE OAUTH APP CALLBACK. PLEASE USE YOUR VERIFIED 6-DIGIT EMAIL CODE TO SIGN IN.`
-      );
-    } finally {
-      setIsLoading(false);
+    if (provider === 'google') {
+      window.location.href = '/api/studio/auth/google';
+      return;
     }
+
+    // Apple Music / Apple ID is on standby
+    setErrorMessage('APPLE SIGN-IN IS ON STANDBY (REQUIRES £79/YR APPLE DEVELOPER MEMBERSHIP). PLEASE SIGN IN WITH GOOGLE OR EMAIL.');
+    setIsLoading(false);
   };
 
   // -------------------------------------------------------------
