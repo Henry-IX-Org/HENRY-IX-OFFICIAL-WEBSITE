@@ -111,6 +111,7 @@ export interface StudioState {
   toasts: StudioToast[];
   
   // Audio Player State
+  // Audio Player & Queue State
   playerState: 'minimised' | 'docked' | 'half-deck' | 'fullscreen';
   currentTrack: StudioTrack;
   isPlaying: boolean;
@@ -118,6 +119,12 @@ export interface StudioState {
   volume: number;
   isMuted: boolean;
   pitchSemitones: number;
+  playbackQueue: StudioTrack[];
+  queueIndex: number;
+  repeatMode: 'off' | 'all' | 'one';
+  isShuffled: boolean;
+  originalQueue: StudioTrack[];
+  isQueueOpen: boolean;
   
   // Music & Crates
   trackCollection: StudioTrack[];
@@ -157,6 +164,16 @@ export interface StudioState {
   setIsMuted: (m: boolean) => void;
   setPitchSemitones: (st: number | ((prev: number) => number)) => void;
   setPlayerState: (state: 'minimised' | 'docked' | 'half-deck' | 'fullscreen') => void;
+  setIsQueueOpen: (open: boolean) => void;
+  playNextTrack: () => void;
+  playPreviousTrack: () => void;
+  toggleRepeat: () => void;
+  toggleShuffle: () => void;
+  addToQueue: (track: StudioTrack | StudioTrack[]) => void;
+  removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
+  playQueueItem: (index: number) => void;
+  reorderQueue: (startIndex: number, endIndex: number) => void;
 
   // Music Actions
   addToSetlist: (track: StudioTrack) => void;
@@ -381,14 +398,20 @@ export const useStudioStore = create<StudioState>()(
       isLoadingGigs: false,
       isLoadingSocial: false,
 
-      // Audio
+      // Audio & Queue State
       playerState: 'docked',
       currentTrack: DEFAULT_TRACKS[0],
       isPlaying: false,
-      currentTime: 92,
+      currentTime: 0,
       volume: 0.85,
       isMuted: false,
       pitchSemitones: 0,
+      playbackQueue: [...DEFAULT_TRACKS],
+      queueIndex: 0,
+      repeatMode: 'off',
+      isShuffled: false,
+      originalQueue: [...DEFAULT_TRACKS],
+      isQueueOpen: false,
 
       // Collections
       trackCollection: DEFAULT_TRACKS,
@@ -446,10 +469,21 @@ export const useStudioStore = create<StudioState>()(
 
       removeToast: (id) => set(state => ({ toasts: state.toasts.filter(t => t.id !== id) })),
 
-      // Audio Actions
+      // Audio Actions & Queue Engine
+      setIsQueueOpen: (open) => set({ isQueueOpen: open }),
+
       playTrack: (track) => {
+        const queue = get().playbackQueue;
+        let index = queue.findIndex(t => t.id === track.id);
+        let newQueue = queue;
+        if (index === -1) {
+          newQueue = [track, ...queue];
+          index = 0;
+        }
         set({
           currentTrack: track,
+          playbackQueue: newQueue,
+          queueIndex: index,
           isPlaying: true,
           currentTime: 0,
         });
@@ -475,6 +509,218 @@ export const useStudioStore = create<StudioState>()(
         pitchSemitones: typeof st === 'function' ? Math.max(-2, Math.min(2, st(state.pitchSemitones))) : Math.max(-2, Math.min(2, st))
       })),
       setPlayerState: (state) => set({ playerState: state }),
+
+      playNextTrack: () => {
+        const { playbackQueue, queueIndex, repeatMode } = get();
+        if (playbackQueue.length === 0) return;
+
+        if (repeatMode === 'one') {
+          set({ currentTime: 0, isPlaying: true });
+          return;
+        }
+
+        const nextIndex = queueIndex + 1;
+        if (nextIndex < playbackQueue.length) {
+          const nextTrack = playbackQueue[nextIndex];
+          set({
+            currentTrack: nextTrack,
+            queueIndex: nextIndex,
+            currentTime: 0,
+            isPlaying: true,
+          });
+          get().addToast({
+            title: 'PLAYING NEXT',
+            message: `${nextTrack.artist} - ${nextTrack.title}`,
+            type: 'info',
+          });
+        } else if (repeatMode === 'all') {
+          const firstTrack = playbackQueue[0];
+          set({
+            currentTrack: firstTrack,
+            queueIndex: 0,
+            currentTime: 0,
+            isPlaying: true,
+          });
+          get().addToast({
+            title: 'LOOPING QUEUE',
+            message: `${firstTrack.artist} - ${firstTrack.title}`,
+            type: 'info',
+          });
+        } else {
+          set({ isPlaying: false, currentTime: 0 });
+          get().addToast({
+            title: 'QUEUE ENDED',
+            message: 'All tracks completed.',
+            type: 'info',
+          });
+        }
+      },
+
+      playPreviousTrack: () => {
+        const { playbackQueue, queueIndex, currentTime, repeatMode } = get();
+        if (playbackQueue.length === 0) return;
+
+        // If track has played more than 3 seconds, reset to beginning like CDJ
+        if (currentTime > 3) {
+          set({ currentTime: 0, isPlaying: true });
+          return;
+        }
+
+        const prevIndex = queueIndex - 1;
+        if (prevIndex >= 0) {
+          const prevTrack = playbackQueue[prevIndex];
+          set({
+            currentTrack: prevTrack,
+            queueIndex: prevIndex,
+            currentTime: 0,
+            isPlaying: true,
+          });
+          get().addToast({
+            title: 'PREVIOUS TRACK',
+            message: `${prevTrack.artist} - ${prevTrack.title}`,
+            type: 'info',
+          });
+        } else if (repeatMode === 'all') {
+          const lastIndex = playbackQueue.length - 1;
+          const lastTrack = playbackQueue[lastIndex];
+          set({
+            currentTrack: lastTrack,
+            queueIndex: lastIndex,
+            currentTime: 0,
+            isPlaying: true,
+          });
+        } else {
+          set({ currentTime: 0 });
+        }
+      },
+
+      toggleRepeat: () => {
+        const current = get().repeatMode;
+        const next: 'off' | 'all' | 'one' = current === 'off' ? 'all' : current === 'all' ? 'one' : 'off';
+        set({ repeatMode: next });
+        get().addToast({
+          title: 'REPEAT MODE',
+          message: next === 'off' ? 'Repeat disabled' : next === 'all' ? 'Repeating all tracks in queue' : 'Repeating current track',
+          type: 'info',
+        });
+      },
+
+      toggleShuffle: () => {
+        const { isShuffled, playbackQueue, originalQueue, currentTrack } = get();
+        const nextShuffle = !isShuffled;
+
+        if (nextShuffle) {
+          const savedOriginal = originalQueue.length > 0 ? [...originalQueue] : [...playbackQueue];
+          const remaining = playbackQueue.filter(t => t.id !== currentTrack.id);
+          for (let i = remaining.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+          }
+          const shuffled = [currentTrack, ...remaining];
+          set({
+            isShuffled: true,
+            originalQueue: savedOriginal,
+            playbackQueue: shuffled,
+            queueIndex: 0,
+          });
+          get().addToast({
+            title: 'SHUFFLE ACTIVE',
+            message: 'Queue order randomized.',
+            type: 'info',
+          });
+        } else {
+          const restored = originalQueue.length > 0 ? [...originalQueue] : [...playbackQueue];
+          const newIndex = Math.max(0, restored.findIndex(t => t.id === currentTrack.id));
+          set({
+            isShuffled: false,
+            playbackQueue: restored,
+            queueIndex: newIndex,
+          });
+          get().addToast({
+            title: 'SHUFFLE DISABLED',
+            message: 'Original queue order restored.',
+            type: 'info',
+          });
+        }
+      },
+
+      addToQueue: (trackOrTracks) => {
+        const incoming = Array.isArray(trackOrTracks) ? trackOrTracks : [trackOrTracks];
+        const currentQueue = get().playbackQueue;
+        const updated = [...currentQueue, ...incoming];
+        set({
+          playbackQueue: updated,
+          originalQueue: [...get().originalQueue, ...incoming],
+        });
+        get().addToast({
+          title: 'ADDED TO QUEUE',
+          message: incoming.length === 1 
+            ? `${incoming[0].title} added to queue.`
+            : `${incoming.length} tracks added to queue.`,
+          type: 'success',
+        });
+      },
+
+      removeFromQueue: (index) => {
+        const { playbackQueue, queueIndex } = get();
+        if (index < 0 || index >= playbackQueue.length) return;
+        const removed = playbackQueue[index];
+        const nextQueue = playbackQueue.filter((_, i) => i !== index);
+        let nextIndex = queueIndex;
+        if (index < queueIndex) {
+          nextIndex = queueIndex - 1;
+        } else if (index === queueIndex) {
+          nextIndex = Math.min(queueIndex, Math.max(0, nextQueue.length - 1));
+        }
+        set({
+          playbackQueue: nextQueue,
+          queueIndex: Math.max(0, nextIndex),
+        });
+        get().addToast({
+          title: 'REMOVED FROM QUEUE',
+          message: `${removed.title} removed.`,
+          type: 'info',
+        });
+      },
+
+      clearQueue: () => {
+        const { currentTrack } = get();
+        set({
+          playbackQueue: [currentTrack],
+          originalQueue: [currentTrack],
+          queueIndex: 0,
+        });
+        get().addToast({
+          title: 'QUEUE CLEARED',
+          message: 'Upcoming queue cleared.',
+          type: 'info',
+        });
+      },
+
+      playQueueItem: (index) => {
+        const { playbackQueue } = get();
+        if (index >= 0 && index < playbackQueue.length) {
+          const track = playbackQueue[index];
+          set({
+            currentTrack: track,
+            queueIndex: index,
+            currentTime: 0,
+            isPlaying: true,
+          });
+        }
+      },
+
+      reorderQueue: (startIndex, endIndex) => {
+        const queue = [...get().playbackQueue];
+        const [removed] = queue.splice(startIndex, 1);
+        queue.splice(endIndex, 0, removed);
+        const { currentTrack } = get();
+        const nextIndex = queue.findIndex(t => t.id === currentTrack.id);
+        set({
+          playbackQueue: queue,
+          queueIndex: Math.max(0, nextIndex),
+        });
+      },
 
       // Music Actions
       addToSetlist: (track) => {

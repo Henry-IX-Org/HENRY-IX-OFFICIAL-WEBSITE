@@ -12,7 +12,15 @@ import {
   Disc,
   Layers,
   Sparkles,
-  Maximize2
+  Maximize2,
+  SkipBack,
+  SkipForward,
+  Repeat,
+  Repeat1,
+  Shuffle,
+  ListMusic,
+  Trash2,
+  X
 } from 'lucide-react';
 import ThreeBandColorWaveform from './ThreeBandColorWaveform';
 import { useStudioStore, StudioTrack } from '@/store/studioStore';
@@ -42,6 +50,21 @@ export default function PersistentAudioPlayer({
   const pitchSemitones = useStudioStore(s => s.pitchSemitones);
   const setPitchSemitones = useStudioStore(s => s.setPitchSemitones);
   const addToast = useStudioStore(s => s.addToast);
+
+  // Queue & Transport Store Hooks
+  const playbackQueue = useStudioStore(s => s.playbackQueue);
+  const queueIndex = useStudioStore(s => s.queueIndex);
+  const repeatMode = useStudioStore(s => s.repeatMode);
+  const isShuffled = useStudioStore(s => s.isShuffled);
+  const isQueueOpen = useStudioStore(s => s.isQueueOpen);
+  const setIsQueueOpen = useStudioStore(s => s.setIsQueueOpen);
+  const playNextTrack = useStudioStore(s => s.playNextTrack);
+  const playPreviousTrack = useStudioStore(s => s.playPreviousTrack);
+  const toggleRepeat = useStudioStore(s => s.toggleRepeat);
+  const toggleShuffle = useStudioStore(s => s.toggleShuffle);
+  const removeFromQueue = useStudioStore(s => s.removeFromQueue);
+  const clearQueue = useStudioStore(s => s.clearQueue);
+  const playQueueItem = useStudioStore(s => s.playQueueItem);
 
   const [airplayActive, setAirplayActive] = useState(false);
   const [devicePickerOpen, setDevicePickerOpen] = useState(false);
@@ -110,8 +133,7 @@ export default function PersistentAudioPlayer({
     };
 
     const onEnded = () => {
-      if (isPlaying) togglePlay();
-      setCurrentTime(0);
+      playNextTrack();
     };
 
     const onError = () => {
@@ -382,15 +404,74 @@ export default function PersistentAudioPlayer({
             />
             <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400">{formatTime(currentTime)}</span>
-              <div className="flex items-center gap-4">
-                <button onClick={() => jumpSeconds(-10)} className="px-3 py-1.5 border border-zinc-800 hover:border-zinc-500">? -10s</button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleShuffle}
+                  className={`p-2 border transition-colors ${
+                    isShuffled ? 'border-emerald-500 text-emerald-400 bg-emerald-950/40' : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                  }`}
+                  title="Toggle Shuffle"
+                >
+                  <Shuffle size={14} />
+                </button>
+
+                <button 
+                  onClick={playPreviousTrack} 
+                  className="p-2 border border-zinc-800 hover:border-zinc-500 text-zinc-300 hover:text-white transition-colors"
+                  title="Previous Track ( |◀ )"
+                >
+                  <SkipBack size={16} />
+                </button>
+
+                <button onClick={() => jumpSeconds(-10)} className="px-2.5 py-1.5 border border-zinc-800 hover:border-zinc-500 text-zinc-400">
+                  <RotateCcw size={14} />
+                </button>
+
                 <button 
                   onClick={togglePlay} 
-                  className="px-8 py-2 bg-[#D8163F] text-white font-bold hover:bg-red-600 shadow-[0_0_15px_rgba(216,22,63,0.6)]"
+                  className="px-8 py-2.5 bg-[#D8163F] text-white font-bold hover:bg-red-600 shadow-[0_0_15px_rgba(216,22,63,0.6)] flex items-center gap-2 transition-all"
                 >
-                  {isPlaying ? 'PAUSE' : 'PLAY'}
+                  {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                  <span>{isPlaying ? 'PAUSE' : 'PLAY'}</span>
                 </button>
-                <button onClick={() => jumpSeconds(10)} className="px-3 py-1.5 border border-zinc-800 hover:border-zinc-500">+10s ?</button>
+
+                <button onClick={() => jumpSeconds(10)} className="px-2.5 py-1.5 border border-zinc-800 hover:border-zinc-500 text-zinc-400">
+                  <RotateCw size={14} />
+                </button>
+
+                <button 
+                  onClick={playNextTrack} 
+                  className="p-2 border border-zinc-800 hover:border-zinc-500 text-zinc-300 hover:text-white transition-colors"
+                  title="Next Track ( ▶| )"
+                >
+                  <SkipForward size={16} />
+                </button>
+
+                <button
+                  onClick={toggleRepeat}
+                  className={`p-2 border transition-colors flex items-center gap-1 ${
+                    repeatMode === 'one' 
+                      ? 'border-[#D8163F] text-[#D8163F] bg-red-950/40' 
+                      : repeatMode === 'all'
+                      ? 'border-cyan-500 text-cyan-400 bg-cyan-950/40'
+                      : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                  }`}
+                  title={`Repeat Mode: ${repeatMode.toUpperCase()}`}
+                >
+                  {repeatMode === 'one' ? <Repeat1 size={14} /> : <Repeat size={14} />}
+                  <span className="text-[10px] uppercase font-bold">{repeatMode}</span>
+                </button>
+
+                <button
+                  onClick={() => setIsQueueOpen(!isQueueOpen)}
+                  className={`p-2 border transition-colors flex items-center gap-1.5 ${
+                    isQueueOpen ? 'border-[#D8163F] text-white bg-[#D8163F]/20' : 'border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                  title="Toggle Queue"
+                >
+                  <ListMusic size={15} />
+                  <span className="text-[10px] font-bold text-[#22d3ee]">{playbackQueue.length}</span>
+                </button>
               </div>
               <span className="text-zinc-400">-{formatTime(currentTrack.duration - currentTime)}</span>
             </div>
@@ -469,19 +550,73 @@ export default function PersistentAudioPlayer({
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <span className="text-zinc-400">{formatTime(currentTime)}</span>
+              
+              <button
+                onClick={toggleShuffle}
+                className={`p-1.5 border rounded transition-colors ${
+                  isShuffled ? 'border-emerald-500 text-emerald-400 bg-emerald-950/40' : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                }`}
+                title="Toggle Shuffle"
+              >
+                <Shuffle size={13} />
+              </button>
+
+              <button 
+                onClick={playPreviousTrack} 
+                className="p-1.5 border border-zinc-800 hover:border-zinc-500 text-zinc-300 hover:text-white transition-colors"
+                title="Previous Track ( |◀ )"
+              >
+                <SkipBack size={15} />
+              </button>
+
               <button 
                 onClick={togglePlay}
-                className="w-10 h-10 rounded-full bg-[#D8163F] text-white flex items-center justify-center hover:bg-red-600 shadow-[0_0_12px_rgba(216,22,63,0.5)]"
+                className="w-10 h-10 rounded-full bg-[#D8163F] text-white flex items-center justify-center hover:bg-red-600 shadow-[0_0_12px_rgba(216,22,63,0.5)] transition-all"
               >
                 {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
               </button>
+
+              <button 
+                onClick={playNextTrack} 
+                className="p-1.5 border border-zinc-800 hover:border-zinc-500 text-zinc-300 hover:text-white transition-colors"
+                title="Next Track ( ▶| )"
+              >
+                <SkipForward size={15} />
+              </button>
+
+              <button
+                onClick={toggleRepeat}
+                className={`p-1.5 border rounded transition-colors flex items-center gap-1 ${
+                  repeatMode === 'one' 
+                    ? 'border-[#D8163F] text-[#D8163F] bg-red-950/40' 
+                    : repeatMode === 'all'
+                    ? 'border-cyan-500 text-cyan-400 bg-cyan-950/40'
+                    : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                }`}
+                title={`Repeat Mode: ${repeatMode.toUpperCase()}`}
+              >
+                {repeatMode === 'one' ? <Repeat1 size={13} /> : <Repeat size={13} />}
+                <span className="text-[9px] uppercase font-bold">{repeatMode}</span>
+              </button>
+
+              <button
+                onClick={() => setIsQueueOpen(!isQueueOpen)}
+                className={`p-1.5 border rounded transition-colors flex items-center gap-1.5 ${
+                  isQueueOpen ? 'border-[#D8163F] text-white bg-[#D8163F]/20' : 'border-zinc-800 text-zinc-400 hover:text-white'
+                }`}
+                title="Toggle Queue"
+              >
+                <ListMusic size={14} />
+                <span className="text-[10px] font-bold text-[#22d3ee]">{playbackQueue.length}</span>
+              </button>
+
               <span className="text-zinc-400">-{formatTime(currentTrack.duration - currentTime)}</span>
             </div>
 
-            <div className="text-zinc-500 text-[11px]">
-              SYNTH AUDIO: <span className={isPlaying ? 'text-emerald-400 font-bold' : 'text-zinc-600'}>{isPlaying ? 'LIVE STREAMING' : 'STANDBY'}</span>
+            <div className="text-zinc-500 text-[11px] hidden sm:block">
+              AUDIO: <span className={isPlaying ? 'text-emerald-400 font-bold' : 'text-zinc-600'}>{isStreamingDropbox ? 'DROPBOX CLOUD' : isPlaying ? 'DSP SYNTH' : 'STANDBY'}</span>
             </div>
           </div>
         </div>
@@ -523,26 +658,34 @@ export default function PersistentAudioPlayer({
 
           {/* Zone 2: Transport & Scrubbable Waveform */}
           <div className="flex-1 max-w-2xl px-6 flex flex-col items-center">
-            <div className="flex items-center gap-4 mb-1 text-xs">
+            <div className="flex items-center gap-2 mb-1 text-xs">
               <button 
                 onClick={() => setPitchSemitones(p => Math.max(-2, p - 1))}
                 className="text-[10px] px-1.5 py-0.5 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white"
                 title="Key Shift Down 1 Semitone"
               >
-                ? -1
+                ♭ -1
+              </button>
+
+              <button 
+                onClick={playPreviousTrack}
+                className="text-zinc-400 hover:text-white transition-colors p-1"
+                title="Previous Track / Restart ( |◀ )"
+              >
+                <SkipBack size={14} />
               </button>
               
               <button 
                 onClick={() => jumpSeconds(-10)} 
-                className="text-zinc-500 hover:text-white transition-colors"
+                className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
                 title="Rewind 10 Seconds"
               >
-                <RotateCcw size={13} />
+                <RotateCcw size={12} />
               </button>
 
               <button 
                 onClick={togglePlay}
-                className="w-7 h-7 rounded-full bg-[#D8163F] text-white flex items-center justify-center hover:bg-red-600 shadow-[0_0_10px_rgba(216,22,63,0.5)] transition-all"
+                className="w-7 h-7 rounded-full bg-[#D8163F] text-white flex items-center justify-center hover:bg-red-600 shadow-[0_0_10px_rgba(216,22,63,0.5)] transition-all flex-shrink-0"
                 title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? <Pause size={12} /> : <Play size={12} className="ml-0.5" />}
@@ -550,10 +693,18 @@ export default function PersistentAudioPlayer({
 
               <button 
                 onClick={() => jumpSeconds(10)} 
-                className="text-zinc-500 hover:text-white transition-colors"
+                className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
                 title="Forward 10 Seconds"
               >
-                <RotateCw size={13} />
+                <RotateCw size={12} />
+              </button>
+
+              <button 
+                onClick={playNextTrack}
+                className="text-zinc-400 hover:text-white transition-colors p-1"
+                title="Next Track ( ▶| )"
+              >
+                <SkipForward size={14} />
               </button>
 
               <button 
@@ -561,7 +712,54 @@ export default function PersistentAudioPlayer({
                 className="text-[10px] px-1.5 py-0.5 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white"
                 title="Key Shift Up 1 Semitone"
               >
-                ? +1
+                ♯ +1
+              </button>
+
+              <div className="w-[1px] h-3.5 bg-zinc-800 mx-1 hidden sm:block" />
+
+              {/* Repeat Toggle */}
+              <button
+                onClick={toggleRepeat}
+                className={`p-1 rounded transition-all flex items-center gap-1 ${
+                  repeatMode === 'one' 
+                    ? 'text-[#D8163F] bg-red-950/40 border border-[#D8163F]/50 shadow-[0_0_8px_rgba(216,22,63,0.4)]' 
+                    : repeatMode === 'all'
+                    ? 'text-[#22d3ee] bg-cyan-950/40 border border-cyan-500/50 shadow-[0_0_8px_rgba(34,211,238,0.3)]'
+                    : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+                }`}
+                title={`Repeat Mode: ${repeatMode.toUpperCase()} (Click to cycle Off / All / One)`}
+              >
+                {repeatMode === 'one' ? <Repeat1 size={13} /> : <Repeat size={13} />}
+                <span className="text-[9px] font-bold uppercase hidden md:inline">{repeatMode}</span>
+              </button>
+
+              {/* Shuffle Toggle */}
+              <button
+                onClick={toggleShuffle}
+                className={`p-1 rounded transition-all flex items-center gap-1 ${
+                  isShuffled 
+                    ? 'text-emerald-400 bg-emerald-950/40 border border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
+                    : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+                }`}
+                title={isShuffled ? "Shuffle Enabled (Random without repeats)" : "Shuffle Off (Sequential)"}
+              >
+                <Shuffle size={13} />
+              </button>
+
+              {/* Queue Drawer Button */}
+              <button
+                onClick={() => setIsQueueOpen(!isQueueOpen)}
+                className={`p-1 px-1.5 rounded transition-all flex items-center gap-1.5 text-xs font-mono border ${
+                  isQueueOpen 
+                    ? 'border-[#D8163F] text-white bg-[#D8163F]/20' 
+                    : 'border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                }`}
+                title="Toggle Playback Queue Drawer"
+              >
+                <ListMusic size={13} />
+                <span className="text-[10px] font-bold bg-zinc-900 px-1 py-0.2 rounded border border-zinc-800 text-[#22d3ee]">
+                  {playbackQueue.length}
+                </span>
               </button>
             </div>
 
@@ -680,6 +878,165 @@ export default function PersistentAudioPlayer({
 
           </div>
 
+        </div>
+      )}
+
+      {/* 4. INTERACTIVE SLIDE-OVER QUEUE DRAWER */}
+      {isQueueOpen && (
+        <div className="fixed top-0 bottom-16 right-0 w-80 sm:w-96 bg-black/95 backdrop-blur-md border-l border-zinc-800 shadow-2xl z-40 flex flex-col font-mono animate-in slide-in-from-right duration-200 select-none">
+          {/* Drawer Header */}
+          <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/80">
+            <div className="flex items-center gap-2">
+              <ListMusic size={16} className="text-[#D8163F]" />
+              <span className="font-bold text-xs text-white uppercase tracking-wider">Playback Queue</span>
+              <span className="text-[10px] px-1.5 py-0.2 bg-zinc-900 border border-zinc-800 text-[#22d3ee] font-bold">
+                {playbackQueue.length}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsQueueOpen(false)}
+              className="p-1 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white rounded transition-colors"
+              title="Close Queue Drawer"
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Queue Actions Bar */}
+          <div className="px-4 py-2 border-b border-zinc-900 bg-black/60 flex items-center justify-between text-xs">
+            <button
+              onClick={toggleShuffle}
+              className={`flex items-center gap-1.5 px-2.5 py-1 border rounded text-[10px] font-bold transition-all ${
+                isShuffled 
+                  ? 'border-emerald-500 text-emerald-400 bg-emerald-950/40' 
+                  : 'border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+              }`}
+            >
+              <Shuffle size={11} />
+              <span>{isShuffled ? 'SHUFFLED' : 'SHUFFLE ALL'}</span>
+            </button>
+
+            <button
+              onClick={clearQueue}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] text-zinc-500 hover:text-red-400 transition-colors"
+              title="Clear upcoming tracks from queue"
+            >
+              <Trash2 size={11} />
+              <span>CLEAR UPCOMING</span>
+            </button>
+          </div>
+
+          {/* Drawer Body: Now Playing + Up Next */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+            
+            {/* Active Track Card */}
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 flex items-center justify-between">
+                <span>NOW PLAYING</span>
+                {isPlaying && (
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    LIVE
+                  </span>
+                )}
+              </div>
+              <div className="p-3 border border-[#D8163F]/40 bg-[#D8163F]/5 relative overflow-hidden rounded-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-black border border-zinc-800 relative flex items-center justify-center flex-shrink-0">
+                    <Disc size={20} className={`text-[#D8163F] ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold text-white truncate">{currentTrack.title}</div>
+                    <div className="text-[11px] text-zinc-400 truncate mt-0.5">{currentTrack.artist}</div>
+                    <div className="flex items-center gap-2 mt-1 text-[10px]">
+                      <span className="text-[#22d3ee] font-bold">{currentTrack.key}</span>
+                      <span className="text-zinc-600">•</span>
+                      <span className="text-zinc-400">{currentTrack.bpm} BPM</span>
+                      <span className="text-zinc-600">•</span>
+                      <span className="text-zinc-500">{formatTime(currentTrack.duration)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Up Next Section */}
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 flex items-center justify-between">
+                <span>UP NEXT IN QUEUE</span>
+                <span className="text-zinc-600">{Math.max(0, playbackQueue.length - (queueIndex + 1))} remaining</span>
+              </div>
+
+              {playbackQueue.length <= 1 ? (
+                <div className="p-6 border border-dashed border-zinc-900 text-center text-zinc-600 text-xs rounded">
+                  <ListMusic size={24} className="mx-auto mb-2 opacity-40 text-zinc-500" />
+                  <p>Queue is empty.</p>
+                  <p className="text-[10px] text-zinc-700 mt-1">Click [+ Queue] on any track in your Library or Crates to add songs.</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {playbackQueue.map((track, idx) => {
+                    const isCurrent = idx === queueIndex;
+                    const isPast = idx < queueIndex;
+                    return (
+                      <div
+                        key={`${track.id}-${idx}`}
+                        className={`p-2 border text-xs flex items-center justify-between gap-2 group transition-all rounded-sm ${
+                          isCurrent
+                            ? 'border-[#D8163F] bg-[#D8163F]/10'
+                            : isPast
+                            ? 'border-zinc-900 bg-black/40 opacity-50'
+                            : 'border-zinc-900 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <span className="text-[10px] text-zinc-600 font-mono w-4 text-right flex-shrink-0">
+                            {idx + 1}
+                          </span>
+                          <button
+                            onClick={() => playQueueItem(idx)}
+                            className="text-zinc-500 hover:text-white transition-colors p-0.5"
+                            title="Play this track now"
+                          >
+                            {isCurrent && isPlaying ? (
+                              <Pause size={12} className="text-[#D8163F]" />
+                            ) : (
+                              <Play size={12} className="group-hover:text-[#D8163F]" />
+                            )}
+                          </button>
+                          <div className="min-w-0 flex-1">
+                            <div className={`truncate font-bold ${isCurrent ? 'text-[#D8163F]' : 'text-zinc-200'}`}>
+                              {track.title}
+                            </div>
+                            <div className="text-[10px] text-zinc-500 truncate">{track.artist}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-[9px] px-1 bg-zinc-900 border border-zinc-800 text-[#22d3ee] font-bold">
+                            {track.key}
+                          </span>
+                          <span className="text-[9px] text-zinc-500 font-mono">
+                            {track.bpm.toFixed(0)}
+                          </span>
+                          {!isCurrent && (
+                            <button
+                              onClick={() => removeFromQueue(idx)}
+                              className="text-zinc-600 hover:text-red-400 p-1 transition-colors opacity-0 group-hover:opacity-100"
+                              title="Remove from queue"
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
       )}
     </>

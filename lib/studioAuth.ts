@@ -98,17 +98,7 @@ const defaultOwner: StudioUserProfile = {
   apple: {
     connected: false,
   },
-  passkeys: [
-    {
-      id: 'passkey_default_mac',
-      name: 'MacBook Pro Touch ID',
-      credentialId: 'cred_mock_touchid_01',
-      publicKey: 'mock_pk_henry_mac',
-      counter: 12,
-      createdAt: '2026-01-15T12:00:00.000Z',
-      lastUsedAt: '2026-09-07T10:00:00.000Z',
-    }
-  ],
+  passkeys: [],
   totp: {
     enabled: false,
   },

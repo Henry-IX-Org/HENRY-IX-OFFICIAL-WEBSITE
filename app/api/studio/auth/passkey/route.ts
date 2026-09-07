@@ -44,25 +44,9 @@ export async function POST(req: NextRequest) {
       // Lookup user associated with this passkey credentialId
       const user = await getUserByPasskey(credential.id);
       if (!user) {
-        // Fallback for Henry's default mock passkey if not yet explicitly registered in cloud
-        const defaultUser = await getUserById('usr_henryix_master');
-        if (defaultUser) {
-          const token = await createSessionToken(defaultUser);
-          const response = NextResponse.json({
-            success: true,
-            user: defaultUser,
-            message: `Biometric passkey verified for ${defaultUser.name}`,
-          });
-          response.cookies.set('henryix_studio_session', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 30 * 24 * 60 * 60,
-            path: '/',
-          });
-          return response;
-        }
-        return NextResponse.json({ error: 'Passkey not recognized. Please sign in with email first to register this passkey.' }, { status: 404 });
+        return NextResponse.json({ 
+          error: 'Passkey not recognized. Please sign in with your verified email first to enroll this device.' 
+        }, { status: 401 });
       }
 
       // Update passkey lastUsedAt

@@ -263,45 +263,58 @@ export default function StudioPage() {
     setStatusMessage('PROMPTING BIOMETRIC PASSKEY...');
 
     try {
+      if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+        setErrorMessage('WEBAUTHN NOT SUPPORTED ON THIS BROWSER');
+        return;
+      }
+
       // 1. Fetch challenge from server
       const challengeRes = await fetch('/api/studio/auth/passkey');
       const challengeData = (await challengeRes.json()) as any;
 
-      // Convert challenge base64url to Uint8Array
-      const challengeBuffer = Uint8Array.from(atob(challengeData.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-
-      let credentialId = 'cred_mock_touchid_01';
-
-      // 2. Trigger browser WebAuthn if supported
-      if (typeof window !== 'undefined' && window.PublicKeyCredential) {
-        try {
-          const credential = await navigator.credentials.get({
-            publicKey: {
-              challenge: challengeBuffer,
-              timeout: 60000,
-              userVerification: 'preferred',
-              rpId: window.location.hostname === 'localhost' ? 'localhost' : undefined,
-            },
-          }) as any;
-
-          if (credential?.id) {
-            credentialId = credential.id;
-          }
-        } catch (webauthnErr: any) {
-          console.warn('WebAuthn prompt dismissed or fallback:', webauthnErr);
-        }
+      if (!challengeRes.ok || !challengeData.challenge) {
+        setErrorMessage('FAILED TO INITIALIZE BIOMETRIC CHALLENGE');
+        return;
       }
 
-      // 3. Verify passkey on server
+      // Convert challenge base64url to Uint8Array
+      const challengeBuffer = Uint8Array.from(
+        atob(challengeData.challenge.replace(/-/g, '+').replace(/_/g, '/')), 
+        c => c.charCodeAt(0)
+      );
+
+      // 2. Trigger browser WebAuthn - strictly handle dismissals/cancellations
+      let credential: any;
+      try {
+        credential = await navigator.credentials.get({
+          publicKey: {
+            challenge: challengeBuffer,
+            timeout: 60000,
+            userVerification: 'preferred',
+            rpId: window.location.hostname === 'localhost' ? 'localhost' : undefined,
+          },
+        });
+      } catch (webauthnErr: any) {
+        console.warn('WebAuthn prompt error or cancelled:', webauthnErr);
+        setErrorMessage('BIOMETRIC AUTHENTICATION CANCELLED OR NOT DETECTED');
+        return;
+      }
+
+      if (!credential?.id) {
+        setErrorMessage('NO BIOMETRIC CREDENTIAL RETURNED');
+        return;
+      }
+
+      // 3. Verify genuine passkey on server
       const verifyRes = await fetch('/api/studio/auth/passkey', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify', credential: { id: credentialId } }),
+        body: JSON.stringify({ action: 'verify', credential: { id: credential.id } }),
       });
       const data = (await verifyRes.json()) as any;
 
       if (!verifyRes.ok) {
-        setErrorMessage(data.error || 'PASSKEY VERIFICATION FAILED');
+        setErrorMessage(data.error || 'PASSKEY NOT RECOGNIZED. SIGN IN WITH EMAIL TO ENROLL.');
         return;
       }
 
@@ -315,8 +328,8 @@ export default function StudioPage() {
       playSuccessChime();
       setCurrentUser(data.user);
       setIsAuthenticated(true);
-    } catch {
-      setErrorMessage('BIOMETRIC PASSKEY REJECTED');
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'BIOMETRIC PASSKEY REJECTED');
     } finally {
       setIsLoading(false);
     }
@@ -329,29 +342,13 @@ export default function StudioPage() {
     playTactileClick(950);
     setIsLoading(true);
     setErrorMessage(null);
-    setStatusMessage(`CONNECTING TO ${provider.toUpperCase()}...`);
+    setStatusMessage(`INITIALIZING ${provider.toUpperCase()} AUTHENTICATION...`);
 
     try {
-      // Direct federated resolution into user's account
-      const res = await fetch('/api/studio/auth/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'verify',
-          email: provider === 'google' ? 'henryixdj@gmail.com' : 'henry@henryix.com',
-          code: 'OAUTH_BYPASS_VERIFIED',
-        }),
-      });
-
-      // Quick fallback if direct mock bypass needed for Henry
-      playSuccessChime();
-      const defaultUser = await fetch('/api/studio/auth/session').then(r => r.json() as Promise<any>).then((d: any) => d.user).catch(() => null);
-      if (defaultUser) {
-        setCurrentUser(defaultUser);
-      }
-      setIsAuthenticated(true);
-    } catch {
-      setIsAuthenticated(true);
+      // Strictly prevent mock bypasses: guide user to verified email or real OAuth
+      setErrorMessage(
+        `${provider.toUpperCase()} SSO REQUIRES SECURE OAUTH APP CALLBACK. PLEASE USE YOUR VERIFIED 6-DIGIT EMAIL CODE TO SIGN IN.`
+      );
     } finally {
       setIsLoading(false);
     }

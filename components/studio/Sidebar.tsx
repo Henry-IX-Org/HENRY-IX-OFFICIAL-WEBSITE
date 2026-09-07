@@ -28,7 +28,8 @@ import {
   Send,
   Sparkles,
   ChevronDown,
-  ShieldCheck
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 
 export interface SidebarProps {
@@ -136,6 +137,21 @@ export default function Sidebar({
                     {currentRole === role && <ShieldCheck size={12} className="text-[#D8163F]" />}
                   </button>
                 ))}
+                <div className="border-t border-zinc-900 pt-1 mt-1">
+                  <button
+                    onClick={async () => {
+                      setProfileDropdownOpen(false);
+                      try {
+                        await fetch('/api/studio/auth/session', { method: 'DELETE' });
+                      } catch {}
+                      window.location.reload();
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded flex items-center gap-2 text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-colors text-[11px] font-bold"
+                  >
+                    <LogOut size={12} />
+                    <span>Sign Out Operator</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

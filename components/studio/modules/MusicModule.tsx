@@ -24,7 +24,8 @@ import {
   RefreshCw,
   Share2,
   TrendingUp,
-  Tag
+  Tag,
+  ListPlus
 } from 'lucide-react';
 import ThreeBandColorWaveform from '../ThreeBandColorWaveform';
 import { useStudioStore, StudioTrack } from '@/store/studioStore';
@@ -41,6 +42,7 @@ export default function MusicModule({
   const trackCollection = useStudioStore((s) => s.trackCollection);
   const activeSetlist = useStudioStore((s) => s.activeSetlist);
   const addToSetlist = useStudioStore((s) => s.addToSetlist);
+  const addToQueue = useStudioStore((s) => s.addToQueue);
   const removeFromSetlist = useStudioStore((s) => s.removeFromSetlist);
   const cleanTrackTitle = useStudioStore((s) => s.cleanTrackTitle);
   const exportRekordboxXml = useStudioStore((s) => s.exportRekordboxXml);
@@ -380,6 +382,7 @@ export default function MusicModule({
                   <th className="p-2.5 w-40">3-BAND WAVE</th>
                   <th className="p-2.5 w-28">HEAT TAG</th>
                   <th className="p-2.5 w-28">CLEARANCE</th>
+                  <th className="p-2.5 w-12 text-center">+QUEUE</th>
                   <th className="p-2.5 w-12 text-center">+SET</th>
                 </tr>
               </thead>
@@ -469,6 +472,18 @@ export default function MusicModule({
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
+                            addToQueue(track);
+                          }}
+                          className="p-1 border border-zinc-800 hover:border-[#22d3ee] hover:text-[#22d3ee] transition-colors rounded"
+                          title="Add to Playback Queue"
+                        >
+                          <ListPlus size={12} />
+                        </button>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
                             addToSetlist(track);
                           }}
                           className="p-1 border border-zinc-800 hover:border-[#D8163F] hover:text-[#D8163F] transition-colors rounded"
@@ -551,6 +566,18 @@ export default function MusicModule({
               <button
                 onClick={() => {
                   const tList = currentMode === 'crate-kc4' ? kc4Tracks : currentMode === 'crate-rc2' ? rc2Tracks : cn1Tracks;
+                  addToQueue(tList);
+                }}
+                className="px-3.5 py-2 bg-zinc-900 border border-zinc-700 hover:border-[#22d3ee] text-[#22d3ee] text-xs font-bold flex items-center gap-1.5 transition-colors"
+                title="Append all crate tracks to playback queue"
+              >
+                <ListPlus size={13} />
+                <span>QUEUE ALL</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const tList = currentMode === 'crate-kc4' ? kc4Tracks : currentMode === 'crate-rc2' ? rc2Tracks : cn1Tracks;
                   handleLoadCrateToSetlist(tList, currentMode === 'crate-kc4' ? 'Knight Club 4' : currentMode === 'crate-rc2' ? 'Royal Court 2' : 'Corner N1');
                 }}
                 className="px-4 py-2 bg-[#D8163F] text-black font-bold text-xs hover:bg-white transition-colors flex items-center gap-1.5 shadow-[0_0_12px_rgba(216,22,63,0.4)]"
@@ -571,21 +598,22 @@ export default function MusicModule({
 
           {/* Crate Tracks Table */}
           <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950">
-            <table className="w-full text-left border-collapse text-xs font-mono">
+            <table className="w-full text-left border-collapse text-xs">
               <thead className="bg-black sticky top-0 z-10 border-b border-zinc-800 text-zinc-400 font-bold uppercase text-[10px]">
                 <tr>
                   <th className="p-2.5 w-10 text-center">#</th>
                   <th className="p-2.5 w-10 text-center">PLAY</th>
                   <th className="p-2.5">TITLE</th>
                   <th className="p-2.5">ARTIST</th>
-                  <th className="p-2.5 w-20">BPM</th>
-                  <th className="p-2.5 w-20">KEY</th>
-                  <th className="p-2.5 w-28">ENERGY</th>
-                  <th className="p-2.5 w-32">MIX PRESENCE</th>
-                  <th className="p-2.5 w-16 text-center">+SET</th>
+                  <th className="p-2.5 w-16">BPM</th>
+                  <th className="p-2.5 w-16">KEY</th>
+                  <th className="p-2.5 w-32">ENERGY</th>
+                  <th className="p-2.5">PRESENCE</th>
+                  <th className="p-2.5 w-12 text-center">+QUEUE</th>
+                  <th className="p-2.5 w-12 text-center">+SET</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-900">
+              <tbody className="divide-y divide-zinc-900 font-mono">
                 {(currentMode === 'crate-kc4' ? kc4Tracks : currentMode === 'crate-rc2' ? rc2Tracks : cn1Tracks).map((track, idx) => {
                   const isCurrent = currentTrack?.id === track.id;
                   return (
@@ -620,8 +648,17 @@ export default function MusicModule({
                       <td className="p-2.5 text-zinc-400 text-[11px]">{track.mixPresence}</td>
                       <td className="p-2.5 text-center">
                         <button
+                          onClick={() => addToQueue(track)}
+                          className="p-1 border border-zinc-800 hover:border-[#22d3ee] hover:text-[#22d3ee] transition-colors rounded"
+                          title="Add to Playback Queue"
+                        >
+                          <ListPlus size={12} />
+                        </button>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <button
                           onClick={() => addToSetlist(track)}
-                          className="p-1 border border-zinc-800 hover:border-[#D8163F] hover:text-[#D8163F]"
+                          className="p-1 border border-zinc-800 hover:border-[#D8163F] hover:text-[#D8163F] transition-colors rounded"
                           title="Add to Setlist"
                         >
                           <Plus size={12} />
