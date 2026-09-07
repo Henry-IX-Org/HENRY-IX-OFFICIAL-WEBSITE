@@ -10,6 +10,7 @@ import StudioRightDrawer, { RightDrawerTab } from './StudioRightDrawer';
 import StudioToasts from './StudioToasts';
 import { useStudioStore } from '@/store/studioStore';
 import { canAccessModule, ROLE_METADATA } from '@/lib/studioPermissions';
+import { Lock } from 'lucide-react';
 
 // Module Component Imports
 import StreamingModule from './modules/StreamingModule';
@@ -23,9 +24,10 @@ import SocialModule from './modules/SocialModule';
 
 interface StudioShellProps {
   children?: React.ReactNode;
+  onLock?: () => void;
 }
 
-export default function StudioShell({ children }: StudioShellProps) {
+export default function StudioShell({ children, onLock }: StudioShellProps) {
   // Navigation & View State
   const [activeView, setActiveView] = useState<string>('streaming-live');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -45,6 +47,19 @@ export default function StudioShell({ children }: StudioShellProps) {
   const playerState = useStudioStore((s) => s.playerState);
   const setPlayerState = useStudioStore((s) => s.setPlayerState);
   const currentUser = useStudioStore((s) => s.currentUser);
+
+  // Lock Console / Sign Out
+  const handleLockStudio = useCallback(async () => {
+    try {
+      await fetch('/api/studio/auth/session', { method: 'DELETE' });
+    } catch {}
+    useStudioStore.getState().setCurrentUser(null);
+    if (onLock) {
+      onLock();
+    } else {
+      window.location.href = '/studio?lock=true';
+    }
+  }, [onLock]);
 
   // RBAC Access Guard: Ensure current operator is routed to an authorized module
   useEffect(() => {
@@ -237,6 +252,7 @@ export default function StudioShell({ children }: StudioShellProps) {
             isPlaying: isPlaying,
           }}
           onTogglePlay={togglePlay}
+          onSignOut={handleLockStudio}
         />
 
         {/* Pillar 2: Main Center Canvas */}
@@ -253,7 +269,7 @@ export default function StudioShell({ children }: StudioShellProps) {
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {/* Operator Presence Badge */}
               {currentUser && (
                 <div 
@@ -269,6 +285,17 @@ export default function StudioShell({ children }: StudioShellProps) {
                   </span>
                 </div>
               )}
+
+              {/* Quick Lock / Sign Out Button */}
+              <button 
+                type="button"
+                onClick={handleLockStudio}
+                className="flex items-center gap-1.5 px-2 py-1 bg-[#1b1c22] border border-white/[0.08] hover:border-red-500/40 hover:bg-red-950/20 text-zinc-400 hover:text-red-300 rounded-lg text-xs font-mono transition-colors shadow-sm"
+                title="Lock Studio & Return to Sign In Console"
+              >
+                <Lock size={12} />
+                <span className="hidden sm:inline text-[11px]">Lock</span>
+              </button>
 
               {/* Universal Quick Search Button */}
               <button 

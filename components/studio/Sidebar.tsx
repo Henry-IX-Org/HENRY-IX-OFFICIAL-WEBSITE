@@ -54,6 +54,7 @@ export interface SidebarProps {
     isPlaying: boolean;
   };
   onTogglePlay?: () => void;
+  onSignOut?: () => void;
 }
 
 export default function Sidebar({
@@ -72,6 +73,7 @@ export default function Sidebar({
     isPlaying: false,
   },
   onTogglePlay,
+  onSignOut,
 }: SidebarProps) {
   const currentUser = useStudioStore((s) => s.currentUser);
   const role = currentUser?.role || 'owner';
@@ -176,7 +178,12 @@ export default function Sidebar({
                       try {
                         await fetch('/api/studio/auth/session', { method: 'DELETE' });
                       } catch {}
-                      window.location.reload();
+                      useStudioStore.getState().setCurrentUser(null);
+                      if (onSignOut) {
+                        onSignOut();
+                      } else {
+                        window.location.href = '/studio?lock=true';
+                      }
                     }}
                     className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-colors text-xs font-medium"
                   >
