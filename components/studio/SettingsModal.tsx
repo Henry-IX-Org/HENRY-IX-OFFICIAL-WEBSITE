@@ -35,14 +35,14 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: SettingsModalProps) {
   const tabs = [
-    { id: 'appearance', label: '🎨 Appearance & Theme', icon: Sliders },
-    { id: 'accounts', label: '🔗 Connected Accounts', icon: ExternalLink },
-    { id: 'audio', label: '🎛️ Audio & Devices', icon: Music },
-    { id: 'copilot', label: '🤖 AI Copilot & Prompts', icon: Cpu },
-    { id: 'sync', label: '☁️ Cloud & Library Sync', icon: Cloud },
-    { id: 'broadcast', label: '📹 Broadcast & OBS', icon: Radio },
-    { id: 'security', label: '🔒 Security & Passkeys', icon: Shield },
-    { id: 'logistics', label: '📅 DJ Logistics Defaults', icon: HardDrive },
+    { id: 'appearance', label: 'Appearance & Theme', icon: Sliders },
+    { id: 'accounts', label: 'Connected Accounts', icon: ExternalLink },
+    { id: 'audio', label: 'Audio & Devices', icon: Music },
+    { id: 'copilot', label: 'AI Copilot & Prompts', icon: Cpu },
+    { id: 'sync', label: 'Cloud & Library Sync', icon: Cloud },
+    { id: 'broadcast', label: 'Broadcast & OBS', icon: Radio },
+    { id: 'security', label: 'Security & Passkeys', icon: Shield },
+    { id: 'logistics', label: 'DJ Logistics Defaults', icon: HardDrive },
   ];
 
   const [activeTab, setActiveTab] = useState('appearance');
@@ -138,7 +138,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
       const glow = (settings.glowIntensity / 100) * 0.65;
-      root.style.setProperty('--color-primary-glow', `rgba(216, 22, 63, ${glow})`);
+      root.style.setProperty('--color-primary-glow', `rgba(229, 53, 88, ${glow})`);
       root.setAttribute('data-theme', settings.theme);
       root.setAttribute('data-density', settings.density);
     }
@@ -232,23 +232,23 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
   };
 
   const handleSendPhoneSms = async () => {
-    if (!phoneInput || phoneInput.length < 7) {
-      addToast({ title: 'INVALID NUMBER', message: 'Enter a valid phone number.', type: 'warning' });
+    if (!phoneInput || phoneInput.length < 8) {
+      addToast({ title: 'INVALID PHONE', message: 'Enter a valid international phone number.', type: 'warning' });
       return;
     }
     setPhoneLoading(true);
     try {
-      const res = await fetch('/api/studio/auth/sms', {
+      const res = await fetch('/api/studio/auth/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send', phone: phoneInput.trim() }),
+        body: JSON.stringify({ action: 'set-phone', phone: phoneInput.trim() }),
       });
       const data = (await res.json()) as any;
       if (!res.ok) throw new Error(data.error || 'Failed to send SMS');
       setPhoneOtpSent(true);
-      addToast({ title: 'SMS SENT', message: `Verification code sent to ${phoneInput}`, type: 'info' });
+      addToast({ title: 'SMS DISPATCHED', message: `Verification code sent to ${phoneInput}`, type: 'info' });
     } catch (err: any) {
-      addToast({ title: 'ERROR', message: err.message, type: 'error' });
+      addToast({ title: 'SMS ERROR', message: err.message, type: 'error' });
     } finally {
       setPhoneLoading(false);
     }
@@ -256,83 +256,83 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
 
   const handleVerifyPhoneSms = async () => {
     if (!phoneOtpInput || phoneOtpInput.trim().length !== 6) {
-      addToast({ title: 'INVALID CODE', message: 'Enter the 6-digit SMS code.', type: 'warning' });
+      addToast({ title: 'INVALID CODE', message: 'Enter the 6-digit text code.', type: 'warning' });
       return;
     }
     setPhoneLoading(true);
     try {
-      const res = await fetch('/api/studio/auth/sms', {
+      const res = await fetch('/api/studio/auth/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify', phone: phoneInput.trim(), code: phoneOtpInput.trim() }),
+        body: JSON.stringify({ action: 'verify-phone', phone: phoneInput.trim(), code: phoneOtpInput.trim() }),
       });
       const data = (await res.json()) as any;
-      if (!res.ok) throw new Error(data.error || 'SMS verification failed');
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
       updateCurrentUser(data.user);
       setIsAddingPhone(false);
       setPhoneOtpSent(false);
-      setPhoneInput('');
       setPhoneOtpInput('');
-      addToast({ title: 'PHONE VERIFIED', message: 'Mobile number linked to your account.', type: 'success' });
+      addToast({ title: 'PHONE VERIFIED', message: `${phoneInput} is verified for SMS alerts.`, type: 'success' });
     } catch (err: any) {
-      addToast({ title: 'VERIFY FAILED', message: err.message, type: 'error' });
+      addToast({ title: 'VERIFICATION FAILED', message: err.message, type: 'error' });
     } finally {
       setPhoneLoading(false);
     }
   };
 
   const handleRegisterPasskey = async () => {
+    if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+      addToast({ title: 'PASSKEYS UNSUPPORTED', message: 'This device does not support WebAuthn passkeys.', type: 'error' });
+      return;
+    }
     setPasskeyLoading(true);
     try {
-      const challengeRes = await fetch('/api/studio/auth/passkey');
-      const challengeData = (await challengeRes.json()) as any;
-      const challengeBuffer = Uint8Array.from(atob(challengeData.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+      const optRes = await fetch('/api/studio/auth/passkeys/register-options', { method: 'POST' });
+      const options = (await optRes.json()) as any;
+      if (!optRes.ok) throw new Error(options.error || 'Could not get passkey options');
 
-      let credentialId = `cred_${Date.now()}`;
-      if (typeof window !== 'undefined' && window.PublicKeyCredential) {
-        try {
-          const cred = await navigator.credentials.create({
-            publicKey: {
-              challenge: challengeBuffer,
-              rp: challengeData.rp,
-              user: {
-                id: new Uint8Array([1, 2, 3, 4]),
-                name: currentUser?.name || 'Henry IX',
-                displayName: currentUser?.name || 'Henry IX',
-              },
-              pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
-              authenticatorSelection: {
-                userVerification: 'preferred',
-              },
-              timeout: 60000,
-            }
-          }) as any;
-          if (cred?.id) credentialId = cred.id;
-        } catch (e) {
-          console.warn('Passkey native enrollment dismissed, using registered token:', e);
-        }
-      }
+      const challengeBytes = Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+      const userBytes = new TextEncoder().encode(options.user.id);
 
-      const regRes = await fetch('/api/studio/auth/passkey', {
+      const credential = (await navigator.credentials.create({
+        publicKey: {
+          challenge: challengeBytes,
+          rp: options.rp,
+          user: {
+            id: userBytes,
+            name: options.user.name,
+            displayName: options.user.displayName,
+          },
+          pubKeyCredParams: options.pubKeyCredParams,
+          authenticatorSelection: options.authenticatorSelection,
+          timeout: 60000,
+        },
+      })) as PublicKeyCredential;
+
+      if (!credential) throw new Error('Biometric registration was cancelled.');
+
+      const rawId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      const attestationObj = (credential.response as AuthenticatorAttestationResponse).attestationObject;
+      const clientDataJSON = (credential.response as AuthenticatorAttestationResponse).clientDataJSON;
+
+      const verifyRes = await fetch('/api/studio/auth/passkeys/verify-registration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'register',
-          credential: { id: credentialId },
-          name: navigator.userAgent.includes('Mac') ? 'MacBook Touch ID' : navigator.userAgent.includes('Windows') ? 'Windows Hello PC' : 'Device Passkey',
+          credentialId: rawId,
+          deviceName: navigator.userAgent.includes('Mac') ? 'MacBook Touch ID' : 'Windows Hello / Hardware Key',
+          clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(clientDataJSON))),
+          attestationObject: btoa(String.fromCharCode(...new Uint8Array(attestationObj))),
         }),
       });
-      const regData = (await regRes.json()) as any;
-      if (!regRes.ok) throw new Error(regData.error || 'Failed to register passkey');
 
-      // Refresh profile
-      const profRes = await fetch('/api/studio/auth/profile');
-      const profData = (await profRes.json()) as any;
-      if (profData.user) updateCurrentUser(profData.user);
+      const verifyData = (await verifyRes.json()) as any;
+      if (!verifyRes.ok) throw new Error(verifyData.error || 'Passkey verification failed');
 
-      addToast({ title: 'PASSKEY REGISTERED', message: 'Biometric passkey bound to your account.', type: 'success' });
+      updateCurrentUser(verifyData.user);
+      addToast({ title: 'PASSKEY ENROLLED', message: 'Biometric passkey registered to this account.', type: 'success' });
     } catch (err: any) {
-      addToast({ title: 'PASSKEY ERROR', message: err.message, type: 'error' });
+      addToast({ title: 'PASSKEY CANCELLED', message: err.message, type: 'warning' });
     } finally {
       setPasskeyLoading(false);
     }
@@ -341,9 +341,13 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
   const handleStartTotpSetup = async () => {
     setTotpLoading(true);
     try {
-      const res = await fetch('/api/studio/auth/totp');
+      const res = await fetch('/api/studio/auth/totp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setup' }),
+      });
       const data = (await res.json()) as any;
-      if (!res.ok) throw new Error(data.error || 'Failed to initialize 2FA');
+      if (!res.ok) throw new Error(data.error || 'Failed to initialize TOTP');
       setTotpData(data);
       setIsSettingUpTotp(true);
     } catch (err: any) {
@@ -494,22 +498,22 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150 font-sans">
       <div 
-        className="bg-zinc-950 border-2 border-[#D8163F] shadow-[0_0_50px_rgba(216,22,63,0.35)] w-full max-w-5xl h-[85vh] flex flex-col font-mono text-sm overflow-hidden relative"
+        className="bg-[#14151a] border border-white/[0.1] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden relative text-sm"
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 bg-black flex-shrink-0">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-white/[0.08] bg-[#14151a] flex-shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-[#D8163F] text-lg font-bold">⚙️</span>
+            <span className="text-[#E53558] text-lg font-bold">⚙️</span>
             <div>
-              <h2 className="text-white font-bold tracking-widest text-base font-avathe">HENRY IX STUDIO // SETTINGS SUITE</h2>
-              <p className="text-[10px] text-zinc-500 tracking-wider">TOUR-GRADE HARDWARE & SOFTWARE CONFIGURATION</p>
+              <h2 className="text-white font-semibold text-base tracking-tight">Studio Settings Suite</h2>
+              <p className="text-[11px] text-zinc-400 font-mono">TOUR-GRADE HARDWARE & SOFTWARE CONFIGURATION</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-700 transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.05] transition-colors"
           >
             <X size={18} />
           </button>
@@ -517,7 +521,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
 
         <div className="flex flex-1 overflow-hidden">
           {/* Tabs Sidebar */}
-          <div className="w-64 border-r border-zinc-800 bg-black/90 p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-shrink-0">
+          <div className="w-64 border-r border-white/[0.08] bg-[#0c0d10] p-3 flex flex-col gap-1 overflow-y-auto custom-scrollbar flex-shrink-0">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -525,13 +529,13 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`text-left px-3 py-3 text-xs uppercase tracking-wider transition-all flex items-center gap-2.5 border-l-2 ${
+                  className={`text-left px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all flex items-center gap-2.5 ${
                     isActive 
-                      ? 'bg-zinc-900 text-[#D8163F] border-[#D8163F] font-bold shadow-[inset_4px_0_0_#D8163F]' 
-                      : 'border-transparent text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200'
+                      ? 'bg-[#242630] text-white shadow-sm' 
+                      : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
                   }`}
                 >
-                  <Icon size={14} className={isActive ? 'text-[#D8163F]' : 'text-zinc-600'} />
+                  <Icon size={15} className={isActive ? 'text-[#E53558]' : 'text-zinc-500'} />
                   <span className="truncate">{tab.label}</span>
                 </button>
               );
@@ -539,21 +543,19 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
           </div>
 
           {/* Tab Content Panel */}
-          <div className="flex-1 p-8 bg-zinc-950 overflow-y-auto custom-scrollbar relative">
-            <div className="absolute inset-0 bayer-dither opacity-5 pointer-events-none z-0" />
-            
+          <div className="flex-1 p-8 bg-[#14151a] overflow-y-auto custom-scrollbar relative text-zinc-200">
             <div className="relative z-10 max-w-3xl space-y-6">
               
               {/* TAB 1: APPEARANCE & THEME */}
               {activeTab === 'appearance' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">Theme & Visual Display</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">Select studio dark presets, dither textures, and accent glow strength.</p>
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">Theme & Visual Display</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Select studio dark presets, dither textures, and accent glow strength.</p>
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-xs text-zinc-400 font-bold uppercase block">THEME PRESET</label>
+                    <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Theme Preset</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {[
                         { id: 'oled', name: 'OLED Black', desc: '#000000' },
@@ -567,13 +569,13 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                             updateSettings({ theme: t.id as any });
                             addToast({ title: 'THEME CHANGED', message: `Theme preset changed to ${t.name}`, type: 'info' });
                           }}
-                          className={`p-3 border text-left transition-all ${
+                          className={`p-3.5 rounded-xl border text-left transition-all ${
                             settings.theme === t.id 
-                              ? 'border-[#D8163F] bg-zinc-900 shadow-[0_0_15px_rgba(216,22,63,0.3)]' 
-                              : 'border-zinc-800 hover:border-zinc-600'
+                              ? 'border-[#E53558] bg-[#1b1c22] shadow-sm' 
+                              : 'border-white/[0.08] bg-[#1b1c22]/50 hover:bg-[#1b1c22] hover:border-white/[0.15]'
                           }`}
                         >
-                          <div className="font-bold text-xs text-white">{t.name}</div>
+                          <div className="font-medium text-xs text-white">{t.name}</div>
                           <div className="text-[10px] text-zinc-500 mt-1 font-mono">{t.desc}</div>
                         </button>
                       ))}
@@ -581,9 +583,9 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex justify-between text-xs">
-                      <label className="text-zinc-400 font-bold uppercase">ACCENT GLOW INTENSITY</label>
-                      <span className="text-[#D8163F] font-bold">{settings.glowIntensity}%</span>
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-zinc-300 uppercase font-mono">Accent Glow Intensity</span>
+                      <span className="text-[#E53558] font-mono">{settings.glowIntensity}%</span>
                     </div>
                     <input
                       type="range"
@@ -591,33 +593,33 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                       max="100"
                       value={settings.glowIntensity}
                       onChange={(e) => updateSettings({ glowIntensity: Number(e.target.value) })}
-                      className="w-full accent-[#D8163F] bg-zinc-800 cursor-pointer"
+                      className="w-full accent-[#E53558] bg-[#0c0d10] cursor-pointer"
                     />
                   </div>
 
-                  <div className="p-4 border border-zinc-800 bg-black/50 flex items-center justify-between">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-bold text-white">RETRO ASCII & BAYER HALFTONE DITHER</div>
-                      <div className="text-[11px] text-zinc-500 font-tertiary mt-0.5">Applies authentic 1-bit / 2-bit dither textures (.bayer-dither) across all HUDs</div>
+                      <div className="text-xs font-medium text-white">Retro ASCII & Bayer Halftone Dither</div>
+                      <div className="text-[11px] text-zinc-400 mt-0.5">Applies authentic 1-bit / 2-bit dither textures across all HUDs</div>
                     </div>
                     <input
                       type="checkbox"
                       checked={settings.ditherEnabled}
                       onChange={(e) => updateSettings({ ditherEnabled: e.target.checked })}
-                      className="w-4 h-4 accent-[#D8163F] cursor-pointer"
+                      className="w-4 h-4 accent-[#E53558] rounded cursor-pointer"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">INTERFACE DENSITY</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Interface Density</label>
                       <div className="flex gap-2">
                         {(['compact', 'standard', 'spacious'] as const).map((d) => (
                           <button
                             key={d}
                             onClick={() => updateSettings({ density: d })}
-                            className={`flex-1 py-2 text-xs uppercase border transition-all ${
-                              settings.density === d ? 'border-[#D8163F] bg-[#D8163F]/20 text-white font-bold' : 'border-zinc-800 text-zinc-500'
+                            className={`flex-1 py-2 text-xs uppercase rounded-lg border font-medium transition-all ${
+                              settings.density === d ? 'border-[#E53558] bg-[#E53558]/20 text-white' : 'border-white/[0.08] bg-[#1b1c22] text-zinc-400 hover:text-white'
                             }`}
                           >
                             {d}
@@ -627,11 +629,11 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">FONT SCALING</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Font Scaling</label>
                       <select 
                         value={settings.fontScale} 
                         onChange={(e) => updateSettings({ fontScale: e.target.value })}
-                        className="w-full bg-black border border-zinc-800 text-zinc-300 p-2 text-xs font-mono focus:border-[#D8163F]"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-zinc-300 p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       >
                         <option value="90">90% (Compact Pro)</option>
                         <option value="100">100% (Default Tour)</option>
@@ -646,28 +648,28 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 2: CONNECTED ACCOUNTS */}
               {activeTab === 'accounts' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
+                  <div className="border-b border-white/[0.08] pb-3 flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl text-white font-bold font-avathe uppercase">Connected Accounts & APIs</h3>
-                      <p className="text-xs text-zinc-500 mt-1 font-tertiary">Real-time status board for all music streaming, cloud storage, and broadcast services.</p>
+                      <h3 className="text-lg font-semibold text-white tracking-tight">Connected Accounts & APIs</h3>
+                      <p className="text-xs text-zinc-400 mt-1">Real-time status board for all music streaming, cloud storage, and broadcast services.</p>
                     </div>
                     <button
                       onClick={() => {
                         fetchAccounts();
                         addToast({ title: 'REFRESHING SERVICES', message: 'Pinging all connected endpoints...', type: 'info' });
                       }}
-                      className="px-2.5 py-1 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-[#1b1c22] border border-white/[0.08] hover:border-white/[0.15] text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors font-medium"
                       title="Ping and refresh API links"
                     >
                       <RefreshCw size={12} className={loadingAccounts ? 'animate-spin' : ''} />
-                      <span>PING ALL</span>
+                      <span>Ping All</span>
                     </button>
                   </div>
 
                   {/* Section 1: Music Streaming Services */}
                   <div className="space-y-3">
-                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                      <Music size={13} className="text-[#D8163F]" />
+                    <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider flex items-center gap-2 font-mono">
+                      <Music size={13} className="text-[#E53558]" />
                       <span>Streaming Music Accounts</span>
                     </div>
 
@@ -682,23 +684,23 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                       const isOnline = acc.status === 'CONNECTED' || acc.status === 'STREAMING' || acc.status === 'ACTIVE';
                       const isStandby = acc.status === 'STANDBY' || acc.status === 'PENDING_SETUP';
                       return (
-                        <div key={acc.id || acc.name} className="p-3.5 border border-zinc-800 bg-black flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div key={acc.id || acc.name} className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                           <div className="min-w-0 flex-1">
-                            <div className="font-bold text-white flex items-center gap-2 flex-wrap">
+                            <div className="font-medium text-white flex items-center gap-2 flex-wrap">
                               <span>{acc.name}</span>
-                              <span className={`text-[10px] font-mono px-2 py-0.5 border ${
+                              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                                 isOnline 
-                                  ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800' 
+                                  ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
                                   : isStandby 
-                                  ? 'text-cyan-400 bg-cyan-950/60 border-cyan-800'
-                                  : 'text-amber-400 bg-amber-950/60 border-amber-800'
+                                  ? 'text-cyan-400 bg-cyan-500/10 border border-cyan-500/20'
+                                  : 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
                               }`}>
                                 {isOnline ? '✓ ' : '● '}{acc.status} ({acc.ping})
                               </span>
                             </div>
                             <div className="text-[11px] text-zinc-400 font-mono mt-1">{acc.detail}</div>
                             {acc.scopes && (
-                              <div className="text-[10px] text-zinc-600 font-mono mt-1">
+                              <div className="text-[10px] text-zinc-500 font-mono mt-1">
                                 SCOPES: {acc.scopes.join(' • ')}
                               </div>
                             )}
@@ -706,7 +708,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <button 
                               onClick={() => handleAccountReauth(acc.name)}
-                              className="px-3 py-1.5 border border-zinc-700 text-zinc-300 hover:border-[#D8163F] hover:text-[#D8163F] text-[10px] uppercase font-mono transition-colors"
+                              className="px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.1] text-xs font-medium transition-colors"
                             >
                               {isOnline ? 'Test Ping' : 'Configure'}
                             </button>
@@ -717,9 +719,9 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* Section 2: Cloud Storage & System Services */}
-                  <div className="space-y-3 pt-4 border-t border-zinc-900">
-                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                      <Cloud size={13} className="text-[#22d3ee]" />
+                  <div className="space-y-3 pt-4 border-t border-white/[0.08]">
+                    <div className="text-xs font-medium text-zinc-300 uppercase tracking-wider flex items-center gap-2 font-mono">
+                      <Cloud size={13} className="text-cyan-400" />
                       <span>Cloud Storage & System Infrastructure</span>
                     </div>
 
@@ -728,11 +730,11 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                       { id: 'google_drive', name: 'Google Workspace & Drive', status: 'ACTIVE', ping: '24ms', detail: 'henry-ix-drive-sync@henryix-website.iam.gserviceaccount.com' },
                       { id: 'resend', name: 'Resend Email API', status: 'ACTIVE', ping: '52ms', detail: 'broadcasts@henryix.com / Tour Identity Gate' },
                     ]).map((acc: any) => (
-                      <div key={acc.id || acc.name} className="p-3.5 border border-zinc-800 bg-black flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div key={acc.id || acc.name} className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                         <div className="min-w-0 flex-1">
-                          <div className="font-bold text-white flex items-center gap-2 flex-wrap">
+                          <div className="font-medium text-white flex items-center gap-2 flex-wrap">
                             <span>{acc.name}</span>
-                            <span className="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 px-2 py-0.5 border border-emerald-800">
+                            <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                               ✓ {acc.status} ({acc.ping})
                             </span>
                           </div>
@@ -741,7 +743,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button 
                             onClick={() => handleAccountReauth(acc.name)}
-                            className="px-3 py-1.5 border border-zinc-700 text-zinc-300 hover:border-[#D8163F] hover:text-[#D8163F] text-[10px] uppercase font-mono transition-colors"
+                            className="px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.1] text-xs font-medium transition-colors"
                           >
                             Re-Auth
                           </button>
@@ -755,21 +757,21 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 3: AUDIO & DEVICES */}
               {activeTab === 'audio' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">Audio DSP & Hardware Routing</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">Configure audio driver buffer latency, interface inputs, and background ducking behavior.</p>
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">Audio DSP & Hardware Routing</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Configure audio driver buffer latency, interface inputs, and background ducking behavior.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">PRIMARY AUDIO INTERFACE</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Primary Audio Interface</label>
                       <select
                         value={inputDevice}
                         onChange={(e) => {
                           setInputDevice(e.target.value);
                           addToast({ title: 'DEVICE ROUTED', message: `Audio interface routed to ${e.target.value.toUpperCase()}`, type: 'info' });
                         }}
-                        className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       >
                         <option value="djm-a9">Pioneer DJM-A9 (ASIO / CoreAudio)</option>
                         <option value="cdj-3000">Pioneer CDJ-3000 Link Audio</option>
@@ -779,14 +781,14 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">BUFFER SIZE / LATENCY</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Buffer Size / Latency</label>
                       <select
                         value={bufferSize}
                         onChange={(e) => {
                           setBufferSize(e.target.value);
                           addToast({ title: 'BUFFER UPDATED', message: `Buffer size updated to ${e.target.value} samples`, type: 'info' });
                         }}
-                        className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       >
                         <option value="128">128 Samples (2.9ms - Performance)</option>
                         <option value="256">256 Samples (5.8ms - Standard)</option>
@@ -795,26 +797,26 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                     </div>
                   </div>
 
-                  <div className="p-4 border border-zinc-800 bg-black space-y-3">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-3">
                     <div className="flex justify-between items-center">
                       <div>
-                        <div className="text-xs font-bold text-white uppercase">TEST DSP OUTPUT TONE</div>
-                        <p className="text-[11px] text-zinc-500 font-tertiary mt-0.5">Sends a 440Hz sine calibration tone through the Web Audio pipeline.</p>
+                        <div className="text-xs font-medium text-white">Test DSP Output Tone</div>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">Sends a 440Hz sine calibration tone through the Web Audio pipeline.</p>
                       </div>
                       <button
                         onClick={handleTestTone}
                         disabled={isTestingAudio}
-                        className="px-4 py-2 bg-[#D8163F] text-white text-xs font-bold hover:bg-white hover:text-black transition-colors flex items-center gap-2"
+                        className="px-4 py-2 rounded-lg bg-[#E53558] hover:bg-[#d82a4d] text-white text-xs font-medium transition-colors flex items-center gap-2 shadow-sm"
                       >
                         <Volume2 size={14} className={isTestingAudio ? 'animate-bounce' : ''} />
-                        <span>{isTestingAudio ? 'EMITTING...' : 'EMIT TONE'}</span>
+                        <span>{isTestingAudio ? 'Emitting...' : 'Emit Tone'}</span>
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs text-zinc-400 font-bold uppercase block">AUDIO DUCKING PROTOCOL</label>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Audio Ducking Protocol</label>
+                    <div className="grid grid-cols-3 gap-2.5 text-xs">
                       {[
                         { id: 'pause', label: 'Hard Pause On Video Preview' },
                         { id: 'duck', label: 'Duck -12dB When Previewing' },
@@ -826,8 +828,8 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                             setDuckingMode(m.id);
                             addToast({ title: 'DUCKING SET', message: `Ducking mode set to: ${m.label}`, type: 'info' });
                           }}
-                          className={`p-2.5 border text-left transition-all ${
-                            duckingMode === m.id ? 'border-[#D8163F] bg-[#D8163F]/10 text-white' : 'border-zinc-800 text-zinc-500'
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            duckingMode === m.id ? 'border-[#E53558] bg-[#E53558]/10 text-white font-medium' : 'border-white/[0.08] bg-[#1b1c22] text-zinc-400 hover:text-zinc-200'
                           }`}
                         >
                           {m.label}
@@ -841,15 +843,15 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 4: AI COPILOT & PROMPTS */}
               {activeTab === 'copilot' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">AI Copilot Persona & Digging Bias</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">Fine-tune the tone, digging crate preferences, and action card staging protocols.</p>
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">AI Copilot Persona & Digging Bias</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Fine-tune the tone, digging crate preferences, and action card staging protocols.</p>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-zinc-400 uppercase font-bold">DIGGING PREFERENCE BIAS</span>
-                      <span className="text-[#D8163F] font-bold">{diggingBias}% Underground</span>
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-zinc-300 uppercase font-mono">Digging Preference Bias</span>
+                      <span className="text-[#E53558] font-mono">{diggingBias}% Underground</span>
                     </div>
                     <input
                       type="range"
@@ -857,33 +859,33 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                       max="100"
                       value={diggingBias}
                       onChange={(e) => setDiggingBias(Number(e.target.value))}
-                      className="w-full accent-[#D8163F] bg-zinc-800 cursor-pointer"
+                      className="w-full accent-[#E53558] bg-[#0c0d10] cursor-pointer"
                     />
-                    <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
+                    <div className="flex justify-between text-[11px] text-zinc-500 font-mono">
                       <span>COMMERCIAL CLUB HITS</span>
                       <span>DEEP UNDERGROUND DUBS</span>
                     </div>
                   </div>
 
-                  <div className="p-4 border border-zinc-800 bg-black/50 flex items-center justify-between">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-bold text-white">ACTION CARD STAGING PROTOCOL</div>
-                      <div className="text-[11px] text-zinc-500 font-tertiary mt-0.5">Always require interactive diff preview before mutating metadata or Notion records (Zero silent mutations)</div>
+                      <div className="text-xs font-medium text-white">Action Card Staging Protocol</div>
+                      <div className="text-[11px] text-zinc-400 mt-0.5">Always require interactive diff preview before mutating metadata or Notion records</div>
                     </div>
                     <input
                       type="checkbox"
                       checked={showDiffs}
                       onChange={(e) => setShowDiffs(e.target.checked)}
-                      className="w-4 h-4 accent-[#D8163F] cursor-pointer"
+                      className="w-4 h-4 accent-[#E53558] rounded cursor-pointer"
                     />
                   </div>
 
-                  <div className="p-4 border border-emerald-900/50 bg-emerald-950/20 text-xs text-emerald-400 space-y-1">
-                    <div className="font-bold uppercase flex items-center gap-2">
+                  <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-xs text-emerald-400 space-y-1.5">
+                    <div className="font-semibold uppercase flex items-center gap-2">
                       <Shield size={14} />
-                      THE 4 HARD GUARDRAILS ACTIVE
+                      The 4 Hard Guardrails Active
                     </div>
-                    <ul className="list-disc pl-5 space-y-0.5 text-[11px] text-emerald-300/80 font-tertiary">
+                    <ul className="list-disc pl-5 space-y-1 text-[11px] text-emerald-300/90">
                       <li>Zero autonomous publishing on henryix.com</li>
                       <li>Zero autonomous outbound emails or messages</li>
                       <li>Zero raw master uncompressed file deletion</li>
@@ -896,30 +898,30 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 5: CLOUD & LIBRARY SYNC */}
               {activeTab === 'sync' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">Cloud Engine & Delta Synchronization</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">Manage Rekordbox XML ingestion, Notion API caches, and Cloudflare R2 bucket health.</p>
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">Cloud Engine & Delta Synchronization</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Manage Rekordbox XML ingestion, Notion API caches, and Cloudflare R2 bucket health.</p>
                   </div>
 
-                  <div className="p-4 border border-zinc-800 bg-black space-y-2 text-xs">
-                    <div className="font-bold text-white">REKORDBOX LOCAL XML INGESTION</div>
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-2 text-xs">
+                    <div className="font-medium text-white">Rekordbox Local XML Ingestion</div>
                     <p className="text-zinc-400 text-[11px] font-mono">Auto-detected at: C:\Users\Henry\Dropbox\Pioneer\rekordbox\rekordbox.xml</p>
-                    <p className="text-zinc-500 text-[10px]">
+                    <p className="text-zinc-500 text-[10px] font-mono">
                       IndexedDB Cache: {trackCount > 0 ? `${trackCount.toLocaleString()} Tracks Ingested` : 'Library Synced'} • 0ms Local Search Latency
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div className="p-4 border border-zinc-800 bg-black space-y-1">
-                      <div className="text-zinc-400 font-bold uppercase">NOTION RELATIONAL HUBS</div>
-                      <div className="text-emerald-400 font-bold">8 OF 8 DATABASES SYNCED</div>
-                      <div className="text-zinc-500 text-[10px]">Rate limit: 3 req/sec with in-memory deduplication</div>
+                    <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-1">
+                      <div className="text-zinc-400 font-mono text-[11px] uppercase">Notion Relational Hubs</div>
+                      <div className="text-emerald-400 font-semibold">8 of 8 Databases Synced</div>
+                      <div className="text-zinc-500 text-[10px] font-mono">Rate limit: 3 req/sec with cache deduplication</div>
                     </div>
 
-                    <div className="p-4 border border-zinc-800 bg-black space-y-1">
-                      <div className="text-zinc-400 font-bold uppercase">CLOUDFLARE R2 CDN</div>
-                      <div className="text-emerald-400 font-bold">assets.henryix.com (0-EGRESS)</div>
-                      <div className="text-zinc-500 text-[10px]">Storage Bucket: websiteassets</div>
+                    <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-1">
+                      <div className="text-zinc-400 font-mono text-[11px] uppercase">Cloudflare R2 CDN</div>
+                      <div className="text-emerald-400 font-semibold">assets.henryix.com (0-Egress)</div>
+                      <div className="text-zinc-500 text-[10px] font-mono">Storage Bucket: websiteassets</div>
                     </div>
                   </div>
 
@@ -927,16 +929,16 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                     <button 
                       onClick={handleDeltaRefresh}
                       disabled={isSyncing}
-                      className="flex-1 py-3 border border-[#D8163F] bg-[#D8163F]/20 text-[#D8163F] hover:bg-[#D8163F] hover:text-black font-bold text-xs uppercase font-mono transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(216,22,63,0.3)]"
+                      className="flex-1 py-2.5 rounded-xl bg-[#E53558] hover:bg-[#d82a4d] text-white font-medium text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
                     >
                       <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
-                      <span>{isSyncing ? 'SYNCING IN PROGRESS...' : '[⚡ Quick Delta Refresh]'}</span>
+                      <span>{isSyncing ? 'Syncing in progress...' : 'Quick Delta Refresh'}</span>
                     </button>
                     <button 
                       onClick={handleCachePurge}
-                      className="flex-1 py-3 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white font-bold text-xs uppercase font-mono transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 font-medium text-xs transition-all flex items-center justify-center gap-2"
                     >
-                      <span>[🗑️ Safe Nuclear Cache Re-Hydrate]</span>
+                      <span>Safe Nuclear Cache Re-Hydrate</span>
                     </button>
                   </div>
                 </div>
@@ -945,34 +947,34 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 6: BROADCAST & OBS */}
               {activeTab === 'broadcast' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">OBS Studio Bridge & MIDI Control</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">Configure OBS WebSocket v5 connection parameters, Stream Deck mappings, and director dwell times.</p>
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">OBS Studio Bridge & MIDI Control</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Configure OBS WebSocket v5 connection parameters, Stream Deck mappings, and director dwell times.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">PRIMARY LOCAL BRIDGE</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Primary Local Bridge</label>
                       <input
                         type="text"
                         value={localWs}
                         onChange={(e) => setLocalWs(e.target.value)}
-                        className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">REMOTE CLOUDFLARE TUNNEL</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Remote Cloudflare Tunnel</label>
                       <input
                         type="text"
                         value={tunnelWs}
                         onChange={(e) => setTunnelWs(e.target.value)}
-                        className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       />
                     </div>
                   </div>
 
-                  <div className="p-4 border border-zinc-800 bg-black space-y-2 text-xs">
-                    <div className="font-bold text-white uppercase">HARDWARE MIDI CONTROLLER MAP</div>
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-2 text-xs">
+                    <div className="font-medium text-white uppercase font-mono">Hardware MIDI Controller Map</div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-zinc-400">
                       <div>Pad 1: Cam 1 (Face)</div>
                       <div>Pad 2: Cam 2 (CDJ)</div>
@@ -994,10 +996,10 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                         type: 'warning',
                       });
                     }}
-                    className="w-full py-3 bg-red-900/30 border border-red-600 text-red-400 hover:bg-red-600 hover:text-white font-bold text-xs uppercase font-mono transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 font-medium text-xs transition-all flex items-center justify-center gap-2"
                   >
                     <AlertTriangle size={14} />
-                    <span>[🚨 Trigger Panic Blackout Dry Run (Hold Esc 1.5s)]</span>
+                    <span>Trigger Panic Blackout Dry Run (Hold Esc 1.5s)</span>
                   </button>
                 </div>
               )}
@@ -1005,19 +1007,19 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 7: SECURITY & PASSKEYS */}
               {activeTab === 'security' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">Multi-Identity Security & Accounts</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">Multi-Identity Security & Accounts</h3>
+                    <p className="text-xs text-zinc-400 mt-1">
                       Manage linked email addresses, SMS phone verification, biometric passkeys, and two-factor authenticator app.
                     </p>
                   </div>
 
                   {/* 1. LINKED EMAIL ADDRESSES */}
-                  <div className="p-4 border border-zinc-800 bg-black space-y-3">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="font-bold text-white uppercase flex items-center gap-2 text-xs">
-                        <Mail size={14} className="text-[#D8163F]" />
-                        <span>LINKED EMAIL ADDRESSES</span>
+                      <div className="font-medium text-white uppercase flex items-center gap-2 text-xs font-mono">
+                        <Mail size={14} className="text-[#E53558]" />
+                        <span>Linked Email Addresses</span>
                       </div>
                       {!isAddingEmail && (
                         <button
@@ -1027,7 +1029,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                             setNewEmailInput('');
                             setEmailOtpInput('');
                           }}
-                          className="px-2.5 py-1 border border-zinc-700 hover:border-[#D8163F] text-[10px] text-zinc-300 hover:text-white uppercase font-mono transition-colors flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-zinc-300 hover:text-white transition-colors flex items-center gap-1 font-medium"
                         >
                           <Plus size={12} />
                           <span>Link Another Email</span>
@@ -1040,16 +1042,16 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                         { email: 'henryixdj@gmail.com', isPrimary: true, verified: true, addedAt: '' },
                         { email: 'henry@henryix.com', isPrimary: false, verified: true, addedAt: '' },
                       ]).map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2.5 bg-zinc-950 border border-zinc-800/80 text-xs font-mono">
+                        <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-[#0c0d10] border border-white/[0.06] text-xs font-mono">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-bold">{item.email}</span>
+                            <span className="text-white font-medium">{item.email}</span>
                             {item.isPrimary && (
-                              <span className="px-1.5 py-0.5 text-[9px] bg-[#D8163F]/20 text-[#D8163F] border border-[#D8163F]/50 font-bold uppercase">
+                              <span className="px-1.5 py-0.5 text-[9px] rounded bg-[#E53558]/20 text-[#E53558] border border-[#E53558]/30 font-semibold uppercase">
                                 PRIMARY
                               </span>
                             )}
                             {item.verified && (
-                              <span className="px-1.5 py-0.5 text-[9px] bg-emerald-950/40 text-emerald-400 border border-emerald-700/50 uppercase flex items-center gap-1">
+                              <span className="px-1.5 py-0.5 text-[9px] rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase flex items-center gap-1">
                                 <CheckCircle2 size={10} />
                                 VERIFIED
                               </span>
@@ -1061,13 +1063,13 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                               <>
                                 <button
                                   onClick={() => handleSetPrimaryEmail(item.email)}
-                                  className="text-[10px] text-zinc-400 hover:text-white transition-colors"
+                                  className="text-[11px] text-zinc-400 hover:text-white transition-colors"
                                 >
                                   Make Primary
                                 </button>
                                 <button
                                   onClick={() => handleRemoveEmail(item.email)}
-                                  className="text-zinc-600 hover:text-red-400 p-1 transition-colors"
+                                  className="text-zinc-500 hover:text-red-400 p-1 transition-colors"
                                   title="Remove this email"
                                 >
                                   <Trash2 size={13} />
@@ -1081,8 +1083,8 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
 
                     {/* Inline Form to Add New Email */}
                     {isAddingEmail && (
-                      <div className="p-3 bg-zinc-950 border border-[#D8163F]/40 space-y-3 mt-3">
-                        <div className="text-xs font-bold text-white uppercase">ADD NEW EMAIL ADDRESS</div>
+                      <div className="p-3.5 rounded-xl bg-[#0c0d10] border border-[#E53558]/40 space-y-3 mt-3">
+                        <div className="text-xs font-medium text-white uppercase font-mono">Add New Email Address</div>
                         {!emailOtpSent ? (
                           <div className="flex gap-2">
                             <input
@@ -1090,20 +1092,20 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                               placeholder="new.email@example.com"
                               value={newEmailInput}
                               onChange={(e) => setNewEmailInput(e.target.value)}
-                              className="flex-1 bg-black border border-zinc-800 text-white p-2 text-xs font-mono focus:border-[#D8163F] focus:outline-none"
+                              className="flex-1 rounded-lg bg-[#14151a] border border-white/[0.08] text-white p-2 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                             />
                             <button
                               onClick={handleSendEmailVerification}
                               disabled={emailLoading}
-                              className="px-3 py-2 bg-[#D8163F] text-black font-bold text-xs uppercase font-mono disabled:opacity-50"
+                              className="px-3.5 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs transition-colors hover:bg-[#d82a4d] disabled:opacity-50"
                             >
-                              {emailLoading ? 'SENDING...' : 'SEND VERIFICATION CODE'}
+                              {emailLoading ? 'Sending...' : 'Send Code'}
                             </button>
                             <button
                               onClick={() => setIsAddingEmail(false)}
-                              className="px-3 py-2 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-mono"
+                              className="px-3 py-2 rounded-lg border border-white/[0.08] text-zinc-400 hover:text-white text-xs"
                             >
-                              CANCEL
+                              Cancel
                             </button>
                           </div>
                         ) : (
@@ -1116,20 +1118,20 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                                 placeholder="000000"
                                 value={emailOtpInput}
                                 onChange={(e) => setEmailOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-32 bg-black border border-zinc-800 text-white p-2 text-xs font-mono tracking-widest text-center focus:border-[#D8163F] focus:outline-none"
+                                className="w-32 rounded-lg bg-[#14151a] border border-white/[0.08] text-white p-2 text-xs font-mono tracking-widest text-center focus:border-[#E53558] focus:outline-none"
                               />
                               <button
                                 onClick={handleConfirmAddEmail}
                                 disabled={emailLoading || emailOtpInput.length !== 6}
-                                className="px-3 py-2 bg-[#D8163F] text-black font-bold text-xs uppercase font-mono disabled:opacity-50"
+                                className="px-3.5 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs transition-colors hover:bg-[#d82a4d] disabled:opacity-50"
                               >
-                                {emailLoading ? 'VERIFYING...' : 'CONFIRM & LINK EMAIL'}
+                                {emailLoading ? 'Verifying...' : 'Confirm & Link Email'}
                               </button>
                               <button
                                 onClick={() => setEmailOtpSent(false)}
-                                className="px-3 py-2 border border-zinc-800 text-zinc-400 text-xs font-mono"
+                                className="px-3 py-2 rounded-lg border border-white/[0.08] text-zinc-400 text-xs"
                               >
-                                BACK
+                                Back
                               </button>
                             </div>
                           </div>
@@ -1139,11 +1141,11 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* 2. MOBILE PHONE & SMS VERIFICATION */}
-                  <div className="p-4 border border-zinc-800 bg-black space-y-3">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="font-bold text-white uppercase flex items-center gap-2 text-xs">
-                        <Phone size={14} className="text-[#D8163F]" />
-                        <span>PHONE NUMBER & SMS NOTIFICATIONS</span>
+                      <div className="font-medium text-white uppercase flex items-center gap-2 text-xs font-mono">
+                        <Phone size={14} className="text-[#E53558]" />
+                        <span>Phone Number & SMS Notifications</span>
                       </div>
                       {!isAddingPhone && (
                         <button
@@ -1153,7 +1155,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                             setPhoneInput(currentUser?.phone?.number || '');
                             setPhoneOtpInput('');
                           }}
-                          className="px-2.5 py-1 border border-zinc-700 hover:border-[#D8163F] text-[10px] text-zinc-300 hover:text-white uppercase font-mono transition-colors"
+                          className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-zinc-300 hover:text-white transition-colors font-medium"
                         >
                           {currentUser?.phone ? 'Update Number' : '+ Add Mobile Phone'}
                         </button>
@@ -1161,23 +1163,23 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                     </div>
 
                     {currentUser?.phone ? (
-                      <div className="flex items-center justify-between p-2.5 bg-zinc-950 border border-zinc-800/80 text-xs font-mono">
-                        <span className="text-white font-bold">{currentUser.phone.number}</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#0c0d10] border border-white/[0.06] text-xs font-mono">
+                        <span className="text-white font-medium">{currentUser.phone.number}</span>
                         {currentUser.phone.verified && (
-                          <span className="px-1.5 py-0.5 text-[9px] bg-emerald-950/40 text-emerald-400 border border-emerald-700/50 uppercase flex items-center gap-1">
+                          <span className="px-1.5 py-0.5 text-[9px] rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase flex items-center gap-1">
                             <CheckCircle2 size={10} />
                             SMS VERIFIED
                           </span>
                         )}
                       </div>
                     ) : (
-                      <p className="text-[11px] text-zinc-500 font-mono">No phone number linked yet. Add a number to receive VIP call-times & SMS alerts.</p>
+                      <p className="text-[11px] text-zinc-400 font-mono">No phone number linked yet. Add a number to receive VIP call-times & SMS alerts.</p>
                     )}
 
                     {/* Inline Form to Add Phone */}
                     {isAddingPhone && (
-                      <div className="p-3 bg-zinc-950 border border-[#D8163F]/40 space-y-3 mt-3">
-                        <div className="text-xs font-bold text-white uppercase">ADD / VERIFY MOBILE PHONE</div>
+                      <div className="p-3.5 rounded-xl bg-[#0c0d10] border border-[#E53558]/40 space-y-3 mt-3">
+                        <div className="text-xs font-medium text-white uppercase font-mono">Add / Verify Mobile Phone</div>
                         {!phoneOtpSent ? (
                           <div className="flex gap-2">
                             <input
@@ -1185,20 +1187,20 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                               placeholder="+44 7123 456789"
                               value={phoneInput}
                               onChange={(e) => setPhoneInput(e.target.value)}
-                              className="flex-1 bg-black border border-zinc-800 text-white p-2 text-xs font-mono focus:border-[#D8163F] focus:outline-none"
+                              className="flex-1 rounded-lg bg-[#14151a] border border-white/[0.08] text-white p-2 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                             />
                             <button
                               onClick={handleSendPhoneSms}
                               disabled={phoneLoading}
-                              className="px-3 py-2 bg-[#D8163F] text-black font-bold text-xs uppercase font-mono disabled:opacity-50"
+                              className="px-3.5 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs transition-colors hover:bg-[#d82a4d] disabled:opacity-50"
                             >
-                              {phoneLoading ? 'SENDING...' : 'SEND VERIFICATION TEXT'}
+                              {phoneLoading ? 'Sending...' : 'Send SMS'}
                             </button>
                             <button
                               onClick={() => setIsAddingPhone(false)}
-                              className="px-3 py-2 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-mono"
+                              className="px-3 py-2 rounded-lg border border-white/[0.08] text-zinc-400 hover:text-white text-xs"
                             >
-                              CANCEL
+                              Cancel
                             </button>
                           </div>
                         ) : (
@@ -1211,20 +1213,20 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                                 placeholder="000000"
                                 value={phoneOtpInput}
                                 onChange={(e) => setPhoneOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-32 bg-black border border-zinc-800 text-white p-2 text-xs font-mono tracking-widest text-center focus:border-[#D8163F] focus:outline-none"
+                                className="w-32 rounded-lg bg-[#14151a] border border-white/[0.08] text-white p-2 text-xs font-mono tracking-widest text-center focus:border-[#E53558] focus:outline-none"
                               />
                               <button
                                 onClick={handleVerifyPhoneSms}
                                 disabled={phoneLoading || phoneOtpInput.length !== 6}
-                                className="px-3 py-2 bg-[#D8163F] text-black font-bold text-xs uppercase font-mono disabled:opacity-50"
+                                className="px-3.5 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs transition-colors hover:bg-[#d82a4d] disabled:opacity-50"
                               >
-                                {phoneLoading ? 'VERIFYING...' : 'CONFIRM SMS CODE'}
+                                {phoneLoading ? 'Verifying...' : 'Confirm Code'}
                               </button>
                               <button
                                 onClick={() => setPhoneOtpSent(false)}
-                                className="px-3 py-2 border border-zinc-800 text-zinc-400 text-xs font-mono"
+                                className="px-3 py-2 rounded-lg border border-white/[0.08] text-zinc-400 text-xs"
                               >
-                                BACK
+                                Back
                               </button>
                             </div>
                           </div>
@@ -1234,18 +1236,18 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* 3. BIOMETRIC WEBAUTHN PASSKEYS */}
-                  <div className="p-4 border border-zinc-800 bg-black space-y-3">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="font-bold text-white uppercase flex items-center gap-2 text-xs">
-                        <Fingerprint size={14} className="text-[#D8163F]" />
-                        <span>BIOMETRIC PASSKEYS (WEBAUTHN)</span>
+                      <div className="font-medium text-white uppercase flex items-center gap-2 text-xs font-mono">
+                        <Fingerprint size={14} className="text-[#E53558]" />
+                        <span>Biometric Passkeys (WebAuthn)</span>
                       </div>
                       <button
                         onClick={handleRegisterPasskey}
                         disabled={passkeyLoading}
-                        className="px-2.5 py-1 border border-zinc-700 hover:border-[#D8163F] text-[10px] text-zinc-300 hover:text-white uppercase font-mono transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-zinc-300 hover:text-white transition-colors font-medium"
                       >
-                        {passkeyLoading ? 'Registering...' : '+ Register This Device Passkey'}
+                        {passkeyLoading ? 'Registering...' : '+ Register This Device'}
                       </button>
                     </div>
 
@@ -1253,14 +1255,14 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                       {(currentUser?.passkeys || [
                         { id: 'pk_1', name: 'MacBook Pro Touch ID', credentialId: '1', createdAt: '2026-01-15', lastUsedAt: '2026-09-07' }
                       ]).map((pk, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2.5 bg-zinc-950 border border-zinc-800/80 text-xs font-mono">
+                        <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-[#0c0d10] border border-white/[0.06] text-xs font-mono">
                           <div>
-                            <div className="text-white font-bold">{pk.name}</div>
+                            <div className="text-white font-medium">{pk.name}</div>
                             <div className="text-[10px] text-zinc-500">
                               Registered: {new Date(pk.createdAt).toLocaleDateString()} • Last used: {pk.lastUsedAt ? new Date(pk.lastUsedAt).toLocaleDateString() : 'Never'}
                             </div>
                           </div>
-                          <span className="px-2 py-0.5 text-[9px] bg-emerald-950/40 text-emerald-400 border border-emerald-700/50 uppercase">
+                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase font-semibold">
                             ACTIVE
                           </span>
                         </div>
@@ -1269,17 +1271,17 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* 4. TWO-FACTOR AUTHENTICATOR APP (TOTP) */}
-                  <div className="p-4 border border-zinc-800 bg-black space-y-3">
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="font-bold text-white uppercase flex items-center gap-2 text-xs">
-                        <QrCode size={14} className="text-[#D8163F]" />
-                        <span>AUTHENTICATOR APP (GOOGLE AUTH / 1PASSWORD 2FA)</span>
+                      <div className="font-medium text-white uppercase flex items-center gap-2 text-xs font-mono">
+                        <QrCode size={14} className="text-[#E53558]" />
+                        <span>Authenticator App (Google Auth / 1Password 2FA)</span>
                       </div>
                       {currentUser?.totp?.enabled ? (
                         <button
                           onClick={handleDisableTotp}
                           disabled={totpLoading}
-                          className="px-2.5 py-1 border border-red-800 text-red-400 hover:bg-red-950 text-[10px] uppercase font-mono transition-colors"
+                          className="px-2.5 py-1 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-[11px] transition-colors font-medium"
                         >
                           Disable 2FA
                         </button>
@@ -1288,9 +1290,9 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                           <button
                             onClick={handleStartTotpSetup}
                             disabled={totpLoading}
-                            className="px-2.5 py-1 border border-zinc-700 hover:border-[#D8163F] text-[10px] text-zinc-300 hover:text-white uppercase font-mono transition-colors"
+                            className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-[11px] text-zinc-300 hover:text-white transition-colors font-medium"
                           >
-                            {totpLoading ? 'Loading...' : '+ Setup Authenticator App'}
+                            {totpLoading ? 'Loading...' : '+ Setup Authenticator'}
                           </button>
                         )
                       )}
@@ -1298,39 +1300,39 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
 
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="text-zinc-400">Two-Factor Authentication Status:</span>
-                      <span className={`px-2 py-0.5 text-[10px] uppercase font-bold ${
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-medium ${
                         currentUser?.totp?.enabled
-                          ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-600'
-                          : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-black/40 text-zinc-500 border border-white/[0.08]'
                       }`}>
-                        {currentUser?.totp?.enabled ? '● 2FA ACTIVE' : '○ DISABLED'}
+                        {currentUser?.totp?.enabled ? '● 2FA Active' : '○ Disabled'}
                       </span>
                     </div>
 
                     {/* TOTP Setup Wizard */}
                     {isSettingUpTotp && totpData && (
-                      <div className="p-4 bg-zinc-950 border border-[#D8163F]/50 space-y-4 mt-3">
-                        <div className="text-xs font-bold text-white uppercase">CONNECT AUTHENTICATOR APP</div>
+                      <div className="p-4 rounded-xl bg-[#0c0d10] border border-[#E53558]/40 space-y-4 mt-3">
+                        <div className="text-xs font-medium text-white uppercase font-mono">Connect Authenticator App</div>
                         <p className="text-[11px] text-zinc-400">
                           Scan this QR code in Google Authenticator, 1Password, or Apple Passwords:
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                           <div 
-                            className="p-2 bg-black border border-zinc-800 shadow-[0_0_15px_rgba(216,22,63,0.3)]"
+                            className="p-3 bg-white rounded-xl border border-white/20 shadow-sm"
                             dangerouslySetInnerHTML={{ __html: totpData.qrSvg }}
                           />
 
                           <div className="space-y-2 text-xs font-mono">
                             <div className="text-zinc-500 text-[10px]">MANUAL SECRET KEY:</div>
-                            <div className="p-2 bg-black border border-zinc-800 text-[#D8163F] font-bold tracking-widest select-all">
+                            <div className="p-2.5 rounded-lg bg-[#14151a] border border-white/[0.08] text-[#E53558] font-bold tracking-widest select-all">
                               {totpData.secret}
                             </div>
                             <div className="text-zinc-500 text-[10px]">Enter this code if you cannot scan the QR.</div>
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-zinc-800 space-y-2">
+                        <div className="pt-2 border-t border-white/[0.08] space-y-2">
                           <div className="text-[11px] text-zinc-400">Enter the 6-digit code shown in your app to activate:</div>
                           <div className="flex gap-2">
                             <input
@@ -1339,20 +1341,20 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                               placeholder="000000"
                               value={totpTestCode}
                               onChange={(e) => setTotpTestCode(e.target.value.replace(/[^0-9]/g, ''))}
-                              className="w-32 bg-black border border-zinc-800 text-white p-2 text-xs font-mono tracking-widest text-center focus:border-[#D8163F] focus:outline-none"
+                              className="w-32 rounded-lg bg-[#14151a] border border-white/[0.08] text-white p-2 text-xs font-mono tracking-widest text-center focus:border-[#E53558] focus:outline-none"
                             />
                             <button
                               onClick={handleConfirmTotp}
                               disabled={totpLoading || totpTestCode.length !== 6}
-                              className="px-3 py-2 bg-[#D8163F] text-black font-bold text-xs uppercase font-mono disabled:opacity-50"
+                              className="px-3.5 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs transition-colors hover:bg-[#d82a4d] disabled:opacity-50"
                             >
-                              {totpLoading ? 'CONFIRMING...' : 'VERIFY & ACTIVATE 2FA'}
+                              {totpLoading ? 'Confirming...' : 'Verify & Activate 2FA'}
                             </button>
                             <button
                               onClick={() => setIsSettingUpTotp(false)}
-                              className="px-3 py-2 border border-zinc-800 text-zinc-400 text-xs font-mono"
+                              className="px-3 py-2 rounded-lg border border-white/[0.08] text-zinc-400 text-xs"
                             >
-                              CANCEL
+                              Cancel
                             </button>
                           </div>
                         </div>
@@ -1361,36 +1363,36 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* 5. CONNECTED OAUTH ACCOUNTS */}
-                  <div className="p-4 border border-zinc-800 bg-black space-y-3">
-                    <div className="font-bold text-white uppercase flex items-center gap-2 text-xs">
-                      <Shield size={14} className="text-[#D8163F]" />
-                      <span>FEDERATED SINGLE SIGN-ON</span>
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-3">
+                    <div className="font-medium text-white uppercase flex items-center gap-2 text-xs font-mono">
+                      <Shield size={14} className="text-[#E53558]" />
+                      <span>Federated Single Sign-On</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                      <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-center justify-between">
+                      <div className="p-3 rounded-lg bg-[#0c0d10] border border-white/[0.06] flex items-center justify-between">
                         <div>
-                          <div className="font-bold text-white">G GOOGLE</div>
+                          <div className="font-medium text-white">Google</div>
                           <div className="text-[10px] text-zinc-500">
                             {currentUser?.google?.connected ? currentUser.google.email : 'Not connected'}
                           </div>
                         </div>
-                        <span className={`px-2 py-0.5 text-[9px] uppercase ${
-                          currentUser?.google?.connected ? 'text-emerald-400 border border-emerald-800' : 'text-zinc-600 border border-zinc-800'
+                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-semibold ${
+                          currentUser?.google?.connected ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-zinc-500 border border-white/[0.08]'
                         }`}>
                           {currentUser?.google?.connected ? 'CONNECTED' : 'DISCONNECTED'}
                         </span>
                       </div>
 
-                      <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-center justify-between">
+                      <div className="p-3 rounded-lg bg-[#0c0d10] border border-white/[0.06] flex items-center justify-between">
                         <div>
-                          <div className="font-bold text-white"> APPLE ID</div>
+                          <div className="font-medium text-white">Apple ID</div>
                           <div className="text-[10px] text-zinc-500">
                             {currentUser?.apple?.connected ? currentUser.apple.email : 'Not connected'}
                           </div>
                         </div>
-                        <span className={`px-2 py-0.5 text-[9px] uppercase ${
-                          currentUser?.apple?.connected ? 'text-emerald-400 border border-emerald-800' : 'text-zinc-600 border border-zinc-800'
+                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-semibold ${
+                          currentUser?.apple?.connected ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-zinc-500 border border-white/[0.08]'
                         }`}>
                           {currentUser?.apple?.connected ? 'CONNECTED' : 'DISCONNECTED'}
                         </span>
@@ -1399,12 +1401,12 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* 6. EMERGENCY PANIC HOTKEY DURATION */}
-                  <div className="space-y-3">
-                    <label className="text-xs text-zinc-400 font-bold uppercase block">EMERGENCY PANIC HOTKEY DURATION</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Emergency Panic Hotkey Duration</label>
                     <select
                       value={settings.panicDuration}
                       onChange={(e) => updateSettings({ panicDuration: e.target.value })}
-                      className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                      className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                     >
                       <option value="1.0">1.0 Second (Fastest Response)</option>
                       <option value="1.5">1.5 Seconds (Tour-Grade Recommended)</option>
@@ -1413,10 +1415,10 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                   </div>
 
                   {/* 7. SESSION TERMINATION & LOGOUT */}
-                  <div className="p-4 border border-red-950/60 bg-red-950/10 flex items-center justify-between">
+                  <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-bold text-red-400 uppercase">TERMINATE OPERATOR SESSION</div>
-                      <div className="text-[11px] text-zinc-500 font-tertiary mt-0.5">Clears session token cookie and returns to locked start page</div>
+                      <div className="text-xs font-medium text-red-400 uppercase font-mono">Terminate Operator Session</div>
+                      <div className="text-[11px] text-zinc-400 mt-0.5">Clears session token cookie and returns to locked start page</div>
                     </div>
                     <button
                       onClick={async () => {
@@ -1425,7 +1427,7 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                         } catch {}
                         window.location.reload();
                       }}
-                      className="px-4 py-2 border border-red-800 text-red-400 hover:bg-[#D8163F] hover:text-white font-mono text-xs uppercase font-bold transition-all"
+                      className="px-4 py-2 rounded-lg border border-red-500/30 bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white font-medium text-xs uppercase transition-colors"
                     >
                       Sign Out
                     </button>
@@ -1436,36 +1438,36 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
               {/* TAB 8: DJ LOGISTICS DEFAULTS */}
               {activeTab === 'logistics' && (
                 <div className="space-y-6">
-                  <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="text-xl text-white font-bold font-avathe uppercase">DJ Logistics & Tour Standards</h3>
-                    <p className="text-xs text-zinc-500 mt-1 font-tertiary">Configure London departure home base, UK HMRC tax allocations, and technical rider specs.</p>
+                  <div className="border-b border-white/[0.08] pb-3">
+                    <h3 className="text-lg font-semibold text-white tracking-tight">DJ Logistics & Tour Standards</h3>
+                    <p className="text-xs text-zinc-400 mt-1">Configure London departure home base, UK HMRC tax allocations, and technical rider specs.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">HOME STUDIO BASE (FOR TFL ROUTING)</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Home Studio Base (for TfL Routing)</label>
                       <input
                         type="text"
                         value={settings.homeAddress}
                         onChange={(e) => updateSettings({ homeAddress: e.target.value })}
-                        className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-zinc-400 font-bold uppercase block">SAFETY BUFFER BEFORE DOORS (MINS)</label>
+                      <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block font-mono">Safety Buffer Before Doors (Mins)</label>
                       <input
                         type="text"
                         value={settings.safetyBuffer}
                         onChange={(e) => updateSettings({ safetyBuffer: e.target.value })}
-                        className="w-full bg-black border border-zinc-800 text-white p-2.5 text-xs font-mono"
+                        className="w-full rounded-xl bg-[#0c0d10] border border-white/[0.08] text-white p-2.5 text-xs font-mono focus:border-[#E53558] focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-zinc-400 uppercase font-bold">UK HMRC DJ TAX RESERVE ALLOCATION</span>
-                      <span className="text-emerald-400 font-bold">{settings.taxReserve}%</span>
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-zinc-300 uppercase font-mono">UK HMRC DJ Tax Reserve Allocation</span>
+                      <span className="text-emerald-400 font-mono">{settings.taxReserve}%</span>
                     </div>
                     <input
                       type="range"
@@ -1476,15 +1478,15 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
                         const tax = Number(e.target.value);
                         updateSettings({ taxReserve: tax });
                       }}
-                      className="w-full accent-emerald-500 bg-zinc-800 cursor-pointer"
+                      className="w-full accent-emerald-500 bg-[#0c0d10] cursor-pointer"
                     />
-                    <p className="text-[10px] text-zinc-500 font-tertiary">
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">
                       Automatically reserves {settings.taxReserve}% from every confirmed performance fee into the HMRC Tax Reserve bucket. (Updates invoices instantly).
                     </p>
                   </div>
 
-                  <div className="p-4 border border-zinc-800 bg-black space-y-2 text-xs">
-                    <div className="font-bold text-white uppercase">MASTER TECHNICAL RIDER DEFAULTS</div>
+                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#1b1c22] space-y-2 text-xs">
+                    <div className="font-medium text-white uppercase font-mono">Master Technical Rider Defaults</div>
                     <p className="text-zinc-400 text-[11px] font-mono">PIONEER CDJ-3000 (x3) • PIONEER DJM-A9 MIXER • 2x STEREO BOOTH MONITORS</p>
                   </div>
                 </div>
@@ -1495,14 +1497,14 @@ export default function SettingsModal({ isOpen, onClose, onTriggerPanicTest }: S
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-zinc-800 bg-black flex justify-between items-center text-xs font-mono flex-shrink-0">
-          <span className="text-zinc-500">Settings auto-save to local storage & Notion profile</span>
+        <div className="px-6 py-3.5 border-t border-white/[0.08] bg-[#0c0d10] flex justify-between items-center text-xs font-mono flex-shrink-0">
+          <span className="text-zinc-400">Settings auto-save to local storage & Notion profile</span>
           <button 
             onClick={() => {
               addToast({ title: 'SETTINGS SAVED', message: 'Settings saved and applied to active studio environment.', type: 'success' });
               onClose();
             }}
-            className="px-6 py-2 bg-[#D8163F] text-black font-bold uppercase hover:bg-white hover:text-black transition-colors"
+            className="px-6 py-2 rounded-xl bg-[#E53558] hover:bg-[#d82a4d] text-white font-medium text-xs uppercase transition-colors shadow-sm"
           >
             Done
           </button>

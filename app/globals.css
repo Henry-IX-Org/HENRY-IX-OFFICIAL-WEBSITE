@@ -338,3 +338,106 @@ html:has(.home-snap-container) {
 .animate-btn-flash {
   animation: btn-flash 0.5s step-end infinite;
 }
+
+/* ─── HENRY IX STUDIO: NOTION & ANTIGRAVITY DESIGN SYSTEM ────────── */
+.studio-root {
+  --font-studio-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-studio-display: "Geist Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-studio-mono: "JetBrains Mono", "Geist Mono", "SF Mono", Consolas, monospace;
+
+  /* Surface Ladder (Notion & Linear Neutral Hierarchy) */
+  --studio-canvas: #0c0d10;
+  --studio-sidebar: #14151a;
+  --studio-card: #1b1c22;
+  --studio-card-hover: #242630;
+  --studio-border: rgba(255, 255, 255, 0.07);
+  --studio-border-hover: rgba(255, 255, 255, 0.15);
+
+  /* Coordinated Palette */
+  --studio-red: #E53558;
+  --studio-red-glow: rgba(229, 53, 88, 0.35);
+  --studio-blue: #3b82f6;
+  --studio-emerald: #10b981;
+  --studio-amber: #f59e0b;
+  --studio-violet: #8b5cf6;
+  --studio-cyan: #06b6d4;
+
+  /* Typography scoped overrides */
+  --font-avathe: var(--font-studio-display);
+  --font-mono: var(--font-studio-mono);
+  --font-tertiary: var(--font-studio-sans);
+  --color-primary: var(--studio-red);
+  --color-primary-glow: var(--studio-red-glow);
+
+  font-family: var(--font-studio-sans);
+  background-color: var(--studio-canvas);
+  color: #f4f4f5;
+}
+
+/* Scoped Notion-style scrollbar inside Studio */
+.studio-root .custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.studio-root .custom-scrollbar::-webkit-scrollbar-track {
+  background: #14151a;
+}
+.studio-root .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 9999px !important;
+}
+.studio-root .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}
+.studio-root .custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 #14151a;
+}
+
+/* Studio UI utility classes */
+.studio-card {
+  background-color: #1b1c22;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+}
+.studio-card:hover {
+  background-color: #242630;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.studio-btn-primary {
+  background-color: #E53558;
+  color: #ffffff;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(229, 53, 88, 0.3);
+  transition: all 0.15s ease;
+}
+.studio-btn-primary:hover {
+  background-color: #f43f5e;
+}
+
+.studio-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e4e4e7;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+.studio-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.studio-btn-ghost {
+  color: #a1a1aa;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+}
+.studio-btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}

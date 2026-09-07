@@ -9,7 +9,8 @@ import {
   Copy, 
   Share2,
   Download,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { useStudioStore, StudioTrack } from '@/store/studioStore';
 
@@ -141,101 +142,113 @@ export default function HardwareUtilities({ onNavigate }: HardwareUtilitiesProps
   };
 
   return (
-    <div className="p-6 bg-black text-white font-mono space-y-6">
+    <div className="p-6 text-zinc-200 font-sans space-y-6">
       
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
           <div className="flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-            <h2 className="font-avathe text-2xl text-white tracking-widest uppercase">
-              MODULE 02 // MUSIC &amp; DJ ENGINE
+            <h2 className="font-semibold text-xl text-white tracking-tight">
+              HARDWARE & USB UTILITIES
             </h2>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">USB REDUNDANCY SYNC CHECKER &amp; BOOTH RECORDING AUTO-MATCHER</p>
+          <p className="text-xs text-zinc-400 mt-1 font-mono">
+            TOUR-GRADE STORAGE REDUNDANCY • CDJ USB MIRROR • BOOTH AUDIO RECONSTRUCTION
+          </p>
         </div>
 
-        {/* Sub-navigation Switcher Pills */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => onNavigate ? onNavigate('music-all') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+            onClick={() => onNavigate?.('music-all')}
+            className="px-3 py-1.5 rounded-lg bg-[#1b1c22] border border-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#242630] transition-colors"
           >
-            <span>📁 Master Collection</span>
-          </button>
-          <button
-            onClick={() => onNavigate ? onNavigate('music-set-planning') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
-          >
-            <span>⚡ Set Planning</span>
-          </button>
-          <button
-            onClick={() => onNavigate ? onNavigate('music-organiser') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
-          >
-            <span>🧹 Organiser (6 Bays)</span>
-          </button>
-          <button
-            onClick={() => onNavigate ? onNavigate('music-radar') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
-          >
-            <span>🧭 Music Radar</span>
-          </button>
-          <button
-            onClick={() => onNavigate ? onNavigate('music-hardware') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]"
-          >
-            <span>💾 USB Redundancy</span>
+            ← Library
           </button>
         </div>
       </div>
 
-      {/* 1. USB 1 & USB 2 REDUNDANCY SYNC CHECKER */}
-      <div className="border border-zinc-900 bg-zinc-950 p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-          <div className="flex items-center gap-2">
-            <HardDrive size={16} className="text-[#D8163F]" />
-            <h3 className="font-bold text-sm text-white uppercase">
-              USB 1 & USB 2 REDUNDANCY SYNC CHECKER
+      {/* 1. USB REDUNDANCY MIRROR STATUS */}
+      <div className="rounded-2xl border border-white/[0.08] bg-[#14151a] p-6 space-y-5 shadow-sm">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+          <div className="flex items-center gap-2.5">
+            <HardDrive size={16} className="text-[#E53558]" />
+            <h3 className="font-medium text-sm text-white">
+              Dual USB Redundancy Mirror (CDJ-3000 Primary + Backup)
             </h3>
           </div>
-          <span className={`text-xs px-2.5 py-0.5 rounded border font-bold ${
-            syncStatus === 'synced' 
-              ? 'text-emerald-400 border-emerald-900 bg-emerald-950/30' 
-              : syncStatus === 'syncing' 
-              ? 'text-yellow-400 border-yellow-900 bg-yellow-950/30 animate-pulse'
-              : 'text-amber-400 border-amber-900 bg-amber-950/30'
+          <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full ${
+            syncStatus === 'synced' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
           }`}>
-            {syncStatus === 'synced' ? '✓ FULLY MIRRORED' : syncStatus === 'syncing' ? `SYNCING DELTAS (${syncProgress}%)...` : '⚠️ OUT OF SYNC (2 DELTAS)'}
+            {syncStatus === 'synced' ? 'Bit-Identical' : 'Out of Sync'}
           </span>
         </div>
 
-        {/* Dual Drive Monitors */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          {/* Drive 1: Corsair GTX Primary */}
-          <div className="p-4 bg-black border border-emerald-500/50 space-y-2">
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          Verifies identical FAT32 partition layouts, Rekordbox XML databases, and hot cues across primary and backup flash drives before booth arrival.
+        </p>
+
+        {/* Dual Drive Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Drive 1: Primary Master */}
+          <div className="p-4 rounded-xl bg-[#1b1c22] border border-white/[0.08] space-y-3">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-emerald-400">USB 1: CORSAIR GTX 3.2 (PRIMARY)</span>
-              <span className="text-[10px] text-zinc-500">E:\ REKORDBOX</span>
+              <span className="font-medium text-xs text-white">USB 1: SanDisk Extreme Pro (Primary)</span>
+              <span className="text-[10px] font-mono text-zinc-400 bg-black/40 px-2 py-0.5 rounded border border-white/[0.06]">E:\ REKORDBOX</span>
             </div>
-            <div className="text-zinc-300 space-y-1 text-[11px]">
-              <div>FORMAT: <strong className="text-white">FAT32</strong> • CAPACITY: <strong className="text-white">128 GB (42% Used)</strong></div>
-              <div>COLLECTION: <strong className="text-white">{trackCount} Tracks</strong> • HOT CUES: <strong className="text-white">100% Verified</strong></div>
-              <div className="text-emerald-400 font-bold">STATUS: MASTER READY FOR BOOTH</div>
+            <div className="text-zinc-400 space-y-1.5 text-[11px] font-mono">
+              <div className="flex justify-between">
+                <span>FORMAT:</span>
+                <strong className="text-zinc-200">FAT32</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>CAPACITY:</span>
+                <strong className="text-zinc-200">128 GB (42% Used)</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>COLLECTION:</span>
+                <strong className="text-zinc-200">{trackCount} Tracks</strong>
+              </div>
+              <div className="pt-1 flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <CheckCircle2 size={13} />
+                <span>MASTER READY FOR BOOTH</span>
+              </div>
             </div>
           </div>
 
           {/* Drive 2: Corsair GTX Backup */}
-          <div className="p-4 bg-black border border-zinc-800 space-y-2">
+          <div className="p-4 rounded-xl bg-[#1b1c22] border border-white/[0.08] space-y-3">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-zinc-300">USB 2: CORSAIR GTX 3.2 (BACKUP CLONE)</span>
-              <span className="text-[10px] text-zinc-500">F:\ REKORDBOX</span>
+              <span className="font-medium text-xs text-white">USB 2: Corsair GTX 3.2 (Backup Clone)</span>
+              <span className="text-[10px] font-mono text-zinc-400 bg-black/40 px-2 py-0.5 rounded border border-white/[0.06]">F:\ REKORDBOX</span>
             </div>
-            <div className="text-zinc-300 space-y-1 text-[11px]">
-              <div>FORMAT: <strong className="text-white">FAT32</strong> • CAPACITY: <strong className="text-white">128 GB (42% Used)</strong></div>
-              <div>COLLECTION: <strong className={syncStatus === 'synced' ? 'text-white' : 'text-zinc-400'}>{syncStatus === 'synced' ? `${trackCount} Tracks` : `${Math.max(0, trackCount - 2)} Tracks`}</strong></div>
-              <div className={syncStatus === 'synced' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                {syncStatus === 'synced' ? '✓ MIRROR COMPLETE & IDENTICAL' : 'STATUS: 2 TRACKS OUT OF SYNC'}
+            <div className="text-zinc-400 space-y-1.5 text-[11px] font-mono">
+              <div className="flex justify-between">
+                <span>FORMAT:</span>
+                <strong className="text-zinc-200">FAT32</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>CAPACITY:</span>
+                <strong className="text-zinc-200">128 GB (42% Used)</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>COLLECTION:</span>
+                <strong className={syncStatus === 'synced' ? 'text-zinc-200' : 'text-zinc-400'}>
+                  {syncStatus === 'synced' ? `${trackCount} Tracks` : `${Math.max(0, trackCount - 2)} Tracks`}
+                </strong>
+              </div>
+              <div className="pt-1 flex items-center gap-1.5">
+                {syncStatus === 'synced' ? (
+                  <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <CheckCircle2 size={13} />
+                    <span>MIRROR COMPLETE & IDENTICAL</span>
+                  </div>
+                ) : (
+                  <div className="text-amber-400 font-semibold flex items-center gap-1.5">
+                    <AlertCircle size={13} />
+                    <span>2 TRACKS OUT OF SYNC</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -243,13 +256,13 @@ export default function HardwareUtilities({ onNavigate }: HardwareUtilitiesProps
 
         {/* Sync Progress Bar if syncing */}
         {syncStatus === 'syncing' && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-zinc-400">
+          <div className="space-y-1.5 pt-2">
+            <div className="flex justify-between text-xs text-zinc-400 font-mono">
               <span>Writing bitstream deltas to F:\PIONEER\...</span>
-              <span className="text-yellow-400 font-bold">{syncProgress}%</span>
+              <span className="text-[#E53558] font-bold">{syncProgress}%</span>
             </div>
-            <div className="w-full bg-zinc-900 h-2 border border-zinc-800 overflow-hidden">
-              <div className="bg-[#D8163F] h-full transition-all duration-300" style={{ width: `${syncProgress}%` }} />
+            <div className="w-full bg-[#1b1c22] h-2 rounded-full overflow-hidden border border-white/[0.08]">
+              <div className="bg-[#E53558] h-full rounded-full transition-all duration-300" style={{ width: `${syncProgress}%` }} />
             </div>
           </div>
         )}
@@ -258,99 +271,99 @@ export default function HardwareUtilities({ onNavigate }: HardwareUtilitiesProps
           <button
             onClick={handleSyncDeltas}
             disabled={syncStatus === 'synced' || syncStatus === 'syncing'}
-            className="px-4 py-2 bg-[#D8163F] text-white text-xs font-bold hover:bg-red-600 disabled:opacity-40 transition-colors shadow-[0_0_10px_rgba(216,22,63,0.4)]"
+            className="px-4 py-2 rounded-lg bg-[#E53558] text-white text-xs font-medium hover:bg-[#d82a4d] disabled:opacity-40 disabled:hover:bg-[#E53558] transition-colors shadow-sm"
           >
-            {syncStatus === 'synced' ? '✓ ALL DRIVES MIRRORED' : 'SYNC 2 DELTAS TO USB 2'}
+            {syncStatus === 'synced' ? '✓ All Drives Mirrored' : 'Sync Deltas to USB 2'}
           </button>
         </div>
       </div>
 
       {/* 2. BOOTH RECORDING AUTO-MATCHER */}
-      <div className="border border-zinc-900 bg-zinc-950 p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-          <div className="flex items-center gap-2">
-            <FileAudio size={16} className="text-[#22d3ee]" />
-            <h3 className="font-bold text-sm text-white uppercase">
-              BOOTH RECORDING AUTO-MATCHER (ZOOM H4N / DJM-A9)
+      <div className="rounded-2xl border border-white/[0.08] bg-[#14151a] p-6 space-y-5 shadow-sm">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+          <div className="flex items-center gap-2.5">
+            <FileAudio size={16} className="text-cyan-400" />
+            <h3 className="font-medium text-sm text-white">
+              Booth Recording Auto-Matcher (Zoom H4n / DJM-A9)
             </h3>
           </div>
-          <span className="text-xs text-zinc-500">AUTOMATED SETLIST RECONSTRUCTION</span>
+          <span className="text-xs font-mono text-zinc-500">Automated Setlist Reconstruction</span>
         </div>
 
         <p className="text-xs text-zinc-400 leading-relaxed">
-          Ingests a raw 2-hour WAV/MP3 booth recording, triangulates timestamps against planned Serato/Rekordbox session history, and generates minute-by-minute tracklists.
+          Ingests a raw 2-hour WAV/MP3 booth recording, triangulates timestamps against planned session history, and generates minute-by-minute tracklists for 1001Tracklists and SoundCloud.
         </p>
 
         {/* Dropzone */}
         {!recordingFile ? (
           <div 
             onClick={handleDropRecording}
-            className="border-2 border-dashed border-zinc-800 hover:border-[#D8163F] p-8 text-center bg-black cursor-pointer transition-colors space-y-2 group"
+            className="border-2 border-dashed border-white/[0.08] hover:border-[#E53558]/60 p-8 rounded-xl text-center bg-[#1b1c22]/50 hover:bg-[#1b1c22] cursor-pointer transition-all space-y-3 group"
           >
-            <UploadCloud size={32} className="mx-auto text-zinc-600 group-hover:text-[#D8163F] transition-colors" />
-            <div className="text-xs text-zinc-300 font-bold">CLICK OR DROP BOOTH RECORDING (.WAV / .MP3)</div>
-            <div className="text-[10px] text-zinc-500">Triangulates with Knight Club / London Live Set Markers</div>
+            <UploadCloud size={32} className="mx-auto text-zinc-500 group-hover:text-[#E53558] transition-colors" />
+            <div className="text-xs text-zinc-200 font-medium">Click or drop booth master recording (.wav / .mp3)</div>
+            <div className="text-[11px] text-zinc-500 font-mono">Triangulates with Knight Club / London Live Set Markers</div>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-3 bg-black border border-zinc-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <FileAudio size={14} className="text-emerald-400" />
-                <span className="text-white font-bold">{recordingFile}</span>
+            <div className="p-3.5 rounded-xl bg-[#1b1c22] border border-white/[0.08] flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center gap-2.5">
+                <FileAudio size={15} className="text-emerald-400" />
+                <span className="text-zinc-200 font-medium">{recordingFile}</span>
               </div>
               <button 
                 onClick={() => { setRecordingFile(null); setReconstructedSetlist([]); }}
-                className="text-zinc-500 hover:text-white"
+                className="text-zinc-400 hover:text-white transition-colors"
               >
                 ✕ Clear
               </button>
             </div>
 
             {isReconstructing ? (
-              <div className="p-6 text-center text-xs text-zinc-400 space-y-2 animate-pulse">
-                <RefreshCw size={20} className="mx-auto animate-spin text-[#D8163F]" />
+              <div className="p-8 text-center text-xs text-zinc-400 space-y-3 bg-[#1b1c22] rounded-xl border border-white/[0.08] animate-pulse font-mono">
+                <RefreshCw size={22} className="mx-auto animate-spin text-[#E53558]" />
                 <div>ANALYZING AUDIO TRANSIENTS & RECONSTRUCTING TIMESTAMPS...</div>
               </div>
             ) : reconstructedSetlist.length > 0 && (
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="text-emerald-400 font-bold">✓ RECONSTRUCTED 6 TRACKS (00:28:40 TOTAL)</span>
+                  <span className="text-emerald-400 font-medium font-mono">✓ Reconstructed 6 tracks (00:28:40 total)</span>
                   <div className="flex gap-2">
                     <button 
                       onClick={copyTracklist}
-                      className="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-[#1b1c22] hover:bg-[#242630] border border-white/[0.08] text-xs font-medium text-zinc-300 flex items-center gap-1.5 transition-colors"
                     >
-                      <Copy size={11} />
+                      <Copy size={12} />
                       <span>Copy for SoundCloud</span>
                     </button>
                     <button 
                       onClick={exportCueSheet}
-                      className="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-[#1b1c22] hover:bg-[#242630] border border-white/[0.08] text-xs font-medium text-zinc-300 flex items-center gap-1.5 transition-colors"
                     >
-                      <Download size={11} />
+                      <Download size={12} />
                       <span>Export .CUE</span>
                     </button>
                     <button 
                       onClick={handlePushToNotion}
-                      className="px-3 py-1 bg-[#D8163F] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-[0_0_10px_rgba(216,22,63,0.4)]"
+                      className="px-3 py-1.5 rounded-lg bg-[#E53558] hover:bg-[#d82a4d] text-white font-medium text-xs flex items-center gap-1.5 transition-colors shadow-sm"
                     >
-                      <Share2 size={11} />
+                      <Share2 size={12} />
                       <span>Push to Notion Sets</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="border border-zinc-900 bg-black divide-y divide-zinc-900 text-xs">
+                <div className="rounded-xl border border-white/[0.08] bg-[#1b1c22] divide-y divide-white/[0.06] overflow-hidden text-xs">
                   {reconstructedSetlist.map((item, idx) => (
-                    <div key={idx} className="p-2.5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[#D8163F] font-bold text-[11px] font-mono">{item.time}</span>
-                        <span className="text-white font-bold">{item.track}</span>
-                        <span className="text-zinc-500">{item.artist}</span>
+                    <div key={idx} className="p-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-[#E53558] font-semibold text-xs font-mono">{item.time}</span>
+                        <span className="text-zinc-200 font-medium truncate">{item.track}</span>
+                        <span className="text-zinc-500 truncate">{item.artist}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px]">
-                        <span className="px-1.5 py-0.5 bg-zinc-900 text-[#22d3ee] border border-zinc-800">{item.key}</span>
-                        <span className="text-zinc-500">{item.bpm} BPM</span>
+                      <div className="flex items-center gap-2 text-xs font-mono shrink-0 ml-3">
+                        <span className="px-2 py-0.5 rounded bg-black/40 text-cyan-400 border border-white/[0.08]">{item.key}</span>
+                        <span className="text-zinc-400">{item.bpm} BPM</span>
                       </div>
                     </div>
                   ))}

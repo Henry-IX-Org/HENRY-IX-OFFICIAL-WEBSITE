@@ -65,16 +65,16 @@ export const ThreeBandColorWaveform: React.FC<ThreeBandColorWaveformProps> = ({
         ctx.fillRect(x, (height / 2) + yBase, barWidth, h);
       };
 
-      drawBand(normalizedLows + normalizedMids, normalizedHighs, '#444444', '#ffffff');
-      drawBand(normalizedLows, normalizedMids, '#b45309', '#f59e0b');
-      drawBand(0, normalizedLows, '#1d4ed8', '#3b82f6');
+      drawBand(normalizedLows + normalizedMids, normalizedHighs, '#3f3f46', '#e4e4e7');
+      drawBand(normalizedLows, normalizedMids, '#0891b2', '#06b6d4');
+      drawBand(0, normalizedLows, '#2563eb', '#3b82f6');
     }
 
-    ctx.fillStyle = '#D8163F';
+    ctx.fillStyle = '#E53558';
     ctx.fillRect(playheadX, 0, 2, height);
     
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(216, 22, 63, 0.45)';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(229, 53, 88, 0.4)';
     ctx.fillRect(playheadX - 1, 0, 4, height);
     ctx.shadowBlur = 0;
 

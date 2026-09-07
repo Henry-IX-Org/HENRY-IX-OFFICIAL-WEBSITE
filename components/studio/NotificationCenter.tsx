@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, VolumeX, Volume2, X } from 'lucide-react';
+import { Bell, VolumeX, Volume2, X, AlertTriangle, RefreshCw, Radio } from 'lucide-react';
 import { useStudioStore } from '@/store/studioStore';
 
 interface NotificationCenterProps {
@@ -31,31 +31,31 @@ export default function NotificationCenter({ onAction }: NotificationCenterProps
     {
       id: 'notif-logistics-1',
       category: 'Logistics',
-      title: '⚡ LOGISTICS // Upcoming Tour State',
+      title: 'Upcoming Tour Logistics',
       body: logisticsBody,
       items: uncheckedItems.slice(0, 2),
       actions: [
-        { label: '🎒 View Checklist', action: 'view-bag', primary: true },
+        { label: 'View Checklist', action: 'view-bag', primary: true },
         { label: 'Dismiss', action: 'dismiss', primary: false },
       ],
     },
     {
       id: 'notif-sync-1',
       category: 'Sync',
-      title: '🔄 SYNC CONFLICT // 32 Mins Ago',
+      title: 'Sync Conflict Resolved',
       body: 'GIG: Corner New Cross (Night 1) — Property: Booking Fee. Studio had £350 vs. iPhone Notion had £400 (Auto-resolved to iPhone).',
       actions: [
-        { label: '↩ Revert to £350 (Studio)', action: 'revert-fee', primary: false },
-        { label: '✓ Keep £400 (iPhone)', action: 'keep-iphone', primary: true },
+        { label: 'Revert to £350', action: 'revert-fee', primary: false },
+        { label: 'Keep £400 (iPhone)', action: 'keep-iphone', primary: true },
       ],
     },
     {
       id: 'notif-system-1',
       category: 'System',
-      title: '📡 SYSTEM // 1 Hour Ago',
-      body: 'Google Drive Intake: 3 new 4K clips synced to Asset Vault & R2 mirror.',
+      title: 'Cloud Intake Synced',
+      body: 'Google Drive Intake: 3 new 4K clips synced to Asset Vault & Cloudflare R2 mirror.',
       actions: [
-        { label: '🖼️ Triage in Assets', action: 'triage-assets', primary: true },
+        { label: 'Triage in Assets', action: 'triage-assets', primary: true },
         { label: 'Dismiss', action: 'dismiss', primary: false },
       ],
     },
@@ -94,58 +94,68 @@ export default function NotificationCenter({ onAction }: NotificationCenterProps
     <div className="relative" ref={containerRef}>
       <button 
         onClick={() => setOpen(!open)}
-        className="p-2 text-zinc-400 hover:text-[#D8163F] hover:bg-zinc-900 rounded transition-colors relative flex items-center gap-1.5 font-mono text-xs"
+        className="p-2 text-zinc-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors relative flex items-center gap-1.5 text-xs"
         title="Studio Notification Center"
       >
-        <Bell size={18} />
+        <Bell size={17} />
         {unreadCount > 0 && (
-          <span className="flex items-center justify-center min-w-4 h-4 px-1 bg-[#D8163F] text-white text-[10px] font-bold rounded-full shadow-[0_0_8px_rgba(216,22,63,0.8)]">
+          <span className="flex items-center justify-center min-w-4 h-4 px-1 bg-[#E53558] text-white text-[10px] font-bold rounded-full shadow-sm">
             {unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-96 bg-zinc-950 border-2 border-zinc-800 shadow-[0_0_30px_rgba(0,0,0,0.9)] z-50 rounded-none overflow-hidden font-mono" style={{ borderColor: '#D8163F' }}>
+        <div className="absolute top-full right-0 mt-2 w-96 rounded-2xl bg-[#14151a]/98 backdrop-blur-2xl border border-white/[0.1] shadow-2xl z-50 overflow-hidden font-sans animate-in fade-in zoom-in-95 duration-150">
           
           {/* Header */}
-          <div className="p-3 border-b border-zinc-800 flex justify-between items-center bg-black">
+          <div className="p-3.5 border-b border-white/[0.08] flex justify-between items-center bg-[#14151a]">
             <div className="flex items-center gap-2">
-              <h3 className="text-white text-xs font-bold tracking-wider font-avathe">🔔 STUDIO NOTIFICATION CENTER</h3>
+              <span className="font-medium text-xs text-white">Notifications</span>
+              {unreadCount > 0 && (
+                <span className="text-[10px] font-mono text-zinc-400 bg-black/40 px-2 py-0.5 rounded-full border border-white/[0.06]">
+                  {unreadCount} new
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setDoNotDisturb(!doNotDisturb)}
                 title="Performance Mode (Do Not Disturb)"
-                className={`text-[10px] px-2 py-0.5 border flex items-center gap-1 ${
-                  doNotDisturb ? 'border-yellow-500 text-yellow-500 bg-yellow-500/10' : 'border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                className={`text-[11px] px-2 py-1 rounded-md border flex items-center gap-1 font-medium transition-colors ${
+                  doNotDisturb 
+                    ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' 
+                    : 'border-white/[0.08] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                 }`}
               >
-                {doNotDisturb ? <VolumeX size={10} /> : <Volume2 size={10} />}
-                DND
+                {doNotDisturb ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                <span>DND</span>
               </button>
               <button 
                 onClick={handleMarkAllRead} 
-                className="text-[10px] text-zinc-500 hover:text-[#D8163F] transition-colors"
+                className="text-[11px] text-zinc-400 hover:text-white transition-colors"
               >
-                Clear All
+                Clear all
               </button>
-              <button onClick={() => setOpen(false)} className="text-zinc-500 hover:text-white ml-1">
+              <button 
+                onClick={() => setOpen(false)} 
+                className="text-zinc-500 hover:text-white rounded-md p-1 hover:bg-white/[0.05] transition-colors ml-1"
+              >
                 <X size={14} />
               </button>
             </div>
           </div>
 
           {/* Categorized Filter Tabs */}
-          <div className="flex border-b border-zinc-800 bg-black text-[10px]">
+          <div className="flex border-b border-white/[0.08] bg-[#0c0d10] p-1 gap-1 text-[11px]">
             {(['All', 'Logistics', 'Sync', 'System'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 text-center uppercase tracking-wider transition-colors border-b-2 ${
+                className={`flex-1 py-1.5 px-2 rounded-lg text-center font-medium transition-colors ${
                   activeTab === tab
-                    ? 'border-[#D8163F] text-[#D8163F] bg-zinc-900 font-bold'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50'
+                    ? 'bg-[#242630] text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
                 }`}
               >
                 {tab}
@@ -154,35 +164,38 @@ export default function NotificationCenter({ onAction }: NotificationCenterProps
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-[380px] overflow-y-auto custom-scrollbar p-3 space-y-3 bg-zinc-950">
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar p-3 space-y-2.5 bg-[#14151a]">
             {filteredNotifications.length === 0 ? (
-              <div className="py-10 text-center text-zinc-600 text-xs">
-                ALL CAUGHT UP. NO PENDING ALERTS ({activeTab.toUpperCase()})
+              <div className="py-12 text-center text-zinc-500 text-xs font-mono">
+                All caught up. No pending alerts ({activeTab})
               </div>
             ) : (
               filteredNotifications.map((notif) => (
                 <div 
                   key={notif.id}
-                  className="p-3 border border-zinc-800 bg-black/80 hover:border-zinc-700 transition-colors text-xs space-y-2 relative"
+                  className="p-3.5 rounded-xl border border-white/[0.08] bg-[#1b1c22] hover:border-white/[0.12] transition-colors text-xs space-y-2 relative"
                 >
-                  <div className="text-[11px] font-bold text-[#D8163F] flex justify-between items-center">
-                    <span>{notif.title}</span>
+                  <div className="text-xs font-medium text-white flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#E53558]" />
+                      <span>{notif.title}</span>
+                    </div>
                     <button 
                       onClick={() => handleDismiss(notif.id)}
-                      className="text-zinc-600 hover:text-zinc-400"
+                      className="text-zinc-500 hover:text-zinc-300 rounded p-0.5"
                     >
                       <X size={12} />
                     </button>
                   </div>
 
-                  <p className="text-zinc-300 text-[11px] leading-relaxed font-tertiary">
+                  <p className="text-zinc-400 text-[11px] leading-relaxed">
                     {notif.body}
                   </p>
 
                   {notif.items && (
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1.5 mt-1">
                       {notif.items.map((item, i) => (
-                        <span key={i} className="text-[10px] px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/50 text-yellow-400">
+                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono">
                           {item}
                         </span>
                       ))}
@@ -201,10 +214,10 @@ export default function NotificationCenter({ onAction }: NotificationCenterProps
                             handleDismiss(notif.id);
                           }
                         }}
-                        className={`text-[10px] px-3 py-1 font-mono uppercase font-bold transition-all border ${
+                        className={`text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors ${
                           act.primary
-                            ? 'border-[#D8163F] bg-[#D8163F]/20 text-[#D8163F] hover:bg-[#D8163F] hover:text-black shadow-[0_0_8px_rgba(216,22,63,0.3)]'
-                            : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white'
+                            ? 'bg-[#E53558] hover:bg-[#d82a4d] text-white shadow-sm'
+                            : 'bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300'
                         }`}
                       >
                         {act.label}
@@ -218,9 +231,9 @@ export default function NotificationCenter({ onAction }: NotificationCenterProps
 
           {/* DND Indicator footer */}
           {doNotDisturb && (
-            <div className="p-2 border-t border-zinc-900 bg-yellow-500/10 text-yellow-400 text-[10px] flex items-center justify-center gap-2">
-              <VolumeX size={12} />
-              PERFORMANCE MODE ACTIVE (NOTIFICATIONS MUTED)
+            <div className="p-2.5 border-t border-amber-500/20 bg-amber-500/10 text-amber-400 text-[11px] font-medium flex items-center justify-center gap-2">
+              <VolumeX size={13} />
+              <span>Performance Mode Active (Notifications Muted)</span>
             </div>
           )}
         </div>

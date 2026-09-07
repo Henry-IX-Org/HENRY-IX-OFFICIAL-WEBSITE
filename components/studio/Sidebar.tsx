@@ -29,7 +29,11 @@ import {
   Sparkles,
   ChevronDown,
   ShieldCheck,
-  LogOut
+  LogOut,
+  Layers,
+  FileCode,
+  Music,
+  ExternalLink
 } from 'lucide-react';
 
 export interface SidebarProps {
@@ -95,32 +99,48 @@ export default function Sidebar({
     setActiveView(viewKey);
   };
 
+  const getItemClass = (viewKey: string) => {
+    const isActive = activeView === viewKey;
+    return `w-full text-left px-2.5 py-1.5 rounded-md flex items-center gap-2.5 truncate transition-all text-xs ${
+      isActive 
+        ? 'bg-white/[0.08] text-white font-medium shadow-sm' 
+        : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+    }`;
+  };
+
   return (
     <aside 
-      className={`flex flex-col bg-black border-r border-zinc-900 select-none transition-all duration-300 relative z-30 ${
-        collapsed ? 'w-[48px]' : 'w-[260px]'
+      className={`flex flex-col bg-[#14151a] border-r border-white/[0.06] select-none transition-all duration-300 relative z-30 font-sans ${
+        collapsed ? 'w-[52px]' : 'w-[268px]'
       }`}
       aria-label="Studio Navigation Sidebar"
     >
       {/* 1. TOP PROFILE & WORKSPACE SWITCHER */}
-      <div className="h-12 border-b border-zinc-900 px-3 flex items-center justify-between flex-shrink-0 relative bg-zinc-950">
+      <div className="h-13 border-b border-white/[0.06] px-3 flex items-center justify-between flex-shrink-0 relative bg-[#14151a]">
         {!collapsed ? (
-          <div className="relative">
+          <div className="relative flex-1 min-w-0 pr-2">
             <button 
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2 text-zinc-200 hover:text-white font-mono text-xs overflow-hidden group focus:outline-none"
+              className="flex items-center gap-2 text-zinc-200 hover:text-white text-xs overflow-hidden group focus:outline-none w-full text-left py-1"
               title="Switch Workspace Profile"
             >
-              <span className="w-2 h-2 rounded-full bg-[#D8163F] shadow-[0_0_8px_rgba(216,22,63,0.8)] flex-shrink-0" />
-              <span className="truncate font-bold tracking-wider">HENRY IX ({currentRole})</span>
-              <ChevronDown size={12} className="text-zinc-500 group-hover:text-zinc-300 transition-transform" />
+              <div className="w-5 h-5 rounded-md bg-[#E53558]/15 border border-[#E53558]/30 text-[#E53558] font-bold text-[10px] flex items-center justify-center flex-shrink-0">
+                IX
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate font-semibold text-xs text-zinc-100">HENRY IX</span>
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase">({currentRole})</span>
+                </div>
+              </div>
+              <ChevronDown size={12} className="text-zinc-500 group-hover:text-zinc-300 transition-transform flex-shrink-0" />
             </button>
 
             {/* Profile Dropdown Menu */}
             {profileDropdownOpen && (
-              <div className="absolute top-10 left-0 w-52 bg-zinc-950 border border-zinc-800 shadow-2xl p-2 z-50 font-mono text-xs space-y-1">
-                <div className="px-2 py-1 text-[10px] text-zinc-500 tracking-widest uppercase border-b border-zinc-900">
-                  Switch Workspace Role
+              <div className="absolute top-11 left-0 w-56 bg-[#1b1c22] border border-white/[0.08] rounded-xl shadow-2xl p-1.5 z-50 text-xs space-y-0.5 backdrop-blur-xl">
+                <div className="px-2.5 py-1.5 text-[10px] text-zinc-500 font-mono tracking-wider uppercase border-b border-white/[0.06]">
+                  WORKSPACE PERMISSIONS
                 </div>
                 {(['Owner', 'Manager', 'Media', 'Viewer'] as const).map(role => (
                   <button
@@ -129,15 +149,15 @@ export default function Sidebar({
                       setCurrentRole(role);
                       setProfileDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-2 py-1.5 rounded flex items-center justify-between transition-colors ${
-                      currentRole === role ? 'bg-[#D8163F]/20 text-white font-bold' : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors ${
+                      currentRole === role ? 'bg-white/[0.08] text-white font-medium' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
                     }`}
                   >
                     <span>{role}</span>
-                    {currentRole === role && <ShieldCheck size={12} className="text-[#D8163F]" />}
+                    {currentRole === role && <ShieldCheck size={13} className="text-[#E53558]" />}
                   </button>
                 ))}
-                <div className="border-t border-zinc-900 pt-1 mt-1">
+                <div className="border-t border-white/[0.06] pt-1 mt-1">
                   <button
                     onClick={async () => {
                       setProfileDropdownOpen(false);
@@ -146,9 +166,9 @@ export default function Sidebar({
                       } catch {}
                       window.location.reload();
                     }}
-                    className="w-full text-left px-2 py-1.5 rounded flex items-center gap-2 text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-colors text-[11px] font-bold"
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-red-400 hover:bg-red-950/30 hover:text-red-300 transition-colors text-xs font-medium"
                   >
-                    <LogOut size={12} />
+                    <LogOut size={13} />
                     <span>Sign Out Operator</span>
                   </button>
                 </div>
@@ -161,15 +181,17 @@ export default function Sidebar({
             className="text-zinc-400 hover:text-white mx-auto flex-shrink-0 focus:outline-none"
             title="Expand Sidebar"
           >
-            <User size={16} className="text-[#D8163F]" />
+            <div className="w-6 h-6 rounded-md bg-[#E53558]/15 border border-[#E53558]/30 text-[#E53558] font-bold text-[10px] flex items-center justify-center">
+              IX
+            </div>
           </button>
         )}
 
         {!collapsed && (
           <button 
             onClick={openSettings}
-            className="text-zinc-500 hover:text-[#D8163F] p-1 transition-colors rounded hover:bg-zinc-900 focus:outline-none"
-            title="Open Studio Settings (Cmd/Ctrl + ,)"
+            className="text-zinc-500 hover:text-zinc-200 p-1.5 transition-colors rounded-lg hover:bg-white/[0.06] focus:outline-none flex-shrink-0"
+            title="Studio Settings (Cmd/Ctrl + ,)"
           >
             <Settings size={15} />
           </button>
@@ -177,83 +199,69 @@ export default function Sidebar({
       </div>
 
       {/* 2. UNIVERSAL QUICK SEARCH */}
-      <div className="p-2 border-b border-zinc-900 bg-black flex-shrink-0">
+      <div className="p-2 border-b border-white/[0.06] bg-[#14151a] flex-shrink-0">
         <button 
           onClick={openCommandPalette}
-          className="w-full flex items-center gap-2 bg-zinc-950 border border-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 p-2 text-xs font-mono transition-all rounded-sm group focus:outline-none"
-          title="Universal Quick Find (Cmd/Ctrl + K)"
+          className="w-full flex items-center gap-2 bg-[#1b1c22]/90 border border-white/[0.08] hover:border-white/20 text-zinc-400 hover:text-zinc-200 px-2.5 py-1.5 text-xs transition-all rounded-lg group focus:outline-none shadow-sm"
+          title="Quick Find (Cmd/Ctrl + K)"
         >
-          <Search size={14} className="text-zinc-500 group-hover:text-[#D8163F] transition-colors flex-shrink-0" />
+          <Search size={13} className="text-zinc-500 group-hover:text-zinc-300 transition-colors flex-shrink-0" />
           {!collapsed && (
             <div className="flex-1 flex items-center justify-between text-left overflow-hidden">
-              <span className="truncate text-[11px]">Quick Find...</span>
-              <kbd className="text-[9px] bg-zinc-900 px-1 py-0.5 border border-zinc-800 text-zinc-500">⌘K</kbd>
+              <span className="truncate text-xs text-zinc-400">Search workspace...</span>
+              <kbd className="text-[10px] font-mono bg-zinc-800/80 px-1.5 py-0.5 rounded border border-white/[0.08] text-zinc-400">⌘K</kbd>
             </div>
           )}
         </button>
       </div>
 
       {/* 3. EXPANDABLE PROJECT NAVIGATION TREES (01 to 05) */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar py-2 px-1 space-y-3">
+      <div className="flex-1 overflow-y-auto custom-scrollbar py-2.5 px-1.5 space-y-2.5">
         
         {/* MODULE 01: STREAMING */}
         <div>
           <button
             onClick={() => toggleTree('01')}
-            className={`w-full flex items-center justify-between px-2 py-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded transition-colors font-mono text-xs ${
+            className={`w-full flex items-center justify-between px-2 py-1 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] rounded-md transition-colors text-[11px] font-semibold tracking-wider uppercase font-mono ${
               collapsed ? 'justify-center' : ''
             }`}
           >
             <div className="flex items-center gap-2 truncate">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#E53558] animate-pulse flex-shrink-0" />
               {!collapsed && (
-                <span className="font-bold tracking-wider text-zinc-300">
-                  [01 / STREAMING]
-                </span>
+                <span className="truncate">01. STREAMING</span>
               )}
             </div>
             {!collapsed && (
               <ChevronDown 
-                size={12} 
-                className={`text-zinc-600 transition-transform ${expandedTrees['01'] ? 'rotate-0' : '-rotate-90'}`} 
+                size={11} 
+                className={`text-zinc-500 transition-transform ${expandedTrees['01'] ? 'rotate-0' : '-rotate-90'}`} 
               />
             )}
           </button>
 
           {!collapsed && expandedTrees['01'] && (
-            <div className="pl-4 pr-1 mt-1 space-y-0.5 font-mono text-[11px]">
+            <div className="pl-3.5 pr-0.5 mt-1 space-y-0.5">
               <button
                 onClick={() => handleSelectView('streaming-live')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'streaming-live' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('streaming-live')}
               >
-                <Radio size={12} className="flex-shrink-0" />
-                <span className="truncate">🔴 Live Broadcast Deck</span>
+                <Radio size={13} className={activeView === 'streaming-live' ? 'text-[#E53558]' : 'text-zinc-400'} />
+                <span className="truncate">Live Broadcast Console</span>
               </button>
               <button
                 onClick={() => handleSelectView('streaming-analytics')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'streaming-analytics' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('streaming-analytics')}
               >
-                <Activity size={12} className="flex-shrink-0" />
-                <span className="truncate">📊 History & Analytics</span>
+                <Activity size={13} className={activeView === 'streaming-analytics' ? 'text-[#06b6d4]' : 'text-zinc-400'} />
+                <span className="truncate">Analytics & Stream Health</span>
               </button>
               <button
                 onClick={() => handleSelectView('streaming-clips')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'streaming-clips' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('streaming-clips')}
               >
-                <Sliders size={12} className="flex-shrink-0" />
-                <span className="truncate">🎬 Livestream Clips</span>
+                <Sparkles size={13} className={activeView === 'streaming-clips' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
+                <span className="truncate">Clip Markers & EDL Log</span>
               </button>
             </div>
           )}
@@ -263,163 +271,133 @@ export default function Sidebar({
         <div>
           <button
             onClick={() => toggleTree('02')}
-            className={`w-full flex items-center justify-between px-2 py-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded transition-colors font-mono text-xs ${
+            className={`w-full flex items-center justify-between px-2 py-1 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] rounded-md transition-colors text-[11px] font-semibold tracking-wider uppercase font-mono ${
               collapsed ? 'justify-center' : ''
             }`}
           >
             <div className="flex items-center gap-2 truncate">
-              <Disc size={14} className="text-cyan-400 flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#10b981] flex-shrink-0" />
               {!collapsed && (
-                <span className="font-bold tracking-wider text-zinc-300">
-                  [02 / MUSIC]
-                </span>
+                <span className="truncate">02. MUSIC ENGINE</span>
               )}
             </div>
             {!collapsed && (
               <ChevronDown 
-                size={12} 
-                className={`text-zinc-600 transition-transform ${expandedTrees['02'] ? 'rotate-0' : '-rotate-90'}`} 
+                size={11} 
+                className={`text-zinc-500 transition-transform ${expandedTrees['02'] ? 'rotate-0' : '-rotate-90'}`} 
               />
             )}
           </button>
 
           {!collapsed && expandedTrees['02'] && (
-            <div className="pl-3 pr-1 mt-1 space-y-1 font-mono text-[11px]">
-              {/* Library Root */}
+            <div className="pl-3.5 pr-0.5 mt-1 space-y-0.5">
+              {/* Library sub-tree */}
               <div>
                 <button
-                  onClick={() => toggleTree('02-library')}
-                  className="w-full text-left px-2 py-1 text-zinc-300 hover:text-white flex items-center justify-between"
+                  onClick={() => handleSelectView('music-all')}
+                  className={getItemClass('music-all')}
                 >
-                  <span className="flex items-center gap-1.5">
-                    {expandedTrees['02-library'] ? <FolderOpen size={12} className="text-yellow-500" /> : <Folder size={12} className="text-yellow-500" />}
-                    <span>Library</span>
-                  </span>
-                  <ChevronDown size={10} className={`text-zinc-600 ${expandedTrees['02-library'] ? '' : '-rotate-90'}`} />
+                  <Disc size={13} className={activeView === 'music-all' ? 'text-[#10b981]' : 'text-zinc-400'} />
+                  <span className="truncate">Master Music Library</span>
+                </button>
+              </div>
+
+              {/* Crates Sub-Branch */}
+              <div className="pt-1">
+                <button
+                  onClick={(e) => toggleTree('02-crates', e)}
+                  className="w-full text-left px-2 py-1 text-zinc-500 hover:text-zinc-300 rounded flex items-center justify-between text-[11px] font-medium"
+                >
+                  <div className="flex items-center gap-1.5">
+                    {expandedTrees['02-crates'] ? <FolderOpen size={12} /> : <Folder size={12} />}
+                    <span>Crates & Playlists</span>
+                  </div>
+                  <ChevronDown size={10} className={`transition-transform ${expandedTrees['02-crates'] ? 'rotate-0' : '-rotate-90'}`} />
                 </button>
 
-                {expandedTrees['02-library'] && (
-                  <div className="pl-4 space-y-0.5">
+                {expandedTrees['02-crates'] && (
+                  <div className="pl-3 space-y-0.5 mt-0.5">
                     <button
-                      onClick={() => handleSelectView('music-all')}
-                      className={`w-full text-left px-2 py-0.5 rounded truncate transition-colors ${
-                        activeView === 'music-all' ? 'text-[#D8163F] font-bold' : 'text-zinc-400 hover:text-white'
-                      }`}
+                      onClick={() => handleSelectView('music-crate-kc4')}
+                      className={getItemClass('music-crate-kc4')}
                     >
-                      📁 All Collection
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#E53558] flex-shrink-0" />
+                      <span className="truncate">Knight Club Set (KC4)</span>
                     </button>
-                    
-                    {/* My Crates Subtree */}
-                    <div>
-                      <button
-                        onClick={() => toggleTree('02-crates')}
-                        className="w-full text-left px-2 py-0.5 text-zinc-400 hover:text-white flex items-center justify-between"
-                      >
-                        <span>▼ 📁 My Crates</span>
-                      </button>
-                      {expandedTrees['02-crates'] && (
-                        <div className="pl-3 space-y-0.5 text-[10px]">
-                          <button
-                            onClick={() => handleSelectView('music-crate-kc4')}
-                            className={`w-full text-left px-2 py-0.5 rounded truncate ${
-                              activeView === 'music-crate-kc4' ? 'text-white font-bold bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300'
-                            }`}
-                          >
-                            🎵 Knight Club Vol 4 [18]
-                          </button>
-                          <button
-                            onClick={() => handleSelectView('music-crate-rc2')}
-                            className={`w-full text-left px-2 py-0.5 rounded truncate ${
-                              activeView === 'music-crate-rc2' ? 'text-white font-bold bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300'
-                            }`}
-                          >
-                            🎵 Royal Court 2 [24]
-                          </button>
-                          <button
-                            onClick={() => handleSelectView('music-crate-cn1')}
-                            className={`w-full text-left px-2 py-0.5 rounded truncate ${
-                              activeView === 'music-crate-cn1' ? 'text-white font-bold bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300'
-                            }`}
-                          >
-                            🎵 Corner N1 [31]
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
+                    <button
+                      onClick={() => handleSelectView('music-crate-rc2')}
+                      className={getItemClass('music-crate-rc2')}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6] flex-shrink-0" />
+                      <span className="truncate">Royal Court Live (RC2)</span>
+                    </button>
+                    <button
+                      onClick={() => handleSelectView('music-crate-cn1')}
+                      className={getItemClass('music-crate-cn1')}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] flex-shrink-0" />
+                      <span className="truncate">Corner New Cross (CN1)</span>
+                    </button>
                     <button
                       onClick={() => handleSelectView('music-smart-crates')}
-                      className={`w-full text-left px-2 py-0.5 rounded truncate transition-colors ${
-                        activeView === 'music-smart-crates' ? 'text-white font-bold bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300'
-                      }`}
+                      className={getItemClass('music-smart-crates')}
                     >
-                      ► 📁 Smart Crates (140 BPM)
-                    </button>
-                    <button
-                      onClick={() => handleSelectView('music-spotify')}
-                      className={`w-full text-left px-2 py-0.5 rounded truncate transition-colors ${
-                        activeView === 'music-spotify' ? 'text-white font-bold bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300'
-                      }`}
-                    >
-                      ► 📁 Synced Spotify
-                    </button>
-                    <button
-                      onClick={() => handleSelectView('music-soundcloud')}
-                      className={`w-full text-left px-2 py-0.5 rounded truncate transition-colors ${
-                        activeView === 'music-soundcloud' ? 'text-white font-bold bg-zinc-900' : 'text-zinc-500 hover:text-zinc-300'
-                      }`}
-                    >
-                      ► 📁 Synced SoundCloud
+                      <Sparkles size={12} className="text-[#f59e0b] flex-shrink-0" />
+                      <span className="truncate">Smart Filter Crates</span>
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Other Music Tools */}
-              <button
-                onClick={() => handleSelectView('music-set-planning')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'music-set-planning' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
-              >
-                <Sparkles size={12} className="text-yellow-400 flex-shrink-0" />
-                <span className="truncate">⚡ Set Planning Split</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('music-organiser')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'music-organiser' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
-              >
-                <Sliders size={12} className="flex-shrink-0" />
-                <span className="truncate">🧹 Library Organiser (6 Bays)</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('music-radar')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'music-radar' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
-              >
-                <Compass size={12} className="flex-shrink-0" />
-                <span className="truncate">🧭 Music Radar</span>
-              </button>
-              <button
-                onClick={() => handleSelectView('music-hardware')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'music-hardware' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
-              >
-                <ListMusic size={12} className="flex-shrink-0" />
-                <span className="truncate">💾 USB Redundancy Sync</span>
-              </button>
+              {/* Streaming Integrations Sub-Branch */}
+              <div className="pt-1">
+                <button
+                  onClick={() => handleSelectView('music-spotify')}
+                  className={getItemClass('music-spotify')}
+                >
+                  <span className="text-[#10b981] font-bold text-xs flex-shrink-0">●</span>
+                  <span className="truncate">Spotify Playlists</span>
+                </button>
+                <button
+                  onClick={() => handleSelectView('music-soundcloud')}
+                  className={getItemClass('music-soundcloud')}
+                >
+                  <span className="text-[#f59e0b] font-bold text-xs flex-shrink-0">●</span>
+                  <span className="truncate">SoundCloud Sync</span>
+                </button>
+              </div>
+
+              {/* DJ Utilities & Tools */}
+              <div className="pt-1 border-t border-white/[0.04]">
+                <button
+                  onClick={() => handleSelectView('music-set-planning')}
+                  className={getItemClass('music-set-planning')}
+                >
+                  <Sliders size={13} className={activeView === 'music-set-planning' ? 'text-[#3b82f6]' : 'text-zinc-400'} />
+                  <span className="truncate">Set Planning Workbench</span>
+                </button>
+                <button
+                  onClick={() => handleSelectView('music-radar')}
+                  className={getItemClass('music-radar')}
+                >
+                  <Compass size={13} className={activeView === 'music-radar' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
+                  <span className="truncate">Harmonic Match Radar</span>
+                </button>
+                <button
+                  onClick={() => handleSelectView('music-organiser')}
+                  className={getItemClass('music-organiser')}
+                >
+                  <Layers size={13} className={activeView === 'music-organiser' ? 'text-[#06b6d4]' : 'text-zinc-400'} />
+                  <span className="truncate">Library Organiser</span>
+                </button>
+                <button
+                  onClick={() => handleSelectView('music-hardware')}
+                  className={getItemClass('music-hardware')}
+                >
+                  <FileCode size={13} className={activeView === 'music-hardware' ? 'text-[#f59e0b]' : 'text-zinc-400'} />
+                  <span className="truncate">Hardware Utilities</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -428,156 +406,116 @@ export default function Sidebar({
         <div>
           <button
             onClick={() => toggleTree('03')}
-            className={`w-full flex items-center justify-between px-2 py-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded transition-colors font-mono text-xs ${
+            className={`w-full flex items-center justify-between px-2 py-1 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] rounded-md transition-colors text-[11px] font-semibold tracking-wider uppercase font-mono ${
               collapsed ? 'justify-center' : ''
             }`}
           >
             <div className="flex items-center gap-2 truncate">
-              <ImageIcon size={14} className="text-purple-400 flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#8b5cf6] flex-shrink-0" />
               {!collapsed && (
-                <span className="font-bold tracking-wider text-zinc-300">
-                  [03 / ASSETS]
-                </span>
+                <span className="truncate">03. ASSET VAULT</span>
               )}
             </div>
             {!collapsed && (
               <ChevronDown 
-                size={12} 
-                className={`text-zinc-600 transition-transform ${expandedTrees['03'] ? 'rotate-0' : '-rotate-90'}`} 
+                size={11} 
+                className={`text-zinc-500 transition-transform ${expandedTrees['03'] ? 'rotate-0' : '-rotate-90'}`} 
               />
             )}
           </button>
 
           {!collapsed && expandedTrees['03'] && (
-            <div className="pl-4 pr-1 mt-1 space-y-0.5 font-mono text-[11px]">
+            <div className="pl-3.5 pr-0.5 mt-1 space-y-0.5">
               <button
                 onClick={() => handleSelectView('assets-vault')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'assets-vault' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('assets-vault')}
               >
-                <Grid size={12} className="flex-shrink-0" />
-                <span className="truncate">🖼️ Asset Vault</span>
+                <ImageIcon size={13} className={activeView === 'assets-vault' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
+                <span className="truncate">Media Gallery</span>
               </button>
               <button
                 onClick={() => handleSelectView('assets-dropzone')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'assets-dropzone' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('assets-dropzone')}
               >
-                <FolderOpen size={12} className="flex-shrink-0" />
-                <span className="truncate">📥 Intake Dropzone</span>
+                <Folder size={13} className={activeView === 'assets-dropzone' ? 'text-[#3b82f6]' : 'text-zinc-400'} />
+                <span className="truncate">Google Drive Ingest</span>
               </button>
               <button
                 onClick={() => handleSelectView('assets-r2')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'assets-r2' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('assets-r2')}
               >
-                <Activity size={12} className="flex-shrink-0" />
-                <span className="truncate">⚡ R2 Storage Mirror</span>
+                <Layers size={13} className={activeView === 'assets-r2' ? 'text-[#06b6d4]' : 'text-zinc-400'} />
+                <span className="truncate">Cloudflare R2 Bucket</span>
               </button>
               <button
                 onClick={() => handleSelectView('assets-epk')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'assets-epk' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('assets-epk')}
               >
-                <Share2 size={12} className="flex-shrink-0" />
-                <span className="truncate">📄 Press Kit / EPK Hub</span>
+                <Sparkles size={13} className={activeView === 'assets-epk' ? 'text-[#E53558]' : 'text-zinc-400'} />
+                <span className="truncate">1-Click EPK Builder</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* MODULE 04: GIGS */}
+        {/* MODULE 04: GIGS & LOGISTICS */}
         <div>
           <button
             onClick={() => toggleTree('04')}
-            className={`w-full flex items-center justify-between px-2 py-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded transition-colors font-mono text-xs ${
+            className={`w-full flex items-center justify-between px-2 py-1 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] rounded-md transition-colors text-[11px] font-semibold tracking-wider uppercase font-mono ${
               collapsed ? 'justify-center' : ''
             }`}
           >
             <div className="flex items-center gap-2 truncate">
-              <Calendar size={14} className="text-emerald-400 flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#f59e0b] flex-shrink-0" />
               {!collapsed && (
-                <span className="font-bold tracking-wider text-zinc-300">
-                  [04 / GIGS]
-                </span>
+                <span className="truncate">04. TOUR LOGISTICS</span>
               )}
             </div>
             {!collapsed && (
               <ChevronDown 
-                size={12} 
-                className={`text-zinc-600 transition-transform ${expandedTrees['04'] ? 'rotate-0' : '-rotate-90'}`} 
+                size={11} 
+                className={`text-zinc-500 transition-transform ${expandedTrees['04'] ? 'rotate-0' : '-rotate-90'}`} 
               />
             )}
           </button>
 
           {!collapsed && expandedTrees['04'] && (
-            <div className="pl-4 pr-1 mt-1 space-y-0.5 font-mono text-[11px]">
+            <div className="pl-3.5 pr-0.5 mt-1 space-y-0.5">
               <button
                 onClick={() => handleSelectView('gigs-hub')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'gigs-hub' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('gigs-hub')}
               >
-                <Calendar size={12} className="flex-shrink-0" />
-                <span className="truncate">📅 Gig Hub (Schedule)</span>
+                <Calendar size={13} className={activeView === 'gigs-hub' ? 'text-[#f59e0b]' : 'text-zinc-400'} />
+                <span className="truncate">Tour Dates & Call-Times</span>
               </button>
               <button
                 onClick={() => handleSelectView('gigs-daysheet')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'gigs-daysheet' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('gigs-daysheet')}
               >
-                <Sliders size={12} className="flex-shrink-0" />
-                <span className="truncate">📄 1-Page Day Sheet</span>
+                <Activity size={13} className={activeView === 'gigs-daysheet' ? 'text-[#3b82f6]' : 'text-zinc-400'} />
+                <span className="truncate">Lockscreen Day Sheet</span>
               </button>
               <button
                 onClick={() => handleSelectView('gigs-checklist')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'gigs-checklist' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('gigs-checklist')}
               >
-                <CheckSquare size={12} className="flex-shrink-0" />
-                <span className="truncate">🎒 Smart DJ Bag Checklist</span>
+                <CheckSquare size={13} className={activeView === 'gigs-checklist' ? 'text-[#10b981]' : 'text-zinc-400'} />
+                <span className="truncate">Smart DJ Bag Checklist</span>
               </button>
               <button
                 onClick={() => handleSelectView('gigs-finance')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'gigs-finance' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('gigs-finance')}
               >
-                <DollarSign size={12} className="flex-shrink-0" />
-                <span className="truncate">💰 Finance & HMRC Tax</span>
+                <DollarSign size={13} className={activeView === 'gigs-finance' ? 'text-[#E53558]' : 'text-zinc-400'} />
+                <span className="truncate">HMRC Invoice & Tax</span>
               </button>
               <button
                 onClick={() => handleSelectView('gigs-scanner')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'gigs-scanner' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('gigs-scanner')}
               >
-                <QrCode size={12} className="flex-shrink-0" />
-                <span className="truncate">📱 Door QR Scanner</span>
+                <QrCode size={13} className={activeView === 'gigs-scanner' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
+                <span className="truncate">Guestlist & Scanner</span>
               </button>
             </div>
           )}
@@ -587,71 +525,53 @@ export default function Sidebar({
         <div>
           <button
             onClick={() => toggleTree('05')}
-            className={`w-full flex items-center justify-between px-2 py-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded transition-colors font-mono text-xs ${
+            className={`w-full flex items-center justify-between px-2 py-1 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] rounded-md transition-colors text-[11px] font-semibold tracking-wider uppercase font-mono ${
               collapsed ? 'justify-center' : ''
             }`}
           >
             <div className="flex items-center gap-2 truncate">
-              <Share2 size={14} className="text-amber-400 flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#06b6d4] flex-shrink-0" />
               {!collapsed && (
-                <span className="font-bold tracking-wider text-zinc-300">
-                  [05 / SOCIAL]
-                </span>
+                <span className="truncate">05. SOCIAL & MARKETING</span>
               )}
             </div>
             {!collapsed && (
               <ChevronDown 
-                size={12} 
-                className={`text-zinc-600 transition-transform ${expandedTrees['05'] ? 'rotate-0' : '-rotate-90'}`} 
+                size={11} 
+                className={`text-zinc-500 transition-transform ${expandedTrees['05'] ? 'rotate-0' : '-rotate-90'}`} 
               />
             )}
           </button>
 
           {!collapsed && expandedTrees['05'] && (
-            <div className="pl-4 pr-1 mt-1 space-y-0.5 font-mono text-[11px]">
+            <div className="pl-3.5 pr-0.5 mt-1 space-y-0.5">
               <button
                 onClick={() => handleSelectView('social-scout')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'social-scout' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('social-scout')}
               >
-                <Compass size={12} className="flex-shrink-0" />
-                <span className="truncate">⚡ Scene Scout & Parser</span>
+                <Share2 size={13} className={activeView === 'social-scout' ? 'text-[#06b6d4]' : 'text-zinc-400'} />
+                <span className="truncate">Scene Scout Event Parser</span>
               </button>
               <button
                 onClick={() => handleSelectView('social-grid')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'social-grid' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('social-grid')}
               >
-                <Grid size={12} className="flex-shrink-0" />
-                <span className="truncate">🗓️ 3x3 Instagram Grid</span>
+                <Grid size={13} className={activeView === 'social-grid' ? 'text-[#8b5cf6]' : 'text-zinc-400'} />
+                <span className="truncate">Instagram 3x3 Grid</span>
               </button>
               <button
                 onClick={() => handleSelectView('social-pipeline')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'social-pipeline' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('social-pipeline')}
               >
-                <CheckSquare size={12} className="flex-shrink-0" />
-                <span className="truncate">🚀 Mix Release Pipeline</span>
+                <CheckSquare size={13} className={activeView === 'social-pipeline' ? 'text-[#10b981]' : 'text-zinc-400'} />
+                <span className="truncate">Mix Release Pipeline</span>
               </button>
               <button
                 onClick={() => handleSelectView('social-vip')}
-                className={`w-full text-left px-2 py-1 rounded flex items-center gap-2 truncate transition-colors ${
-                  activeView === 'social-vip' 
-                    ? 'bg-[#D8163F]/20 text-[#D8163F] font-bold border-l-2 border-[#D8163F]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                }`}
+                className={getItemClass('social-vip')}
               >
-                <Send size={12} className="flex-shrink-0" />
-                <span className="truncate">✉️ VIP SMS Alert Dispatch</span>
+                <Send size={13} className={activeView === 'social-vip' ? 'text-[#E53558]' : 'text-zinc-400'} />
+                <span className="truncate">VIP SMS Alert Dispatch</span>
               </button>
             </div>
           )}
@@ -660,38 +580,43 @@ export default function Sidebar({
       </div>
 
       {/* 4. MINIMISED PERSISTENT AUDIO PLAYER SLOT (AT THE VERY BOTTOM) */}
-      <div className="h-16 border-t border-zinc-900 bg-zinc-950 flex items-center px-2 flex-shrink-0 relative overflow-hidden">
+      <div className="h-16 border-t border-white/[0.06] bg-[#16181d] flex items-center px-2.5 flex-shrink-0 relative overflow-hidden">
         {collapsed ? (
           <button 
             onClick={onTogglePlay}
-            className="mx-auto w-8 h-8 rounded-full border border-[#D8163F] bg-black text-[#D8163F] flex items-center justify-center hover:bg-[#D8163F] hover:text-white shadow-[0_0_10px_rgba(216,22,63,0.5)] transition-all focus:outline-none"
+            className="mx-auto w-8 h-8 rounded-full bg-[#E53558] text-white flex items-center justify-center hover:bg-[#f43f5e] shadow-sm shadow-[#E53558]/30 transition-all focus:outline-none"
             title={currentTrack.isPlaying ? 'Pause' : 'Play'}
           >
             {currentTrack.isPlaying ? <Pause size={12} /> : <Play size={12} className="ml-0.5" />}
           </button>
         ) : (
-          <div className="w-full flex items-center justify-between gap-2 font-mono text-xs">
+          <div className="w-full flex items-center justify-between gap-2.5 text-xs">
             <button
               onClick={onTogglePlay}
-              className="w-7 h-7 rounded-full border border-[#D8163F] bg-black text-[#D8163F] flex items-center justify-center hover:bg-[#D8163F] hover:text-white shadow-[0_0_8px_rgba(216,22,63,0.4)] transition-all flex-shrink-0 focus:outline-none"
+              className="w-7 h-7 rounded-full bg-[#E53558] hover:bg-[#f43f5e] text-white flex items-center justify-center shadow-sm shadow-[#E53558]/30 transition-all flex-shrink-0 focus:outline-none"
             >
               {currentTrack.isPlaying ? <Pause size={11} /> : <Play size={11} className="ml-0.5" />}
             </button>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between text-[11px] font-bold truncate">
+              <div className="flex items-center justify-between text-[11px] font-medium truncate">
                 <span className="text-zinc-200 truncate">{currentTrack.title}</span>
-                <span className="text-zinc-500 text-[9px] flex-shrink-0 ml-1">{currentTrack.key} • {currentTrack.bpm}</span>
               </div>
-              <div className="text-[10px] text-zinc-500 truncate">{currentTrack.artist}</div>
+              <div className="text-[10px] text-zinc-400 truncate flex items-center gap-1.5 font-mono">
+                <span>{currentTrack.artist}</span>
+                <span className="text-zinc-600">•</span>
+                <span className="text-[#3b82f6]">{currentTrack.key}</span>
+                <span className="text-zinc-600">•</span>
+                <span>{currentTrack.bpm}</span>
+              </div>
             </div>
 
             <button 
               onClick={onExpandPlayer}
-              className="text-zinc-500 hover:text-[#D8163F] p-1 transition-colors flex-shrink-0 focus:outline-none"
+              className="text-zinc-500 hover:text-zinc-200 p-1 transition-colors flex-shrink-0 focus:outline-none"
               title="Dock Player Bar Across Bottom"
             >
-              <Maximize2 size={12} />
+              <Maximize2 size={13} />
             </button>
           </div>
         )}
@@ -700,7 +625,7 @@ export default function Sidebar({
       {/* Collapse/Expand Floating Toggle Button */}
       <button 
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute bottom-[72px] -right-3 bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white rounded-full p-1 z-40 hidden md:flex items-center justify-center shadow-lg focus:outline-none"
+        className="absolute bottom-[72px] -right-3 bg-[#1b1c22] border border-white/10 text-zinc-400 hover:text-white rounded-full p-1 z-40 hidden md:flex items-center justify-center shadow-md focus:outline-none transition-colors"
         title={collapsed ? "Expand Sidebar (Cmd/Ctrl + B)" : "Collapse Sidebar (Cmd/Ctrl + B)"}
       >
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}

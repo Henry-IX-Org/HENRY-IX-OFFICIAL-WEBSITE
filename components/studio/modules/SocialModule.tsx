@@ -201,25 +201,25 @@ export default function SocialModule({
     if (!ctx) return;
 
     // Dark OLED background
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = '#0c0d10';
     ctx.fillRect(0, 0, 1080, 1920);
 
     // Red glow accent
-    ctx.fillStyle = '#D8163F';
+    ctx.fillStyle = '#E53558';
     ctx.fillRect(80, 120, 8, 80);
 
     // Title
-    ctx.font = 'bold 64px monospace';
+    ctx.font = 'bold 56px sans-serif';
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText('HENRY IX // LIVE SETLIST', 120, 180);
 
     // Event
-    ctx.font = '36px monospace';
-    ctx.fillStyle = '#D8163F';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillStyle = '#E53558';
     ctx.fillText(storyEventTitle.toUpperCase(), 120, 240);
 
     // Tracklist
-    ctx.font = '32px monospace';
+    ctx.font = '28px sans-serif';
     ctx.fillStyle = '#CCCCCC';
     const lines = storyTracks.split('\n');
     lines.forEach((line, idx) => {
@@ -227,8 +227,8 @@ export default function SocialModule({
     });
 
     // Watermark footer
-    ctx.font = '24px monospace';
-    ctx.fillStyle = '#666666';
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#71717a';
     ctx.fillText('HENRYIX.COM • ARCHIVED LIVE RECORDING', 120, 1800);
 
     const url = canvas.toDataURL('image/png');
@@ -247,70 +247,73 @@ export default function SocialModule({
   };
 
   return (
-    <div className="p-6 bg-black text-white font-mono space-y-6 select-none">
+    <div className="p-6 bg-transparent text-zinc-100 font-sans space-y-6 select-none">
       
       {/* 1. TOP HEADER & TABS */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
           <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-            <h2 className="font-avathe text-2xl text-white tracking-widest uppercase">
-              MODULE 05 // SOCIAL & SCENE SCOUT
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+            <h2 className="font-semibold text-2xl text-white tracking-tight flex items-center gap-2">
+              <span>Social &amp; Scene Scout</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-400 font-normal font-mono border border-white/10">
+                05
+              </span>
             </h2>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            UNIVERSAL EVENT PARSER • 3X3 INSTAGRAM GRID • MIX RELEASE PIPELINE • VIP SMS
+          <p className="text-xs text-zinc-400 mt-1">
+            Universal event parser • 3x3 Instagram grid • Mix release pipeline • VIP SMS alerts
           </p>
         </div>
 
-        {/* Sub-navigation Switcher Pills */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        {/* Sub-navigation Switcher Pills (Notion Segmented Control) */}
+        <div className="flex flex-wrap items-center gap-1 bg-[#14151a] border border-white/[0.08] p-1 rounded-xl text-xs">
           <button
             onClick={() => onNavigate ? onNavigate('social-scout') : null}
-            className={`px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 ${
               currentMode === 'scout' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm' 
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <Compass size={13} />
-            <span>⚡ Scene Scout & Parser</span>
+            <Compass size={13} className={currentMode === 'scout' ? 'text-amber-400' : ''} />
+            <span>Scene Scout &amp; Parser</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('social-grid') : null}
-            className={`px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 ${
               currentMode === 'grid' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm' 
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <Grid size={13} />
-            <span>🗓️ 3x3 Instagram Grid</span>
+            <Grid size={13} className={currentMode === 'grid' ? 'text-[#8b5cf6]' : ''} />
+            <span>3x3 Instagram Grid</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('social-pipeline') : null}
-            className={`px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 ${
               currentMode === 'pipeline' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm' 
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <CheckSquare size={13} />
-            <span>🚀 Mix Release Pipeline</span>
+            <CheckSquare size={13} className={currentMode === 'pipeline' ? 'text-emerald-400' : ''} />
+            <span>Mix Release Pipeline</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('social-vip') : null}
-            className={`px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 ${
               currentMode === 'vip' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm' 
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <Send size={13} />
-            <span>✉️ VIP SMS Alert Dispatch</span>
+            <Send size={13} className={currentMode === 'vip' ? 'text-[#06b6d4]' : ''} />
+            <span>VIP SMS Alert Dispatch</span>
           </button>
         </div>
       </div>
@@ -322,22 +325,24 @@ export default function SocialModule({
         <div className="space-y-6">
           
           {/* Radar Tuners */}
-          <div className="border border-zinc-900 bg-zinc-950 p-4 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-2">
-              <span className="text-xs font-bold text-white uppercase flex items-center gap-2">
-                <Sliders size={14} className="text-[#D8163F]" />
-                ANALOG SCENE RADAR TUNERS
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-3 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+              <span className="text-xs font-semibold text-white tracking-wider uppercase flex items-center gap-2">
+                <Sliders size={14} className="text-[#3b82f6]" />
+                Analog Scene Radar Tuners
               </span>
-              <span className="text-[10px] text-emerald-400 font-mono">LIVE LONDON FEED</span>
+              <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                LIVE LONDON FEED
+              </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-zinc-500 text-[11px]">SONIC:</span>
+                <span className="text-zinc-400 text-[11px] font-mono uppercase">Sonic:</span>
                 <select 
                   value={sonicTuner} 
                   onChange={(e) => setSonicTuner(e.target.value)}
-                  className="bg-black border border-zinc-800 text-zinc-300 px-2 py-1 text-xs"
+                  className="rounded-lg bg-[#0c0d10] border border-white/10 text-zinc-200 px-3 py-1.5 text-xs focus:outline-none focus:border-[#E53558]"
                 >
                   <option value="140 / Breaks / UKG">140 / Breaks / UKG</option>
                   <option value="Hard Groove (145-155)">Hard Groove (145-155)</option>
@@ -346,11 +351,11 @@ export default function SocialModule({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-zinc-500 text-[11px]">AREA:</span>
+                <span className="text-zinc-400 text-[11px] font-mono uppercase">Area:</span>
                 <select 
                   value={areaTuner} 
                   onChange={(e) => setAreaTuner(e.target.value)}
-                  className="bg-black border border-zinc-800 text-zinc-300 px-2 py-1 text-xs"
+                  className="rounded-lg bg-[#0c0d10] border border-white/10 text-zinc-200 px-3 py-1.5 text-xs focus:outline-none focus:border-[#E53558]"
                 >
                   <option value="South / East London">South / East London (Corsica, MOT, Spanners)</option>
                   <option value="Hackney / Dalston">Hackney / Dalston (FOLD, Colour Factory)</option>
@@ -361,12 +366,12 @@ export default function SocialModule({
           </div>
 
           {/* Universal Event Parser ("Paste & Parse") */}
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-3">
-            <h3 className="font-bold text-xs text-white uppercase flex items-center gap-2">
-              <Sparkles size={14} className="text-[#D8163F]" />
-              UNIVERSAL EVENT PARSER (&quot;PASTE &amp; PARSE&quot;)
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-3 shadow-sm">
+            <h3 className="font-semibold text-xs text-white uppercase tracking-wider flex items-center gap-2">
+              <Sparkles size={14} className="text-[#E53558]" />
+              Universal Event Parser (&quot;Paste &amp; Parse&quot;)
             </h3>
-            <p className="text-zinc-500 text-xs">
+            <p className="text-zinc-400 text-xs">
               Paste unstructured promoter WhatsApp forwards, Instagram flyer captions, or Resident Advisor links to instantly extract event dates, venues, lineup slots, and contacts.
             </p>
             
@@ -375,33 +380,33 @@ export default function SocialModule({
               placeholder="Paste WhatsApp gig invite e.g.: 'Hey Henry, loved your set! We're putting together a session on Nov 7th at Corner New Cross. Want to headline 01:00-03:00? Hit me back - Alex'"
               value={flyerText}
               onChange={(e) => setFlyerText(e.target.value)}
-              className="w-full bg-black border border-zinc-800 p-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#D8163F]"
+              className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-3.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#E53558]"
             />
 
             <div className="flex justify-between items-center pt-1">
               <button
                 onClick={() => setFlyerText("Royal Court Session // Corner New Cross SE14. Nov 7th. Headline set 01:00-03:00. Promoter Alex 07911123456.")}
-                className="text-xs text-zinc-500 hover:text-zinc-300"
+                className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
               >
                 + Paste Sample Promoter WhatsApp
               </button>
               <button
                 onClick={handleParseFlyer}
-                className="px-4 py-2 bg-[#D8163F] text-black text-xs font-bold hover:bg-white flex items-center gap-1.5 shadow-[0_0_10px_rgba(216,22,63,0.4)] transition-colors"
+                className="px-4 py-2 rounded-lg bg-[#E53558] hover:bg-[#f43f5e] text-white text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
               >
                 <Sparkles size={13} />
-                <span>PARSE EVENT DETAILS</span>
+                <span>Parse Event Details</span>
               </button>
             </div>
           </div>
 
           {/* Parsed Result Card */}
           {parsedLead && (
-            <div className="border border-emerald-500 bg-emerald-950/20 p-5 space-y-3 text-xs">
-              <div className="font-bold text-emerald-400 uppercase flex items-center justify-between">
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 space-y-3 text-xs shadow-sm">
+              <div className="font-semibold text-emerald-300 uppercase flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <CheckCircle2 size={15} />
-                  PARSED GIG INQUIRY DETECTED
+                  <CheckCircle2 size={16} className="text-emerald-400" />
+                  Parsed Gig Inquiry Detected
                 </span>
                 <button
                   onClick={() => {
@@ -411,40 +416,43 @@ export default function SocialModule({
                       type: 'success',
                     });
                   }}
-                  className="px-3 py-1 bg-emerald-600 text-black font-bold hover:bg-white transition-colors"
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-400 text-black font-medium text-xs hover:bg-emerald-300 transition-colors shadow-sm"
                 >
                   + Add to GIGS Module Schedule
                 </button>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div><span className="text-zinc-500 text-[10px] block">VENUE</span> <div className="text-white font-bold">{parsedLead.venue}</div></div>
-                <div><span className="text-zinc-500 text-[10px] block">DATE</span> <div className="text-white font-bold">{parsedLead.date}</div></div>
-                <div><span className="text-zinc-500 text-[10px] block">SLOT</span> <div className="text-white font-bold">{parsedLead.role}</div></div>
-                <div><span className="text-zinc-500 text-[10px] block">PROMOTER</span> <div className="text-white font-bold">{parsedLead.promoter}</div></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+                <div><span className="text-zinc-400 text-[10px] uppercase font-mono block">Venue</span> <div className="text-white font-medium">{parsedLead.venue}</div></div>
+                <div><span className="text-zinc-400 text-[10px] uppercase font-mono block">Date</span> <div className="text-white font-medium">{parsedLead.date}</div></div>
+                <div><span className="text-zinc-400 text-[10px] uppercase font-mono block">Slot</span> <div className="text-white font-medium">{parsedLead.role}</div></div>
+                <div><span className="text-zinc-400 text-[10px] uppercase font-mono block">Promoter</span> <div className="text-white font-medium">{parsedLead.promoter}</div></div>
               </div>
             </div>
           )}
 
           {/* Monitored London Collectives Watchlist */}
-          <div className="border border-zinc-900 bg-zinc-950 p-4 space-y-3">
-            <h4 className="font-bold text-xs text-white uppercase">MONITORED UNDERGROUND COLLECTIVES</h4>
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-4 shadow-sm">
+            <h4 className="font-semibold text-xs text-white uppercase tracking-wider">Monitored Underground Collectives</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
               {[
                 { name: 'UNFOLD // FOLD London', status: 'RSVP Form Active', sound: '145-155 BPM Hard Groove', nextDate: 'Sunday 18 Oct' },
                 { name: 'RAT PARTY // Spanners', status: 'Open Decks Submission', sound: 'UKG, 140 Dubs, Breaks', nextDate: 'Friday 23:59 Deadline' },
                 { name: 'TELETECH // E1 London', status: 'Lineup Staged', sound: 'Industrial High Energy', nextDate: 'Saturday 31 Oct' },
               ].map(c => (
-                <div key={c.name} className="p-3 bg-black border border-zinc-800 space-y-2">
-                  <div className="font-bold text-white">{c.name}</div>
-                  <div className="text-[11px] text-emerald-400">● {c.status}</div>
-                  <div className="text-[10px] text-zinc-500">{c.sound} • Next: {c.nextDate}</div>
+                <div key={c.name} className="p-4 rounded-lg bg-[#0c0d10] border border-white/[0.06] hover:border-white/10 space-y-2.5 transition-all">
+                  <div className="font-medium text-white">{c.name}</div>
+                  <div className="text-xs text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>{c.status}</span>
+                  </div>
+                  <div className="text-xs text-zinc-400">{c.sound} • Next: {c.nextDate}</div>
                   <button
                     onClick={() => {
                       addToast({ title: 'PITCH STAGED', message: `EPK pitch drafted for ${c.name}.`, type: 'info' });
                     }}
-                    className="w-full py-1 bg-zinc-900 border border-zinc-700 hover:border-white text-zinc-300 hover:text-white text-[10px] font-bold"
+                    className="w-full py-1.5 rounded-md bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-zinc-200 text-xs font-medium transition-colors"
                   >
-                    ✉️ Pitch Promoter with EPK
+                    Pitch Promoter with EPK
                   </button>
                 </div>
               ))}
@@ -459,76 +467,76 @@ export default function SocialModule({
       {/* ========================================================================= */}
       {currentMode === 'grid' && (
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-xs text-white uppercase">INSTAGRAM PROFILE 3X3 FEED AESTHETIC</h3>
-                <span className="text-[10px] px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+                <h3 className="font-semibold text-xs text-white uppercase tracking-wider">Instagram Profile 3x3 Feed Aesthetic</h3>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-zinc-400 font-mono">
                   NOTION: {instagramGrid.length} POSTS
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-500">Plan visual contrast across drops. Move posts up/down to balance aesthetic flow.</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Plan visual contrast across drops. Move posts up/down to balance aesthetic flow.</p>
             </div>
             
             <div className="flex items-center gap-2">
               <button
                 onClick={() => fetchContentPosts()}
                 disabled={isLoadingSocial}
-                className="px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white text-xs flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
                 title="Refresh from Notion Content Calendar"
               >
-                <RefreshCw size={12} className={isLoadingSocial ? 'animate-spin text-[#D8163F]' : ''} />
-                <span>SYNC NOTION</span>
+                <RefreshCw size={12} className={isLoadingSocial ? 'animate-spin text-[#E53558]' : ''} />
+                <span>Sync Notion</span>
               </button>
 
               <button
                 onClick={() => setShowStageModal(true)}
-                className="px-3 py-1.5 bg-[#D8163F] text-black text-xs font-bold hover:bg-white flex items-center gap-1 transition-colors shadow-[0_0_10px_rgba(216,22,63,0.3)]"
+                className="px-3.5 py-1.5 rounded-lg bg-[#E53558] hover:bg-[#f43f5e] text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
               >
-                <Plus size={12} />
-                <span>+ STAGE POST TO NOTION</span>
+                <Plus size={13} />
+                <span>+ Stage Post to Notion</span>
               </button>
             </div>
           </div>
 
           {/* Stage Post Modal */}
           {showStageModal && (
-            <div className="border border-[#D8163F] bg-zinc-950 p-4 space-y-4 max-w-2xl mx-auto shadow-[0_0_20px_rgba(216,22,63,0.2)]">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#14151a] p-6 space-y-4 max-w-2xl mx-auto shadow-2xl">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#D8163F]" />
-                  <span className="font-bold text-xs text-white uppercase">
-                    STAGE NEW POST // NOTION CONTENT CALENDAR
+                  <span className="w-2 h-2 rounded-full bg-[#E53558]" />
+                  <span className="font-semibold text-xs text-white uppercase tracking-wider">
+                    Stage New Post // Notion Content Calendar
                   </span>
                 </div>
                 <button 
                   onClick={() => setShowStageModal(false)}
-                  className="text-zinc-500 hover:text-white"
+                  className="text-zinc-400 hover:text-white p-1 rounded hover:bg-white/[0.06]"
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </button>
               </div>
 
-              <form onSubmit={handleStagePost} className="space-y-3 text-xs">
+              <form onSubmit={handleStagePost} className="space-y-4 text-xs font-sans">
                 <div>
-                  <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-bold">Post Title / Hook:</label>
+                  <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-mono">Post Title / Hook:</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Knight Club Vol 4 Lineup Reveal Video"
                     value={newPostTitle}
                     onChange={(e) => setNewPostTitle(e.target.value)}
-                    className="w-full bg-black border border-zinc-800 p-2 text-white placeholder-zinc-600 focus:outline-none focus:border-[#D8163F]"
+                    className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#E53558]"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-bold">Content Type:</label>
+                    <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-mono">Content Type:</label>
                     <select
                       value={newPostType}
                       onChange={(e) => setNewPostType(e.target.value as any)}
-                      className="w-full bg-black border border-zinc-800 p-2 text-white focus:outline-none focus:border-[#D8163F]"
+                      className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2 text-white focus:outline-none focus:border-[#E53558]"
                     >
                       <option value="Video Clip">Video Clip (Reel / Teaser)</option>
                       <option value="Gig Flyer">Gig Flyer (Lineup Poster)</option>
@@ -538,52 +546,53 @@ export default function SocialModule({
                   </div>
 
                   <div>
-                    <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-bold">Publish Date:</label>
+                    <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-mono">Publish Date:</label>
                     <input
                       type="date"
                       value={newPostDate}
                       onChange={(e) => setNewPostDate(e.target.value)}
-                      className="w-full bg-black border border-zinc-800 p-2 text-white focus:outline-none focus:border-[#D8163F]"
-                    />
+                      className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2 text-white focus:outline-none focus:border-[#E53558]"
+                    >
+                    </input>
                   </div>
 
                   <div>
-                    <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-bold">Campaign:</label>
+                    <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-mono">Campaign:</label>
                     <input
                       type="text"
                       placeholder="e.g. Knight Club Vol 4"
                       value={newPostCampaign}
                       onChange={(e) => setNewPostCampaign(e.target.value)}
-                      className="w-full bg-black border border-zinc-800 p-2 text-white placeholder-zinc-600 focus:outline-none focus:border-[#D8163F]"
+                      className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2 text-white placeholder-zinc-500 focus:outline-none focus:border-[#E53558]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-bold">Caption / Notes / Hashtags:</label>
+                  <label className="text-zinc-400 block mb-1 uppercase text-[10px] font-mono">Caption / Notes / Hashtags:</label>
                   <textarea
                     rows={2}
                     placeholder="Caption copy, hashtags, or drop details..."
                     value={newPostNotes}
                     onChange={(e) => setNewPostNotes(e.target.value)}
-                    className="w-full bg-black border border-zinc-800 p-2 text-white placeholder-zinc-600 focus:outline-none focus:border-[#D8163F]"
+                    className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-[#E53558]"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-1 border-t border-zinc-900">
+                <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.08]">
                   <button
                     type="button"
                     onClick={() => setShowStageModal(false)}
-                    className="px-3 py-1.5 bg-zinc-900 text-zinc-400 hover:text-white text-xs"
+                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-zinc-300 hover:text-white text-xs font-medium"
                   >
-                    CANCEL
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingPost}
-                    className="px-4 py-1.5 bg-[#D8163F] text-black font-bold text-xs hover:bg-white transition-colors disabled:opacity-50"
+                    className="px-5 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs hover:bg-[#f43f5e] transition-colors disabled:opacity-50 shadow-sm"
                   >
-                    {isSubmittingPost ? 'CREATING IN NOTION...' : 'SAVE TO NOTION CALENDAR'}
+                    {isSubmittingPost ? 'Creating in Notion...' : 'Save to Notion Calendar'}
                   </button>
                 </div>
               </form>
@@ -593,60 +602,60 @@ export default function SocialModule({
           {/* 3x3 Profile Grid */}
           <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
             {instagramGrid.length === 0 ? (
-              <div className="col-span-3 border border-dashed border-zinc-800 p-8 text-center bg-zinc-950/40 space-y-3">
-                <div className="w-10 h-10 mx-auto rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+              <div className="col-span-3 rounded-xl border border-dashed border-white/10 p-8 text-center bg-[#14151a]/40 space-y-3 shadow-sm">
+                <div className="w-10 h-10 mx-auto rounded-full bg-[#14151a] border border-white/10 flex items-center justify-center text-zinc-500">
                   <Grid size={18} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-xs uppercase">NO STAGED POSTS IN NOTION CALENDAR</h4>
-                  <p className="text-[11px] text-zinc-500 mt-1 max-w-md mx-auto">
+                  <h4 className="font-semibold text-white text-xs uppercase">No Staged Posts in Notion Calendar</h4>
+                  <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
                     Your Notion Content Calendar is currently clear. Stage a post to map out your upcoming 3x3 Instagram aesthetic.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowStageModal(true)}
-                  className="px-4 py-2 bg-[#D8163F] text-black text-xs font-bold hover:bg-white inline-flex items-center gap-1.5 shadow-[0_0_10px_rgba(216,22,63,0.3)] transition-colors"
+                  className="px-4 py-2 rounded-lg bg-[#E53558] hover:bg-[#f43f5e] text-white text-xs font-medium inline-flex items-center gap-1.5 shadow-sm transition-colors"
                 >
                   <Plus size={13} />
-                  <span>+ STAGE FIRST POST TO NOTION</span>
+                  <span>+ Stage First Post to Notion</span>
                 </button>
               </div>
             ) : (
               instagramGrid.map((post, idx) => (
                 <div 
                   key={post.id}
-                  className="aspect-square bg-zinc-950 border border-zinc-800 p-2.5 flex flex-col justify-between group relative overflow-hidden transition-colors hover:border-zinc-700"
+                  className="aspect-square rounded-xl bg-[#14151a] border border-white/[0.08] hover:border-white/20 p-3.5 flex flex-col justify-between group relative overflow-hidden transition-all shadow-sm"
                 >
-                  <div className="flex justify-between items-start text-[10px] text-zinc-500 z-10">
-                    <span className="px-1.5 py-0.5 bg-black/80 border border-zinc-800 text-white font-bold">#{idx + 1}</span>
-                    <span className={post.scheduled ? 'text-emerald-400 font-bold' : 'text-zinc-500'}>
+                  <div className="flex justify-between items-start text-[10px] text-zinc-400 z-10">
+                    <span className="px-2 py-0.5 rounded-full bg-[#0c0d10] border border-white/10 text-white font-mono font-medium">#{idx + 1}</span>
+                    <span className={post.scheduled ? 'text-emerald-400 font-mono' : 'text-zinc-500 font-mono'}>
                       {post.scheduled ? 'STAGED' : 'DRAFT'}
                     </span>
                   </div>
 
                   <div className="text-center my-auto p-1">
-                    <div className="text-[11px] font-bold text-white line-clamp-2">{post.title}</div>
-                    <div className="text-[9px] text-zinc-500 mt-1">{post.type}</div>
+                    <div className="text-xs font-medium text-white line-clamp-2">{post.title}</div>
+                    <div className="text-[10px] text-zinc-400 mt-1">{post.type}</div>
                   </div>
 
                   {/* Hover Reorder Controls */}
-                  <div className="flex justify-between items-center border-t border-zinc-900 pt-1 z-10">
+                  <div className="flex justify-between items-center border-t border-white/[0.06] pt-1.5 z-10">
                     <button 
                       disabled={idx === 0}
                       onClick={() => reorderInstagramGrid(idx, idx - 1)}
-                      className="p-1 hover:text-white disabled:opacity-20"
+                      className="p-1 hover:text-white disabled:opacity-20 rounded hover:bg-white/[0.06]"
                       title="Move earlier"
                     >
-                      <MoveUp size={12} />
+                      <MoveUp size={13} />
                     </button>
-                    <span className="text-[9px] text-zinc-500">{post.date}</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">{post.date}</span>
                     <button 
                       disabled={idx === instagramGrid.length - 1}
                       onClick={() => reorderInstagramGrid(idx, idx + 1)}
-                      className="p-1 hover:text-white disabled:opacity-20"
+                      className="p-1 hover:text-white disabled:opacity-20 rounded hover:bg-white/[0.06]"
                       title="Move later"
                     >
-                      <MoveDown size={12} />
+                      <MoveDown size={13} />
                     </button>
                   </div>
                 </div>
@@ -661,20 +670,20 @@ export default function SocialModule({
       {/* ========================================================================= */}
       {currentMode === 'pipeline' && (
         <div className="space-y-6 max-w-4xl mx-auto">
-          <div className="border border-zinc-900 bg-zinc-950 p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-6 space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase flex items-center gap-2">
-                  <CheckSquare size={18} className="text-[#D8163F]" />
-                  8-STAGE MIX MAKING & OMNI-RELEASE PIPELINE
+                <h3 className="font-semibold text-lg text-white tracking-tight flex items-center gap-2">
+                  <CheckSquare size={18} className="text-[#E53558]" />
+                  8-Stage Mix Making &amp; Omni-Release Pipeline
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   End-to-end release workflow: Audio mastering, artwork, platform distribution, and social promo
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-emerald-400 font-bold mr-2">
+                <span className="text-xs text-emerald-400 font-mono mr-2">
                   {pipelineSteps.filter(s => s.completed).length} / {pipelineSteps.length} Steps Complete
                 </span>
                 <button
@@ -683,7 +692,7 @@ export default function SocialModule({
                     navigator.clipboard.writeText(tracklist);
                     addToast({ title: 'TRACKLIST COPIED', message: 'Formatted tracklist copied for SoundCloud/YouTube.', type: 'success' });
                   }}
-                  className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-white text-zinc-200 text-xs flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-zinc-200 text-xs font-medium flex items-center gap-1.5 transition-colors"
                 >
                   <Copy size={12} />
                   <span>Copy Formatted Tracklist</span>
@@ -692,9 +701,9 @@ export default function SocialModule({
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full bg-zinc-900 h-2 border border-zinc-800 overflow-hidden flex">
+            <div className="w-full bg-[#0c0d10] h-2.5 rounded-full border border-white/10 overflow-hidden flex p-0.5">
               <div 
-                className="bg-[#D8163F] h-full transition-all duration-300" 
+                className="bg-[#E53558] h-full rounded-full transition-all duration-300" 
                 style={{ width: `${(pipelineSteps.filter(s => s.completed).length / pipelineSteps.length) * 100}%` }}
               />
             </div>
@@ -705,33 +714,33 @@ export default function SocialModule({
                 <div 
                   key={step.id}
                   onClick={() => togglePipelineStep(step.id)}
-                  className={`p-3.5 border cursor-pointer transition-colors space-y-1 ${
+                  className={`p-4 rounded-lg border cursor-pointer transition-colors space-y-1.5 ${
                     step.completed 
-                      ? 'border-emerald-900/80 bg-emerald-950/20' 
-                      : 'border-zinc-800 bg-black hover:border-zinc-700'
+                      ? 'border-emerald-500/20 bg-emerald-500/5' 
+                      : 'border-white/[0.06] bg-[#0c0d10] hover:border-white/10'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold ${step.completed ? 'text-emerald-400' : 'text-white'}`}>
+                    <span className={`text-xs font-medium ${step.completed ? 'text-emerald-300' : 'text-white'}`}>
                       {step.id}. {step.name}
                     </span>
                     <input 
                       type="checkbox" 
                       checked={step.completed} 
                       onChange={() => {}} 
-                      className="accent-[#D8163F] h-4 w-4 cursor-pointer"
+                      className="accent-[#E53558] h-4 w-4 rounded cursor-pointer"
                     />
                   </div>
-                  <p className="text-[11px] text-zinc-400">{step.desc}</p>
+                  <p className="text-xs text-zinc-400">{step.desc}</p>
                 </div>
               ))}
             </div>
 
-            <div className="p-3 bg-black border border-zinc-900 flex justify-between items-center text-xs">
-              <span className="text-zinc-500">CURRENT TARGET MIX: <strong className="text-white">Knight Club Session 04</strong></span>
+            <div className="p-3.5 rounded-lg bg-[#0c0d10] border border-white/[0.06] flex justify-between items-center text-xs">
+              <span className="text-zinc-400">Current Target Mix: <strong className="text-white">Knight Club Session 04</strong></span>
               <button
                 onClick={() => addToast({ title: 'MIX PUBLISHED', message: 'Knight Club Session 04 pushed to henryix.com/mixes.', type: 'success' })}
-                className="px-3 py-1 bg-[#D8163F] text-black font-bold text-xs hover:bg-white transition-colors"
+                className="px-3.5 py-1.5 rounded-lg bg-[#E53558] hover:bg-[#f43f5e] text-white font-medium text-xs transition-colors shadow-sm"
               >
                 Publish to Website Archive Now
               </button>
@@ -747,24 +756,24 @@ export default function SocialModule({
         <div className="space-y-6 max-w-2xl mx-auto">
           
           {/* VIP SMS Broadcast Card */}
-          <div className="border border-zinc-900 bg-zinc-950 p-6 space-y-4">
-            <div className="border-b border-zinc-900 pb-3">
-              <h3 className="font-avathe text-xl text-white uppercase flex items-center gap-2">
-                <Send size={16} className="text-[#D8163F]" />
-                VIP INNER CIRCLE DISPATCHER
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-6 space-y-4 shadow-sm">
+            <div className="border-b border-white/[0.08] pb-3">
+              <h3 className="font-semibold text-lg text-white tracking-tight flex items-center gap-2">
+                <Send size={16} className="text-[#06b6d4]" />
+                VIP Inner Circle Dispatcher
               </h3>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Direct instant SMS / Email alert dispatch for secret London coordinates & door passcodes
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Direct instant SMS / Email alert dispatch for secret London coordinates &amp; door passcodes
               </p>
             </div>
 
-            <div className="space-y-4 text-xs">
+            <div className="space-y-4 text-xs font-sans">
               <div>
-                <label className="text-zinc-400 uppercase font-bold block mb-1">RECIPIENT AUDIENCE:</label>
+                <label className="text-zinc-400 uppercase font-mono text-[10px] block mb-1">Recipient Audience:</label>
                 <select
                   value={recipientGroup}
                   onChange={(e) => setRecipientGroup(e.target.value)}
-                  className="w-full bg-black border border-zinc-800 p-2 text-white focus:outline-none focus:border-[#D8163F]"
+                  className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2.5 text-white focus:outline-none focus:border-[#E53558]"
                 >
                   <option value="Inner Circle (120 Subscribers)">Inner Circle (120 Subscribers)</option>
                   <option value="London Resident List (350 Subscribers)">London Resident List (350 Subscribers)</option>
@@ -773,64 +782,64 @@ export default function SocialModule({
               </div>
 
               <div>
-                <label className="text-zinc-400 uppercase font-bold block mb-1">SECRET COORDINATES & ACCESS INSTRUCTIONS:</label>
+                <label className="text-zinc-400 uppercase font-mono text-[10px] block mb-1">Secret Coordinates &amp; Access Instructions:</label>
                 <textarea
                   rows={3}
                   value={vipCoords}
                   onChange={(e) => setVipCoords(e.target.value)}
-                  className="w-full bg-black border border-zinc-800 p-2 text-white focus:outline-none focus:border-[#D8163F]"
+                  className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2.5 text-white focus:outline-none focus:border-[#E53558]"
                 />
               </div>
 
               <button
                 onClick={handleDispatchVipSms}
-                className="w-full py-3 bg-[#D8163F] text-black font-bold hover:bg-white flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(216,22,63,0.4)] transition-colors"
+                className="w-full py-2.5 rounded-lg bg-[#E53558] hover:bg-[#f43f5e] text-white font-medium text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
               >
                 <Send size={14} />
-                <span>DISPATCH VIP ALERT TO {recipientGroup.toUpperCase()}</span>
+                <span>Dispatch VIP Alert to {recipientGroup}</span>
               </button>
             </div>
           </div>
 
           {/* 9:16 Tracklist Story Card Generator */}
-          <div className="border border-zinc-900 bg-zinc-950 p-6 space-y-4">
-            <div className="border-b border-zinc-900 pb-3">
-              <h3 className="font-avathe text-xl text-white uppercase flex items-center gap-2">
-                <Share2 size={16} className="text-[#22d3ee]" />
-                9:16 TRACKLIST STORY GENERATOR
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-6 space-y-4 shadow-sm">
+            <div className="border-b border-white/[0.08] pb-3">
+              <h3 className="font-semibold text-lg text-white tracking-tight flex items-center gap-2">
+                <Share2 size={16} className="text-[#3b82f6]" />
+                9:16 Tracklist Story Generator
               </h3>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Generates 1080x1920 retro-dithered vertical graphic formatted for Instagram Stories
               </p>
             </div>
 
-            <div className="space-y-4 text-xs">
+            <div className="space-y-4 text-xs font-sans">
               <div>
-                <label className="text-zinc-400 uppercase font-bold block mb-1">EVENT TITLE:</label>
+                <label className="text-zinc-400 uppercase font-mono text-[10px] block mb-1">Event Title:</label>
                 <input
                   type="text"
                   value={storyEventTitle}
                   onChange={(e) => setStoryEventTitle(e.target.value)}
-                  className="w-full bg-black border border-zinc-800 p-2 text-white focus:outline-none focus:border-[#D8163F]"
+                  className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2.5 text-white focus:outline-none focus:border-[#E53558]"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-400 uppercase font-bold block mb-1">SET TRACKLIST:</label>
+                <label className="text-zinc-400 uppercase font-mono text-[10px] block mb-1">Set Tracklist:</label>
                 <textarea
                   rows={4}
                   value={storyTracks}
                   onChange={(e) => setStoryTracks(e.target.value)}
-                  className="w-full bg-black border border-zinc-800 p-2 text-white focus:outline-none focus:border-[#D8163F]"
+                  className="w-full rounded-lg bg-[#0c0d10] border border-white/10 p-2.5 text-white focus:outline-none focus:border-[#E53558]"
                 />
               </div>
 
               <button
                 onClick={handleDownloadStoryCard}
-                className="w-full py-2.5 bg-zinc-900 border border-zinc-700 hover:border-white text-zinc-200 hover:text-white font-bold flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2.5 rounded-lg bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-zinc-200 text-xs font-medium flex items-center justify-center gap-2 transition-colors"
               >
                 <Download size={14} />
-                <span>DOWNLOAD 9:16 STORY PNG</span>
+                <span>Download 9:16 Story PNG</span>
               </button>
             </div>
           </div>

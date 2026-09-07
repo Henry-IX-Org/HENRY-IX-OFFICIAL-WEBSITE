@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  FileSpreadsheet
+  ShieldCheck
 } from 'lucide-react';
 import { useStudioStore } from '@/store/studioStore';
 
@@ -142,49 +142,51 @@ export default function DoorScanner({ onNavigate }: DoorScannerProps = {}) {
   };
 
   return (
-    <div className="p-6 bg-black text-white font-mono space-y-6">
+    <div className="p-6 text-zinc-200 font-sans space-y-6">
       
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
           <div className="flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <h2 className="font-avathe text-2xl text-white tracking-widest uppercase">
-              MODULE 04 // GIGS &amp; TOUR LOGISTICS
+            <h2 className="font-semibold text-xl text-white tracking-tight">
+              DOOR QR SCANNER & ADMISSIONS
             </h2>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">100% OFFLINE CONCRETE BASEMENT RESILIENCE • HAPTIC &amp; AUDIO DOOR CHECK-IN</p>
+          <p className="text-xs text-zinc-400 mt-1 font-mono">
+            100% OFFLINE CONCRETE BASEMENT RESILIENCE • HAPTIC & AUDIO DOOR CHECK-IN
+          </p>
         </div>
 
         {/* Sub-navigation Switcher Pills */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <button
-            onClick={() => onNavigate ? onNavigate('gigs-hub') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+            onClick={() => onNavigate?.('gigs-hub')}
+            className="px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-[#1b1c22] text-zinc-300 border-white/[0.08] hover:text-white hover:bg-[#242630]"
           >
             <span>📅 Master Hub</span>
           </button>
           <button
-            onClick={() => onNavigate ? onNavigate('gigs-daysheet') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+            onClick={() => onNavigate?.('gigs-daysheet')}
+            className="px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-[#1b1c22] text-zinc-300 border-white/[0.08] hover:text-white hover:bg-[#242630]"
           >
             <span>📄 1-Page Day Sheet</span>
           </button>
           <button
-            onClick={() => onNavigate ? onNavigate('gigs-checklist') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+            onClick={() => onNavigate?.('gigs-checklist')}
+            className="px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-[#1b1c22] text-zinc-300 border-white/[0.08] hover:text-white hover:bg-[#242630]"
           >
             <span>🎒 Smart DJ Bag</span>
           </button>
           <button
-            onClick={() => onNavigate ? onNavigate('gigs-finance') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"
+            onClick={() => onNavigate?.('gigs-finance')}
+            className="px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-[#1b1c22] text-zinc-300 border-white/[0.08] hover:text-white hover:bg-[#242630]"
           >
-            <span>💰 Finance &amp; HMRC Tax</span>
+            <span>💰 Finance & HMRC Tax</span>
           </button>
           <button
-            onClick={() => onNavigate ? onNavigate('gigs-scanner') : null}
-            className="px-3 py-1.5 rounded-sm border font-bold transition-all flex items-center gap-1.5 bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]"
+            onClick={() => onNavigate?.('gigs-scanner')}
+            className="px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-[#E53558] text-white border-transparent shadow-sm"
           >
             <span>📱 Door QR Scanner</span>
           </button>
@@ -192,68 +194,66 @@ export default function DoorScanner({ onNavigate }: DoorScannerProps = {}) {
       </div>
 
       {/* Offline Status & CSV Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950 border border-zinc-900 p-3 text-xs">
-        <div className="flex items-center gap-2">
-          <WifiOff size={13} className="text-emerald-400" />
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#14151a] border border-white/[0.08] rounded-xl p-3.5 text-xs">
+        <div className="flex items-center gap-2 font-mono">
+          <WifiOff size={14} className="text-emerald-400" />
           <span className="text-zinc-400">CRYPTO BASEMENT CACHE:</span>
-          <span className="text-emerald-400 font-bold">120 PASSES ENCRYPTED (OFFLINE READY)</span>
+          <span className="text-emerald-400 font-semibold">120 PASSES ENCRYPTED (OFFLINE READY)</span>
         </div>
 
         <button
           onClick={handleExportCsv}
-          className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-emerald-500 text-zinc-300 hover:text-emerald-400 text-xs flex items-center gap-1.5 transition-colors font-bold"
+          className="px-3 py-1.5 bg-[#1b1c22] border border-white/[0.08] hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 rounded-lg text-xs flex items-center gap-1.5 transition-colors font-medium"
         >
-          <Download size={12} />
+          <Download size={13} />
           <span>Export Admission Log CSV</span>
         </button>
       </div>
 
-      {/* SCANNER CAMERA VIEWFINDER (SKEUOMORPHIC) */}
-      <div className={`border-2 p-8 transition-colors text-center relative overflow-hidden bg-zinc-950 ${
+      {/* SCANNER CAMERA VIEWFINDER */}
+      <div className={`rounded-2xl border p-8 transition-colors text-center relative overflow-hidden bg-[#14151a] shadow-sm ${
         status === 'valid' 
-          ? 'border-emerald-500 bg-emerald-950/20' 
+          ? 'border-emerald-500/80 bg-emerald-950/20' 
           : status === 'duplicate' 
-          ? 'border-yellow-500 bg-yellow-950/20' 
+          ? 'border-amber-500/80 bg-amber-950/20' 
           : status === 'invalid' 
-          ? 'border-red-600 bg-red-950/30' 
-          : 'border-zinc-800'
+          ? 'border-red-500/80 bg-red-950/25' 
+          : 'border-white/[0.08]'
       }`}>
-        <div className="absolute inset-0 bayer-dither opacity-10 pointer-events-none" />
-
-        <div className="max-w-xs mx-auto aspect-square border-2 border-dashed border-zinc-700 relative flex flex-col items-center justify-center p-6 bg-black">
-          <QrCode size={64} className={`transition-transform duration-300 ${status ? 'scale-110' : 'text-zinc-700'}`} />
-          <div className="mt-4 text-[10px] text-zinc-500 tracking-widest uppercase">
+        <div className="max-w-xs mx-auto aspect-square rounded-2xl border-2 border-dashed border-white/[0.12] relative flex flex-col items-center justify-center p-6 bg-[#0c0d10] shadow-inner">
+          <QrCode size={72} className={`transition-transform duration-300 ${status ? 'scale-110' : 'text-zinc-600'}`} />
+          <div className="mt-4 text-[11px] text-zinc-400 font-mono tracking-wider uppercase font-medium">
             POINT CAMERA AT GUESTLIST / VIP QR
           </div>
-          <div className="w-full h-0.5 bg-[#D8163F] absolute top-1/2 -translate-y-1/2 animate-pulse" />
+          <div className="w-full h-0.5 bg-[#E53558] absolute top-1/2 -translate-y-1/2 animate-pulse shadow-[0_0_8px_rgba(229,53,88,0.8)]" />
         </div>
 
         {/* Sensory Scan Result HUD */}
         {status && (
-          <div className="mt-6 space-y-1 animate-in zoom-in-95 duration-150">
-            <div className={`text-xl font-bold tracking-widest uppercase flex items-center justify-center gap-2 ${
-              status === 'valid' ? 'text-emerald-400' : status === 'duplicate' ? 'text-yellow-400' : 'text-red-500'
+          <div className="mt-6 space-y-1.5 animate-in zoom-in-95 duration-150">
+            <div className={`text-lg font-semibold tracking-wide uppercase flex items-center justify-center gap-2 ${
+              status === 'valid' ? 'text-emerald-400' : status === 'duplicate' ? 'text-amber-400' : 'text-red-400'
             }`}>
               {status === 'valid' ? (
                 <>
-                  <CheckCircle2 size={20} />
+                  <CheckCircle2 size={22} />
                   <span>ACCESS GRANTED</span>
                 </>
               ) : status === 'duplicate' ? (
                 <>
-                  <AlertTriangle size={20} />
+                  <AlertTriangle size={22} />
                   <span>DUPLICATE TICKET</span>
                 </>
               ) : (
                 <>
-                  <XCircle size={20} />
+                  <XCircle size={22} />
                   <span>INVALID TICKET</span>
                 </>
               )}
             </div>
             {ticketDetails && (
-              <div className="text-xs text-zinc-300">
-                <strong>{ticketDetails.name}</strong> • {ticketDetails.type} ({ticketDetails.code})
+              <div className="text-xs text-zinc-300 font-mono">
+                <strong className="text-white">{ticketDetails.name}</strong> • {ticketDetails.type} ({ticketDetails.code})
               </div>
             )}
           </div>
@@ -263,21 +263,21 @@ export default function DoorScanner({ onNavigate }: DoorScannerProps = {}) {
         <div className="flex flex-wrap justify-center gap-2 mt-6">
           <button 
             onClick={() => handleScan('valid', 'H9-VIP-889', 'Elena Rostova')}
-            className="px-3 py-1.5 bg-emerald-950 border border-emerald-600 text-emerald-400 text-xs font-bold hover:bg-emerald-600 hover:text-black transition-colors"
+            className="px-3.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
           >
-            SIMULATE VALID (HIGH CHIME)
+            Simulate Valid (High Chime)
           </button>
           <button 
             onClick={() => handleScan('duplicate', 'H9-VIP-001', 'Marcus (Promoter)')}
-            className="px-3 py-1.5 bg-yellow-950 border border-yellow-600 text-yellow-400 text-xs font-bold hover:bg-yellow-600 hover:text-black transition-colors"
+            className="px-3.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors"
           >
-            SIMULATE DUPLICATE (BUZZ)
+            Simulate Duplicate (Buzz)
           </button>
           <button 
             onClick={() => handleScan('invalid', 'FAKE-QR-999', 'Unknown Visitor')}
-            className="px-3 py-1.5 bg-red-950 border border-red-600 text-red-400 text-xs font-bold hover:bg-red-600 hover:text-white transition-colors"
+            className="px-3.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/20 transition-colors"
           >
-            SIMULATE INVALID
+            Simulate Invalid
           </button>
         </div>
       </div>
@@ -285,49 +285,52 @@ export default function DoorScanner({ onNavigate }: DoorScannerProps = {}) {
       {/* MANUAL CODE ENTRY FORM */}
       <form onSubmit={handleManualSearch} className="flex gap-2">
         <div className="flex-1 relative">
-          <Search size={14} className="text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search size={15} className="text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input 
             type="text"
-            placeholder="Manual Guest Name or Pass Code (e.g. H9-VIP-001)..."
+            placeholder="Manual guest name or pass code (e.g. H9-VIP-001)..."
             value={manualCode}
             onChange={(e) => setManualCode(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-[#D8163F]"
+            className="w-full rounded-xl bg-[#14151a] border border-white/[0.08] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#E53558] focus:ring-1 focus:ring-[#E53558] transition-colors font-mono"
           />
         </div>
         <button 
           type="submit"
-          className="px-4 py-2 bg-[#D8163F] text-white text-xs font-bold hover:bg-red-600 transition-colors"
+          className="px-5 py-2.5 rounded-xl bg-[#E53558] text-white text-xs font-medium hover:bg-[#d82a4d] transition-colors shadow-sm"
         >
-          LOOKUP PASS
+          Lookup Pass
         </button>
       </form>
 
       {/* LIVE ADMITTED DOOR LOG */}
-      <div className="border border-zinc-900 bg-zinc-950 p-4 space-y-3">
-        <h3 className="text-xs text-zinc-500 uppercase tracking-widest border-b border-zinc-900 pb-2 flex items-center justify-between">
-          <span>DOOR ADMISSIONS QUEUE (LOCAL STORE)</span>
-          <span className="text-emerald-400 font-bold">{admittedGuests.length} CHECKED IN</span>
+      <div className="rounded-2xl border border-white/[0.08] bg-[#14151a] p-5 space-y-4 shadow-sm">
+        <h3 className="text-xs text-zinc-400 font-medium uppercase tracking-wider border-b border-white/[0.08] pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={14} className="text-emerald-400" />
+            <span>Door Admissions Queue (Local Store)</span>
+          </div>
+          <span className="text-emerald-400 font-mono font-semibold">{admittedGuests.length} Checked In</span>
         </h3>
         {admittedGuests.length === 0 ? (
-          <div className="text-center py-4 text-xs text-zinc-600">No guests admitted yet.</div>
+          <div className="text-center py-6 text-xs text-zinc-500 font-mono">No guests admitted yet.</div>
         ) : (
-          <div className="divide-y divide-zinc-900 text-xs">
+          <div className="divide-y divide-white/[0.06] text-xs">
             {admittedGuests.map((item, idx) => (
-              <div key={idx} className="py-2 flex items-center justify-between">
+              <div key={idx} className="py-2.5 flex items-center justify-between hover:bg-white/[0.02] px-2 rounded-lg transition-colors">
                 <div className="flex items-center gap-3">
                   <span className="text-zinc-500 text-[11px] font-mono">{item.time}</span>
-                  <span className="text-white font-bold">{item.name}</span>
-                  <span className="text-zinc-500 text-[10px] font-mono">{item.code}</span>
-                  <span className="text-zinc-600 text-[10px] hidden sm:inline">{item.type}</span>
+                  <span className="text-zinc-200 font-medium">{item.name}</span>
+                  <span className="text-zinc-400 text-[11px] font-mono px-1.5 py-0.5 rounded bg-black/40 border border-white/[0.06]">{item.code}</span>
+                  <span className="text-zinc-500 text-[11px] hidden sm:inline">{item.type}</span>
                 </div>
-                <span className={`text-[11px] font-bold ${
+                <span className={`text-[11px] font-medium font-mono px-2 py-0.5 rounded-full ${
                   item.status === 'ADMITTED' 
-                    ? 'text-emerald-400' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                     : item.status === 'DUPLICATE' 
-                    ? 'text-yellow-400' 
-                    : 'text-red-400'
+                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
                 }`}>
-                  {item.status === 'ADMITTED' ? '✓ ADMITTED' : item.status === 'DUPLICATE' ? '⚠️ DUPLICATE' : '✕ REJECTED'}
+                  {item.status === 'ADMITTED' ? '✓ Admitted' : item.status === 'DUPLICATE' ? '⚠ Duplicate' : '✕ Rejected'}
                 </span>
               </div>
             ))}

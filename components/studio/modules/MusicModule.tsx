@@ -176,17 +176,17 @@ export default function MusicModule({
   };
 
   return (
-    <div className="flex flex-col h-full bg-black text-white font-mono select-none">
+    <div className="flex flex-col h-full bg-[#0c0d10] text-zinc-100 font-sans select-none">
       
       {/* 1. TOP MODULE NAVIGATION BAR */}
-      <div className="h-12 border-b border-zinc-900 bg-zinc-950 px-4 flex flex-wrap items-center justify-between flex-shrink-0 gap-2">
+      <div className="h-14 border-b border-white/[0.08] bg-[#14151a]/60 px-4 flex flex-wrap items-center justify-between flex-shrink-0 gap-2 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto custom-scrollbar text-xs py-1">
           <button
             onClick={() => onNavigate ? onNavigate('music-all') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'all' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
             <span>📁 Master Collection</span>
@@ -194,22 +194,22 @@ export default function MusicModule({
 
           <button
             onClick={() => onNavigate ? onNavigate('music-set-planning') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'set-planning' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
-            <Sparkles size={11} className="text-yellow-400" />
+            <Sparkles size={12} className="text-amber-400" />
             <span>⚡ Set Planning</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('music-crate-kc4') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'crate-kc4' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
             <span>🎵 KC Vol 4</span>
@@ -217,10 +217,10 @@ export default function MusicModule({
 
           <button
             onClick={() => onNavigate ? onNavigate('music-crate-rc2') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'crate-rc2' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
             <span>🎵 Royal Court 2</span>
@@ -228,10 +228,10 @@ export default function MusicModule({
 
           <button
             onClick={() => onNavigate ? onNavigate('music-crate-cn1') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'crate-cn1' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
             <span>🎵 Corner N1</span>
@@ -239,22 +239,22 @@ export default function MusicModule({
 
           <button
             onClick={() => onNavigate ? onNavigate('music-smart-crates') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'smart-crates' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
-            <Sliders size={11} />
+            <Sliders size={12} />
             <span>Smart Crates</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('music-spotify') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'spotify' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
             <span>🟢 Spotify</span>
@@ -262,10 +262,10 @@ export default function MusicModule({
 
           <button
             onClick={() => onNavigate ? onNavigate('music-soundcloud') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'soundcloud' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
             <span>🟠 SoundCloud</span>
@@ -273,28 +273,28 @@ export default function MusicModule({
 
           <button
             onClick={() => onNavigate ? onNavigate('music-organiser') : null}
-            className="px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 bg-black text-zinc-400 border-zinc-800 hover:text-white"
+            className="px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]"
           >
-            <span>🧹 Organiser (6 Bays)</span>
+            <span>🧹 Organiser</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('music-radar') : null}
-            className={`px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 ${
               currentMode === 'radar' 
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]' 
-                : 'bg-black text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
             }`}
           >
-            <Compass size={11} />
+            <Compass size={12} />
             <span>Music Radar</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('music-hardware') : null}
-            className="px-2.5 py-1 font-bold rounded-sm border transition-colors flex items-center gap-1 bg-black text-zinc-400 border-zinc-800 hover:text-white"
+            className="px-3 py-1.5 font-medium rounded-lg border transition-all flex items-center gap-1.5 bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]"
           >
-            <span>💾 USB Redundancy</span>
+            <span>💾 USB Hardware</span>
           </button>
         </div>
 
@@ -302,15 +302,15 @@ export default function MusicModule({
         <div className="flex items-center gap-3 text-xs">
           <button
             onClick={exportRekordboxXml}
-            className="flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 text-zinc-200 hover:text-emerald-400 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-emerald-500/50 text-zinc-300 hover:text-emerald-400 transition-colors font-medium text-xs shadow-sm"
             title="Download Pioneer Rekordbox XML playlist"
           >
-            <Download size={12} />
-            <span>EXPORT REKORDBOX XML</span>
+            <Download size={13} />
+            <span>Export XML</span>
           </button>
 
           <div className="hidden lg:flex items-center gap-1.5">
-            <span className="text-zinc-500 text-[10px]">PROFILE:</span>
+            <span className="text-zinc-500 text-[10px] font-mono">PROFILE:</span>
             <select 
               value={tasteProfile}
               onChange={(e) => {
@@ -321,7 +321,7 @@ export default function MusicModule({
                   type: 'info',
                 });
               }}
-              className="bg-black border border-zinc-800 text-zinc-300 px-2 py-1 text-xs focus:outline-none focus:border-[#D8163F]"
+              className="bg-[#14151a] border border-white/[0.08] text-zinc-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-[#E53558]"
             >
               <option value="Knight Club (145-155 BPM)">Knight Club (145-155 BPM)</option>
               <option value="Royal Court (Deep Techno)">Royal Court (Deep Techno)</option>
@@ -335,12 +335,12 @@ export default function MusicModule({
       {/* 2. VIEW: MASTER COLLECTION TABLE                                          */}
       {/* ========================================================================= */}
       {currentMode === 'all' && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4 space-y-4">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-6 space-y-4">
           
           {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 pb-3">
-            <div className="flex items-center gap-2 flex-1 max-w-md bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-sm">
-              <Search size={14} className="text-zinc-500" />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 flex-1 max-w-md bg-[#14151a] border border-white/[0.08] px-3.5 py-2 rounded-xl focus-within:border-white/[0.2] transition-colors shadow-sm">
+              <Search size={14} className="text-zinc-400" />
               <input 
                 type="text"
                 placeholder="Search tracks by Title, Artist, Key (8A), BPM..."
@@ -351,15 +351,15 @@ export default function MusicModule({
             </div>
 
             {/* Source Filter Pills */}
-            <div className="flex items-center gap-1 text-xs">
+            <div className="flex items-center gap-1.5 text-xs">
               {(['All', 'Rekordbox', 'Spotify', 'SoundCloud', 'Local'] as const).map(source => (
                 <button
                   key={source}
                   onClick={() => setSourceFilter(source)}
-                  className={`px-2.5 py-1 rounded-sm border font-bold transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg border font-medium transition-all ${
                     sourceFilter === source 
-                      ? 'bg-zinc-800 text-white border-zinc-600' 
-                      : 'bg-black text-zinc-500 border-zinc-900 hover:text-zinc-300'
+                      ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                      : 'bg-white/[0.02] text-zinc-400 border-white/[0.06] hover:text-zinc-200 hover:bg-white/[0.05]'
                   }`}
                 >
                   {source}
@@ -369,35 +369,36 @@ export default function MusicModule({
           </div>
 
           {/* Master Table */}
-          <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-black sticky top-0 z-10 border-b border-zinc-800 text-zinc-400 font-bold uppercase text-[10px]">
+          <div className="flex-1 overflow-auto custom-scrollbar border border-white/[0.08] rounded-xl bg-[#14151a]/50 shadow-sm">
+            <table className="w-full text-left border-collapse text-xs font-sans">
+              <thead className="bg-[#14151a] sticky top-0 z-10 border-b border-white/[0.08] text-zinc-400 font-medium tracking-wider text-[11px]">
                 <tr>
-                  <th className="p-2.5 w-10 text-center">PLAY</th>
-                  <th className="p-2.5 w-24">SOURCE</th>
-                  <th className="p-2.5">TITLE</th>
-                  <th className="p-2.5">ARTIST</th>
-                  <th className="p-2.5 w-16">BPM</th>
-                  <th className="p-2.5 w-16">KEY</th>
-                  <th className="p-2.5 w-40">3-BAND WAVE</th>
-                  <th className="p-2.5 w-28">HEAT TAG</th>
-                  <th className="p-2.5 w-28">CLEARANCE</th>
-                  <th className="p-2.5 w-12 text-center">+QUEUE</th>
-                  <th className="p-2.5 w-12 text-center">+SET</th>
+                  <th className="p-3 w-10 text-center">PLAY</th>
+                  <th className="p-3 w-24">SOURCE</th>
+                  <th className="p-3">TITLE</th>
+                  <th className="p-3">ARTIST</th>
+                  <th className="p-3 w-20">BPM</th>
+                  <th className="p-3 w-20">KEY</th>
+                  <th className="p-3 w-36">3-BAND WAVE</th>
+                  <th className="p-3 w-32">HEAT TAG</th>
+                  <th className="p-3 w-32">CLEARANCE</th>
+                  <th className="p-3 w-12 text-center">+QUEUE</th>
+                  <th className="p-3 w-12 text-center">+SET</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-900 font-mono">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filteredTracks.map(track => {
                   const isCurrent = currentTrack?.id === track.id;
+                  const isMinor = track.key?.endsWith('A');
                   return (
                     <tr 
                       key={track.id}
                       onClick={() => handleInspectClash(track)}
-                      className={`hover:bg-zinc-900/60 cursor-pointer transition-colors ${
-                        isCurrent ? 'bg-[#D8163F]/10 border-l-2 border-[#D8163F]' : ''
+                      className={`hover:bg-white/[0.03] cursor-pointer transition-colors ${
+                        isCurrent ? 'bg-[#E53558]/5 border-l-2 border-[#E53558]' : ''
                       }`}
                     >
-                      <td className="p-2.5 text-center">
+                      <td className="p-3 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -409,84 +410,88 @@ export default function MusicModule({
                           }}
                           className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
                             isCurrent && isPlaying 
-                              ? 'border-emerald-400 bg-emerald-950 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]' 
-                              : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-white hover:text-white'
+                              ? 'border-emerald-400 bg-emerald-950 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]' 
+                              : 'border-white/[0.1] bg-white/[0.04] text-zinc-400 hover:border-white/[0.3] hover:text-white'
                           }`}
                         >
                           {isCurrent && isPlaying ? <Pause size={11} /> : <Play size={10} className="ml-0.5" />}
                         </button>
                       </td>
-                      <td className="p-2.5">
-                        <span className={`text-[10px] px-1.5 py-0.5 border rounded-sm font-bold ${
-                          track.source === 'Rekordbox' ? 'border-blue-900 text-blue-400 bg-blue-950/40' :
-                          track.source === 'Spotify' ? 'border-emerald-900 text-emerald-400 bg-emerald-950/40' :
-                          track.source === 'SoundCloud' ? 'border-amber-900 text-amber-400 bg-amber-950/40' :
-                          'border-zinc-800 text-zinc-400 bg-zinc-900/40'
+                      <td className="p-3">
+                        <span className={`text-[10px] px-2 py-0.5 border rounded-full font-medium ${
+                          track.source === 'Rekordbox' ? 'border-blue-500/30 text-blue-400 bg-blue-950/30' :
+                          track.source === 'Spotify' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-950/30' :
+                          track.source === 'SoundCloud' ? 'border-amber-500/30 text-amber-400 bg-amber-950/30' :
+                          'border-white/[0.08] text-zinc-400 bg-white/[0.04]'
                         }`}>
                           {track.source}
                         </span>
                       </td>
-                      <td className="p-2.5 font-bold text-white flex items-center gap-1.5">
+                      <td className="p-3 font-medium text-white flex items-center gap-1.5">
                         <span>{track.title}</span>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             cleanTrackTitle(track.id);
                           }}
-                          className="text-zinc-600 hover:text-yellow-400 transition-colors"
+                          className="text-zinc-600 hover:text-amber-400 transition-colors"
                           title="Clean Bootleg Rip Strings (Wand)"
                         >
                           <Sparkles size={12} />
                         </button>
                       </td>
-                      <td className="p-2.5 text-zinc-400">{track.artist}</td>
-                      <td className="p-2.5 text-zinc-300 font-mono">{track.bpm.toFixed(1)}</td>
-                      <td className="p-2.5">
-                        <span className="px-1.5 py-0.5 bg-black border border-zinc-800 text-[#22d3ee] font-bold text-[10px] rounded-sm">
+                      <td className="p-3 text-zinc-400">{track.artist}</td>
+                      <td className="p-3 text-zinc-300 font-mono">{track.bpm.toFixed(1)}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-md font-mono font-medium text-[11px] border ${
+                          isMinor 
+                            ? 'bg-purple-500/10 text-purple-300 border-purple-500/20' 
+                            : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                        }`}>
                           {track.key}
                         </span>
                       </td>
-                      <td className="p-2.5">
-                        <div className="w-32 h-4 bg-zinc-900 rounded overflow-hidden flex items-center px-1">
-                          <div className="w-full h-2 bg-gradient-to-r from-blue-500 via-emerald-500 to-[#D8163F] opacity-75" />
+                      <td className="p-3">
+                        <div className="w-28 h-3.5 bg-white/[0.06] rounded-full overflow-hidden flex items-center px-1">
+                          <div className="w-full h-1.5 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-[#E53558] opacity-80" />
                         </div>
                       </td>
-                      <td className="p-2.5">
-                        <span className={`text-[10px] px-1.5 py-0.5 font-bold ${
-                          track.heatTag === 'Peak Weapon' ? 'text-red-400 bg-red-950/40 border border-red-900' :
-                          track.heatTag === 'Secret Dub' ? 'text-purple-400 bg-purple-950/40 border border-purple-900' :
-                          'text-blue-400 bg-blue-950/40 border border-blue-900'
+                      <td className="p-3">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
+                          track.heatTag === 'Peak Weapon' ? 'text-[#E53558] bg-[#E53558]/10 border-[#E53558]/30' :
+                          track.heatTag === 'Secret Dub' ? 'text-purple-400 bg-purple-950/30 border-purple-500/30' :
+                          'text-blue-400 bg-blue-950/30 border-blue-500/30'
                         }`}>
                           {track.heatTag}
                         </span>
                       </td>
-                      <td className="p-2.5">
-                        <span className={`text-[10px] font-bold flex items-center gap-1 ${
-                          track.clearance === 'Stream-Safe' ? 'text-emerald-400' : 'text-amber-500'
+                      <td className="p-3">
+                        <span className={`text-[10px] font-medium flex items-center gap-1.5 ${
+                          track.clearance === 'Stream-Safe' ? 'text-emerald-400' : 'text-amber-400'
                         }`}>
-                          {track.clearance === 'Stream-Safe' ? <CheckCircle2 size={11} /> : <AlertTriangle size={11} />}
+                          {track.clearance === 'Stream-Safe' ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
                           {track.clearance}
                         </span>
                       </td>
-                      <td className="p-2.5 text-center">
+                      <td className="p-3 text-center">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             addToQueue(track);
                           }}
-                          className="p-1 border border-zinc-800 hover:border-[#22d3ee] hover:text-[#22d3ee] transition-colors rounded"
+                          className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:border-cyan-500/40 hover:text-cyan-400 transition-colors"
                           title="Add to Playback Queue"
                         >
                           <ListPlus size={12} />
                         </button>
                       </td>
-                      <td className="p-2.5 text-center">
+                      <td className="p-3 text-center">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             addToSetlist(track);
                           }}
-                          className="p-1 border border-zinc-800 hover:border-[#D8163F] hover:text-[#D8163F] transition-colors rounded"
+                          className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:border-[#E53558]/50 hover:text-[#E53558] transition-colors"
                           title="Add to Active Setlist"
                         >
                           <Plus size={12} />
@@ -501,19 +506,19 @@ export default function MusicModule({
 
           {/* Harmonic Clash Radar Alert Panel */}
           {selectedClashTrack && lastSetTrack && (
-            <div className="border border-zinc-800 bg-zinc-950 p-3 flex flex-wrap items-center justify-between text-xs gap-3">
+            <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-3.5 flex flex-wrap items-center justify-between text-xs gap-3 shadow-md">
               <div className="flex items-center gap-3">
-                <span className="text-zinc-500 font-bold uppercase">HARMONIC RADAR:</span>
+                <span className="text-zinc-500 font-medium font-mono uppercase text-[11px]">HARMONIC RADAR:</span>
                 <span>
-                  Transitioning from <strong className="text-[#22d3ee]">{lastSetTrack.title} ({lastSetTrack.key})</strong> ➔ <strong className="text-white">{selectedClashTrack.title} ({selectedClashTrack.key})</strong>:
+                  Transitioning from <strong className="text-cyan-400 font-mono">{lastSetTrack.title} ({lastSetTrack.key})</strong> ➔ <strong className="text-white font-mono">{selectedClashTrack.title} ({selectedClashTrack.key})</strong>:
                 </span>
                 {isHarmonicMatch(lastSetTrack.key, selectedClashTrack.key) ? (
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 size={13} /> PERFECT HARMONIC BLEND
+                  <span className="text-emerald-400 font-medium flex items-center gap-1">
+                    <CheckCircle2 size={13} /> Perfect Harmonic Blend
                   </span>
                 ) : (
-                  <span className="text-amber-400 font-bold flex items-center gap-1">
-                    <AlertTriangle size={13} /> HARMONIC CLASH RISK
+                  <span className="text-amber-400 font-medium flex items-center gap-1">
+                    <AlertTriangle size={13} /> Harmonic Clash Risk
                   </span>
                 )}
               </div>
@@ -526,7 +531,7 @@ export default function MusicModule({
                       addToSetlist(suggestedBridge);
                       addToSetlist(selectedClashTrack);
                     }}
-                    className="px-2.5 py-1 bg-zinc-900 border border-amber-600 text-amber-300 font-bold text-[10px] hover:bg-amber-600 hover:text-black flex items-center gap-1"
+                    className="px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 font-medium text-xs hover:bg-amber-500/20 flex items-center gap-1.5 transition-colors"
                   >
                     <span>Insert {suggestedBridge.title} ({suggestedBridge.key})</span>
                     <ArrowRight size={10} />
@@ -538,41 +543,42 @@ export default function MusicModule({
         </div>
       )}
 
+
       {/* ========================================================================= */}
       {/* 3. VIEWS: CURATED CRATES (KNIGHT CLUB 4, ROYAL COURT 2, CORNER N1)        */}
       {/* ========================================================================= */}
       {(currentMode === 'crate-kc4' || currentMode === 'crate-rc2' || currentMode === 'crate-cn1') && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-5 space-y-4">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-6 space-y-4 font-sans">
           
           {/* Crate Header Banner */}
-          <div className="border border-zinc-900 bg-zinc-950 p-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="border border-white/[0.08] bg-[#14151a] p-5 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <Folder size={18} className="text-yellow-400" />
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase">
+                <Folder size={18} className="text-amber-400" />
+                <h3 className="font-semibold text-base text-white tracking-wide uppercase">
                   {currentMode === 'crate-kc4' && `CURATED CRATE // KNIGHT CLUB VOL 4 [${kc4Tracks.length} TRACKS]`}
                   {currentMode === 'crate-rc2' && `CURATED CRATE // ROYAL COURT 2 [${rc2Tracks.length} TRACKS]`}
                   {currentMode === 'crate-cn1' && `CURATED CRATE // CORNER N1 [${cn1Tracks.length} TRACKS]`}
                 </h3>
               </div>
-              <p className="text-xs text-zinc-400 mt-1">
+              <p className="text-xs text-zinc-400 mt-1 font-mono">
                 {currentMode === 'crate-kc4' && '145-155 BPM • UKG / BREAKS / HARD GROOVE • CORSICA STUDIOS ROOM 2'}
                 {currentMode === 'crate-rc2' && '134-138 BPM • DEEP HYPNOTIC TECHNO • VENUE MOT BERMONDSEY'}
                 {currentMode === 'crate-cn1' && '138-142 BPM • SPEED GARAGE / 140 DUBS • CORNER NEW CROSS BASEMENT'}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => {
                   const tList = currentMode === 'crate-kc4' ? kc4Tracks : currentMode === 'crate-rc2' ? rc2Tracks : cn1Tracks;
                   addToQueue(tList);
                 }}
-                className="px-3.5 py-2 bg-zinc-900 border border-zinc-700 hover:border-[#22d3ee] text-[#22d3ee] text-xs font-bold flex items-center gap-1.5 transition-colors"
+                className="px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-cyan-500/40 text-cyan-400 text-xs font-medium flex items-center gap-1.5 transition-colors"
                 title="Append all crate tracks to playback queue"
               >
                 <ListPlus size={13} />
-                <span>QUEUE ALL</span>
+                <span>Queue All</span>
               </button>
 
               <button
@@ -580,85 +586,90 @@ export default function MusicModule({
                   const tList = currentMode === 'crate-kc4' ? kc4Tracks : currentMode === 'crate-rc2' ? rc2Tracks : cn1Tracks;
                   handleLoadCrateToSetlist(tList, currentMode === 'crate-kc4' ? 'Knight Club 4' : currentMode === 'crate-rc2' ? 'Royal Court 2' : 'Corner N1');
                 }}
-                className="px-4 py-2 bg-[#D8163F] text-black font-bold text-xs hover:bg-white transition-colors flex items-center gap-1.5 shadow-[0_0_12px_rgba(216,22,63,0.4)]"
+                className="px-4 py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs hover:bg-[#ff3b66] transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(229,53,88,0.4)]"
               >
                 <Play size={12} className="fill-current" />
-                <span>LOAD ALL TO ACTIVE SETLIST</span>
+                <span>Load All to Setlist</span>
               </button>
 
               <button
                 onClick={exportRekordboxXml}
-                className="px-3 py-2 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 text-zinc-300 hover:text-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                className="px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-emerald-500/40 text-zinc-300 hover:text-emerald-400 text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
                 <Download size={12} />
-                <span>EXPORT CRATE XML</span>
+                <span>Export XML</span>
               </button>
             </div>
           </div>
 
           {/* Crate Tracks Table */}
-          <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-black sticky top-0 z-10 border-b border-zinc-800 text-zinc-400 font-bold uppercase text-[10px]">
+          <div className="flex-1 overflow-auto custom-scrollbar border border-white/[0.08] rounded-xl bg-[#14151a]/50 shadow-sm">
+            <table className="w-full text-left border-collapse text-xs font-sans">
+              <thead className="bg-[#14151a] sticky top-0 z-10 border-b border-white/[0.08] text-zinc-400 font-medium tracking-wider text-[11px] uppercase">
                 <tr>
-                  <th className="p-2.5 w-10 text-center">#</th>
-                  <th className="p-2.5 w-10 text-center">PLAY</th>
-                  <th className="p-2.5">TITLE</th>
-                  <th className="p-2.5">ARTIST</th>
-                  <th className="p-2.5 w-16">BPM</th>
-                  <th className="p-2.5 w-16">KEY</th>
-                  <th className="p-2.5 w-32">ENERGY</th>
-                  <th className="p-2.5">PRESENCE</th>
-                  <th className="p-2.5 w-12 text-center">+QUEUE</th>
-                  <th className="p-2.5 w-12 text-center">+SET</th>
+                  <th className="p-3 w-10 text-center">#</th>
+                  <th className="p-3 w-10 text-center">PLAY</th>
+                  <th className="p-3">TITLE</th>
+                  <th className="p-3">ARTIST</th>
+                  <th className="p-3 w-20">BPM</th>
+                  <th className="p-3 w-20">KEY</th>
+                  <th className="p-3 w-32">ENERGY</th>
+                  <th className="p-3">PRESENCE</th>
+                  <th className="p-3 w-12 text-center">+QUEUE</th>
+                  <th className="p-3 w-12 text-center">+SET</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-900 font-mono">
+              <tbody className="divide-y divide-white/[0.04]">
                 {(currentMode === 'crate-kc4' ? kc4Tracks : currentMode === 'crate-rc2' ? rc2Tracks : cn1Tracks).map((track, idx) => {
                   const isCurrent = currentTrack?.id === track.id;
+                  const isMinor = track.key?.endsWith('A');
                   return (
-                    <tr key={track.id} className="hover:bg-zinc-900/60">
-                      <td className="p-2.5 text-center text-zinc-500 font-bold">{idx + 1}</td>
-                      <td className="p-2.5 text-center">
+                    <tr key={track.id} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="p-3 text-center text-zinc-500 font-mono text-xs">{idx + 1}</td>
+                      <td className="p-3 text-center">
                         <button
                           onClick={() => isCurrent ? togglePlay() : playTrack(track)}
                           className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
-                            isCurrent && isPlaying ? 'border-emerald-400 bg-emerald-950 text-emerald-400' : 'border-zinc-700 text-zinc-400 hover:text-white'
+                            isCurrent && isPlaying ? 'border-emerald-400 bg-emerald-950 text-emerald-400' : 'border-white/[0.1] text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                           }`}
                         >
                           {isCurrent && isPlaying ? <Pause size={10} /> : <Play size={10} className="ml-0.5" />}
                         </button>
                       </td>
-                      <td className="p-2.5 font-bold text-white">{track.title}</td>
-                      <td className="p-2.5 text-zinc-400">{track.artist}</td>
-                      <td className="p-2.5 text-zinc-300 font-mono">{track.bpm.toFixed(1)}</td>
-                      <td className="p-2.5">
-                        <span className="px-1.5 py-0.5 bg-black border border-zinc-800 text-[#22d3ee] font-bold text-[10px]">
+                      <td className="p-3 font-medium text-white">{track.title}</td>
+                      <td className="p-3 text-zinc-400">{track.artist}</td>
+                      <td className="p-3 text-zinc-300 font-mono">{track.bpm.toFixed(1)}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-md font-mono font-medium text-[11px] border ${
+                          isMinor 
+                            ? 'bg-purple-500/10 text-purple-300 border-purple-500/20' 
+                            : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                        }`}>
                           {track.key}
                         </span>
                       </td>
-                      <td className="p-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-16 h-2 bg-zinc-900 overflow-hidden flex">
-                            <div className="bg-[#D8163F] h-full" style={{ width: `${(track.energy / 10) * 100}%` }} />
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-1.5 bg-white/[0.08] rounded-full overflow-hidden flex">
+                            <div className="bg-[#E53558] h-full rounded-full" style={{ width: `${(track.energy / 10) * 100}%` }} />
                           </div>
-                          <span className="text-[10px] text-zinc-400">{track.energy}/10</span>
+                          <span className="text-[10px] text-zinc-400 font-mono">{track.energy}/10</span>
                         </div>
                       </td>
-                      <td className="p-2.5 text-zinc-400 text-[11px]">{track.mixPresence}</td>
-                      <td className="p-2.5 text-center">
+                      <td className="p-3 text-zinc-400 text-xs">{track.mixPresence}</td>
+                      <td className="p-3 text-center">
                         <button
                           onClick={() => addToQueue(track)}
-                          className="p-1 border border-zinc-800 hover:border-[#22d3ee] hover:text-[#22d3ee] transition-colors rounded"
+                          className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:border-cyan-500/40 hover:text-cyan-400 transition-colors"
                           title="Add to Playback Queue"
                         >
                           <ListPlus size={12} />
                         </button>
                       </td>
-                      <td className="p-2.5 text-center">
+                      <td className="p-3 text-center">
                         <button
                           onClick={() => addToSetlist(track)}
-                          className="p-1 border border-zinc-800 hover:border-[#D8163F] hover:text-[#D8163F] transition-colors rounded"
+                          className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:border-[#E53558]/50 hover:text-[#E53558] transition-colors"
                           title="Add to Setlist"
                         >
                           <Plus size={12} />
@@ -678,22 +689,22 @@ export default function MusicModule({
       {/* 4. VIEW: SMART CRATES (140 BPM, PEAK WEAPONS)                             */}
       {/* ========================================================================= */}
       {currentMode === 'smart-crates' && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-5 space-y-4">
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-6 space-y-4 font-sans">
+          <div className="border border-white/[0.08] bg-[#14151a] p-5 rounded-xl space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase flex items-center gap-2">
-                  <Sliders size={18} className="text-[#D8163F]" />
+                <h3 className="font-semibold text-base text-white tracking-wide uppercase flex items-center gap-2">
+                  <Sliders size={18} className="text-[#E53558]" />
                   SMART CRATES // DYNAMIC RULE ENGINE
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-1">
                   Auto-populating virtual crates matching tempo range, Camelot harmonic paths, and energy thresholds
                 </p>
               </div>
 
               <button
                 onClick={() => addToast({ title: 'SMART CRATE SYNCED', message: 'Mirrored rules to Rekordbox XML.', type: 'success' })}
-                className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 text-xs font-bold text-zinc-300 hover:text-emerald-400 flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-emerald-500/50 text-xs font-medium text-zinc-300 hover:text-emerald-400 flex items-center gap-1.5 transition-colors"
               >
                 <RefreshCw size={12} />
                 <span>Sync to Rekordbox Smart Crates</span>
@@ -710,55 +721,55 @@ export default function MusicModule({
                 <button
                   key={rule.id}
                   onClick={() => setSmartCrateRule(rule.id as any)}
-                  className={`px-3 py-2 rounded-sm border font-bold text-left transition-colors ${
+                  className={`px-3.5 py-2 rounded-xl border text-left transition-all ${
                     smartCrateRule === rule.id 
-                      ? 'bg-[#D8163F] text-white border-[#D8163F]' 
-                      : 'bg-black border-zinc-800 text-zinc-400 hover:text-white'
+                      ? 'bg-white/[0.1] text-white border-white/[0.15] shadow-sm' 
+                      : 'bg-[#1b1c22]/50 border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
-                  <div>{rule.label}</div>
-                  <div className="text-[10px] text-zinc-300 font-normal">{rule.count} matching</div>
+                  <div className="font-medium text-xs">{rule.label}</div>
+                  <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{rule.count} matching</div>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Smart Matches Table */}
-          <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-black sticky top-0 border-b border-zinc-800 text-zinc-400 uppercase text-[10px]">
+          <div className="flex-1 overflow-auto custom-scrollbar border border-white/[0.08] rounded-xl bg-[#14151a]/50 shadow-sm">
+            <table className="w-full text-left text-xs font-sans">
+              <thead className="bg-[#14151a] sticky top-0 border-b border-white/[0.08] text-zinc-400 font-medium uppercase text-[11px]">
                 <tr>
-                  <th className="p-2.5">PLAY</th>
-                  <th className="p-2.5">MATCHING TRACK</th>
-                  <th className="p-2.5">ARTIST</th>
-                  <th className="p-2.5">BPM</th>
-                  <th className="p-2.5">KEY</th>
-                  <th className="p-2.5">SOURCE</th>
-                  <th className="p-2.5">RULE MATCH REASON</th>
-                  <th className="p-2.5 text-center">+SET</th>
+                  <th className="p-3">PLAY</th>
+                  <th className="p-3">MATCHING TRACK</th>
+                  <th className="p-3">ARTIST</th>
+                  <th className="p-3">BPM</th>
+                  <th className="p-3">KEY</th>
+                  <th className="p-3">SOURCE</th>
+                  <th className="p-3">RULE MATCH REASON</th>
+                  <th className="p-3 text-center">+SET</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-900">
+              <tbody className="divide-y divide-white/[0.04]">
                 {filteredTracks.map(t => (
-                  <tr key={t.id} className="hover:bg-zinc-900/60">
-                    <td className="p-2.5">
+                  <tr key={t.id} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="p-3">
                       <button 
                         onClick={() => playTrack(t)}
-                        className="w-6 h-6 rounded-full border border-zinc-700 flex items-center justify-center hover:border-white text-zinc-400"
+                        className="w-6 h-6 rounded-full border border-white/[0.1] bg-white/[0.04] flex items-center justify-center hover:border-white text-zinc-400"
                       >
                         <Play size={10} className="ml-0.5" />
                       </button>
                     </td>
-                    <td className="p-2.5 font-bold text-white">{t.title}</td>
-                    <td className="p-2.5 text-zinc-400">{t.artist}</td>
-                    <td className="p-2.5 text-zinc-300">{t.bpm.toFixed(1)}</td>
-                    <td className="p-2.5 text-[#22d3ee] font-bold">{t.key}</td>
-                    <td className="p-2.5 text-zinc-500">{t.source}</td>
-                    <td className="p-2.5 text-emerald-400 text-[10px]">
+                    <td className="p-3 font-medium text-white">{t.title}</td>
+                    <td className="p-3 text-zinc-400">{t.artist}</td>
+                    <td className="p-3 text-zinc-300 font-mono">{t.bpm.toFixed(1)}</td>
+                    <td className="p-3 text-cyan-400 font-mono font-medium">{t.key}</td>
+                    <td className="p-3 text-zinc-400">{t.source}</td>
+                    <td className="p-3 text-emerald-400 text-xs">
                       {smartCrateRule === '140-dub' ? 'Tempo inside 138-142 BPM window' : smartCrateRule === 'peak' ? 'Energy rating 8.5+ threshold' : 'Camelot ±1 Key Match'}
                     </td>
-                    <td className="p-2.5 text-center">
-                      <button onClick={() => addToSetlist(t)} className="p-1 border border-zinc-800 hover:border-[#D8163F]">
+                    <td className="p-3 text-center">
+                      <button onClick={() => addToSetlist(t)} className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] hover:border-[#E53558]/50 hover:text-[#E53558] transition-colors">
                         <Plus size={11} />
                       </button>
                     </td>
@@ -774,27 +785,27 @@ export default function MusicModule({
       {/* 5. VIEW: SYNCED SPOTIFY PLAYLISTS                                         */}
       {/* ========================================================================= */}
       {currentMode === 'spotify' && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-5 space-y-4">
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-6 space-y-4 font-sans">
+          <div className="border border-white/[0.08] bg-[#14151a] p-5 rounded-xl space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase flex items-center gap-2">
+                <h3 className="font-semibold text-base text-white tracking-wide uppercase flex items-center gap-2">
                   <Radio size={18} className="text-emerald-400" />
                   SYNCED SPOTIFY PLAYLISTS // ARTIST PRO
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-1">
                   Live connection with Henry IX Spotify for Artists account. Bi-directional track importing and public playlist curation.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 bg-emerald-950/60 border border-emerald-500 text-emerald-400 text-xs font-bold flex items-center gap-1.5">
+                <span className="px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 text-xs font-medium flex items-center gap-1.5">
                   <CheckCircle2 size={13} />
-                  <span>TOKEN ACTIVE</span>
+                  <span>Token Active</span>
                 </span>
                 <button
                   onClick={() => addToast({ title: 'SPOTIFY SYNC COMPLETE', message: 'Imported 8 new saved tracks into Rekordbox pool.', type: 'success' })}
-                  className="px-3 py-1 bg-zinc-900 border border-zinc-700 hover:border-white text-xs text-zinc-300 hover:text-white flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.2] text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors"
                 >
                   <RefreshCw size={12} />
                   <span>Sync New Saves</span>
@@ -803,32 +814,32 @@ export default function MusicModule({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 bg-black border border-zinc-800 space-y-1">
-                <div className="font-bold text-white">HENRY IX // SELECTS (Official)</div>
-                <div className="text-zinc-500 text-[10px]">50 Tracks • 4,280 Followers</div>
+              <div className="p-4 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5 shadow-sm">
+                <div className="font-semibold text-white">HENRY IX // SELECTS (Official)</div>
+                <div className="text-zinc-500 text-[11px] font-mono">50 Tracks • 4,280 Followers</div>
                 <button 
                   onClick={() => addToast({ title: 'PLAYLIST SYNCED', message: 'Updated public Spotify playlist.', type: 'info' })}
-                  className="text-emerald-400 hover:underline text-[10px] block mt-1"
+                  className="text-emerald-400 hover:underline text-[11px] font-medium block pt-1"
                 >
                   + Push Setlist to Spotify
                 </button>
               </div>
-              <div className="p-3 bg-black border border-zinc-800 space-y-1">
-                <div className="font-bold text-white">Late Night London 140</div>
-                <div className="text-zinc-500 text-[10px]">38 Tracks • 1,840 Followers</div>
+              <div className="p-4 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5 shadow-sm">
+                <div className="font-semibold text-white">Late Night London 140</div>
+                <div className="text-zinc-500 text-[11px] font-mono">38 Tracks • 1,840 Followers</div>
                 <button 
                   onClick={() => addToast({ title: 'IMPORT COMPLETE', message: 'Imported 38 tracks to Crate.', type: 'info' })}
-                  className="text-emerald-400 hover:underline text-[10px] block mt-1"
+                  className="text-emerald-400 hover:underline text-[11px] font-medium block pt-1"
                 >
                   + Import to Local Crate
                 </button>
               </div>
-              <div className="p-3 bg-black border border-zinc-800 space-y-1">
-                <div className="font-bold text-white">Knight Club Heavy Rotation</div>
-                <div className="text-zinc-500 text-[10px]">24 Tracks • 910 Followers</div>
+              <div className="p-4 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5 shadow-sm">
+                <div className="font-semibold text-white">Knight Club Heavy Rotation</div>
+                <div className="text-zinc-500 text-[11px] font-mono">24 Tracks • 910 Followers</div>
                 <button 
                   onClick={() => addToast({ title: 'IMPORT COMPLETE', message: 'Imported 24 tracks to Crate.', type: 'info' })}
-                  className="text-emerald-400 hover:underline text-[10px] block mt-1"
+                  className="text-emerald-400 hover:underline text-[11px] font-medium block pt-1"
                 >
                   + Import to Local Crate
                 </button>
@@ -836,21 +847,21 @@ export default function MusicModule({
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950 p-4">
-            <h4 className="font-bold text-xs text-zinc-400 uppercase mb-3">SPOTIFY IMPORT QUEUE (READY FOR REKORDBOX)</h4>
+          <div className="flex-1 overflow-auto custom-scrollbar border border-white/[0.08] rounded-xl bg-[#14151a]/50 p-5 shadow-sm">
+            <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-3">SPOTIFY IMPORT QUEUE (READY FOR REKORDBOX)</h4>
             <div className="space-y-2">
               {filteredTracks.slice(0, 4).map(t => (
-                <div key={t.id} className="p-2.5 bg-black border border-zinc-800 flex items-center justify-between text-xs">
+                <div key={t.id} className="p-3 bg-[#1b1c22]/40 border border-white/[0.05] rounded-lg flex items-center justify-between text-xs hover:border-white/[0.1] transition-colors">
                   <div>
-                    <div className="font-bold text-white">{t.title}</div>
-                    <div className="text-zinc-400 text-[11px]">{t.artist} • {t.bpm} BPM • {t.key}</div>
+                    <div className="font-medium text-white">{t.title}</div>
+                    <div className="text-zinc-400 text-[11px] mt-0.5">{t.artist} • <span className="font-mono text-zinc-300">{t.bpm} BPM</span> • <span className="font-mono text-cyan-400">{t.key}</span></div>
                   </div>
                   <button 
                     onClick={() => {
                       addToSetlist(t);
                       addToast({ title: 'TRACK ADDED', message: `${t.title} imported from Spotify to Setlist.`, type: 'success' });
                     }}
-                    className="px-2.5 py-1 bg-zinc-900 border border-zinc-700 hover:border-[#D8163F] text-zinc-200 text-[11px]"
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-[#E53558]/50 hover:text-[#E53558] text-zinc-200 text-xs font-medium transition-colors"
                   >
                     + Import to Set
                   </button>
@@ -865,51 +876,51 @@ export default function MusicModule({
       {/* 6. VIEW: SYNCED SOUNDCLOUD PLAYLISTS                                      */}
       {/* ========================================================================= */}
       {currentMode === 'soundcloud' && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-5 space-y-4">
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-6 space-y-4 font-sans">
+          <div className="border border-white/[0.08] bg-[#14151a] p-5 rounded-xl space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase flex items-center gap-2">
+                <h3 className="font-semibold text-base text-white tracking-wide uppercase flex items-center gap-2">
                   <Radio size={18} className="text-amber-500" />
                   SOUNDCLOUD PRO // UNRELEASED DUBS & LIVE ARCHIVE
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-1">
                   Lossless WAV upload pipeline, private secret dubs sharing, and automated chapter marker syncing.
                 </p>
               </div>
 
-              <span className="px-2.5 py-1 bg-amber-950/60 border border-amber-500 text-amber-400 text-xs font-bold">
-                NEXT PRO UNLIMITED
+              <span className="px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-500/40 text-amber-400 text-xs font-mono font-medium">
+                Next Pro Unlimited
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 bg-black border border-zinc-800 space-y-1">
-                <div className="font-bold text-white">Secret Dubs (Private Playlist)</div>
-                <div className="text-zinc-500 text-[10px]">12 Unreleased Tracks • Secret Token Link</div>
+              <div className="p-4 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5 shadow-sm">
+                <div className="font-semibold text-white">Secret Dubs (Private Playlist)</div>
+                <div className="text-zinc-500 text-[11px] font-mono">12 Unreleased Tracks • Secret Token Link</div>
                 <button 
                   onClick={() => addToast({ title: 'LINK COPIED', message: 'Secret dubs link copied to clipboard.', type: 'info' })}
-                  className="text-amber-400 hover:underline text-[10px] block mt-1"
+                  className="text-amber-400 hover:underline text-[11px] font-medium block pt-1"
                 >
                   Copy Private Inner Circle URL
                 </button>
               </div>
-              <div className="p-3 bg-black border border-zinc-800 space-y-1">
-                <div className="font-bold text-white">Live at Corsica Studios (Room 2)</div>
-                <div className="text-zinc-500 text-[10px]">02:14:20 • 24 Chapter Markers Sync</div>
+              <div className="p-4 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5 shadow-sm">
+                <div className="font-semibold text-white">Live at Corsica Studios (Room 2)</div>
+                <div className="text-zinc-500 text-[11px] font-mono">02:14:20 • 24 Chapter Markers Sync</div>
                 <button 
                   onClick={() => addToast({ title: 'METADATA SYNCED', message: 'Chapter markers pushed to SoundCloud.', type: 'info' })}
-                  className="text-amber-400 hover:underline text-[10px] block mt-1"
+                  className="text-amber-400 hover:underline text-[11px] font-medium block pt-1"
                 >
                   Sync Timestamps & Tracklist
                 </button>
               </div>
-              <div className="p-3 bg-black border border-zinc-800 space-y-1">
-                <div className="font-bold text-white">Knight Club Session 03</div>
-                <div className="text-zinc-500 text-[10px]">14,200 Plays • Public DJ Mix</div>
+              <div className="p-4 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5 shadow-sm">
+                <div className="font-semibold text-white">Knight Club Session 03</div>
+                <div className="text-zinc-500 text-[11px] font-mono">14,200 Plays • Public DJ Mix</div>
                 <button 
                   onClick={() => addToast({ title: 'STATS PULLED', message: 'Analytics updated from SoundCloud API.', type: 'info' })}
-                  className="text-amber-400 hover:underline text-[10px] block mt-1"
+                  className="text-amber-400 hover:underline text-[11px] font-medium block pt-1"
                 >
                   Refresh Analytics
                 </button>
@@ -917,18 +928,18 @@ export default function MusicModule({
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950 p-4">
-            <h4 className="font-bold text-xs text-zinc-400 uppercase mb-3">UNRELEASED DUBS INGESTION</h4>
+          <div className="flex-1 overflow-auto custom-scrollbar border border-white/[0.08] rounded-xl bg-[#14151a]/50 p-5 shadow-sm">
+            <h4 className="font-semibold text-xs text-zinc-400 uppercase tracking-wider mb-3">UNRELEASED DUBS INGESTION</h4>
             <div className="space-y-2 text-xs">
               {filteredTracks.map(t => (
-                <div key={t.id} className="p-3 bg-black border border-zinc-800 flex items-center justify-between">
+                <div key={t.id} className="p-3 bg-[#1b1c22]/40 border border-white/[0.05] rounded-lg flex items-center justify-between hover:border-white/[0.1] transition-colors">
                   <div>
-                    <div className="font-bold text-white">{t.title}</div>
-                    <div className="text-zinc-400 text-[11px]">{t.artist} • 24-bit 48kHz WAV • {t.bpm} BPM</div>
+                    <div className="font-medium text-white">{t.title}</div>
+                    <div className="text-zinc-400 text-[11px] mt-0.5">{t.artist} • <span className="font-mono text-zinc-300">24-bit 48kHz WAV</span> • <span className="font-mono text-cyan-400">{t.bpm} BPM</span></div>
                   </div>
                   <button 
                     onClick={() => addToast({ title: 'MASTER DOWNLOADED', message: `Downloaded ${t.title} master audio to local library.`, type: 'success' })}
-                    className="px-3 py-1 bg-zinc-900 border border-zinc-700 hover:border-amber-500 text-zinc-200 text-xs flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-amber-500/50 text-zinc-200 text-xs flex items-center gap-1.5 transition-colors font-medium"
                   >
                     <Download size={12} />
                     <span>Download Master</span>
@@ -944,25 +955,25 @@ export default function MusicModule({
       {/* 7. VIEW: SET PLANNING SPLIT WORKBENCH                                     */}
       {/* ========================================================================= */}
       {currentMode === 'set-planning' && (
-        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden p-4 gap-4">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden p-6 gap-5 font-sans">
           
           {/* Left Pane: Search Pool */}
-          <div className="w-full md:w-1/2 flex flex-col border border-zinc-900 bg-zinc-950 p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-              <span className="font-bold text-xs text-white uppercase">AVAILABLE CRATE TRACKS</span>
-              <span className="text-[10px] text-zinc-500">{filteredTracks.length} Ready</span>
+          <div className="w-full md:w-1/2 flex flex-col border border-white/[0.08] bg-[#14151a] rounded-xl p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <span className="font-semibold text-xs text-white uppercase tracking-wider">AVAILABLE CRATE TRACKS</span>
+              <span className="text-[11px] text-zinc-400 font-mono">{filteredTracks.length} Ready</span>
             </div>
             
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1.5">
+            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
               {filteredTracks.map(t => (
-                <div key={t.id} className="p-2 bg-black border border-zinc-900 hover:border-zinc-700 flex items-center justify-between text-xs transition-colors">
+                <div key={t.id} className="p-2.5 bg-[#1b1c22]/40 border border-white/[0.04] hover:border-white/[0.1] rounded-lg flex items-center justify-between text-xs transition-colors">
                   <div>
-                    <div className="font-bold text-white">{t.title}</div>
-                    <div className="text-[10px] text-zinc-500">{t.artist} • <span className="text-[#22d3ee] font-bold">{t.key}</span> • {t.bpm} BPM</div>
+                    <div className="font-medium text-white">{t.title}</div>
+                    <div className="text-[11px] text-zinc-400 mt-0.5">{t.artist} • <span className="text-cyan-400 font-mono font-medium">{t.key}</span> • <span className="font-mono text-zinc-400">{t.bpm} BPM</span></div>
                   </div>
                   <button
                     onClick={() => addToSetlist(t)}
-                    className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-[#D8163F] hover:text-[#D8163F] text-[11px] font-bold"
+                    className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-[#E53558]/50 hover:text-[#E53558] text-zinc-300 text-[11px] font-medium transition-colors"
                   >
                     + Add to Set
                   </button>
@@ -972,32 +983,32 @@ export default function MusicModule({
           </div>
 
           {/* Right Pane: Planned Setlist Workbench */}
-          <div className="w-full md:w-1/2 flex flex-col border border-zinc-900 bg-zinc-950 p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+          <div className="w-full md:w-1/2 flex flex-col border border-white/[0.08] bg-[#14151a] rounded-xl p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
               <div>
-                <span className="font-bold text-xs text-white uppercase">ACTIVE LIVE SETLIST</span>
-                <span className="text-[10px] text-zinc-500 ml-2">({activeSetlist.length} Tracks Planned)</span>
+                <span className="font-semibold text-xs text-white uppercase tracking-wider">ACTIVE LIVE SETLIST</span>
+                <span className="text-[11px] text-zinc-400 font-mono ml-2">({activeSetlist.length} Tracks Planned)</span>
               </div>
               <button
                 onClick={exportRekordboxXml}
-                className="px-2.5 py-1 bg-emerald-950 border border-emerald-600 text-emerald-400 font-bold text-[10px] hover:bg-emerald-600 hover:text-black flex items-center gap-1"
+                className="px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 font-medium text-xs hover:bg-emerald-500/20 flex items-center gap-1.5 transition-colors"
               >
-                <Download size={11} />
-                <span>SAVE XML</span>
+                <Download size={12} />
+                <span>Save XML</span>
               </button>
             </div>
 
             {/* Set Flow Energy Profile Curve */}
-            <div className="p-2.5 bg-black border border-zinc-900 space-y-1">
-              <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+            <div className="p-3 bg-[#1b1c22]/50 border border-white/[0.06] rounded-xl space-y-1.5">
+              <div className="flex justify-between text-[11px] text-zinc-400 font-mono">
                 <span>SET FLOW ENERGY PROFILE</span>
-                <span className="text-[#D8163F]">Peak: 10.0 / 10</span>
+                <span className="text-[#E53558] font-medium">Peak: 10.0 / 10</span>
               </div>
-              <div className="h-8 flex items-end gap-1 pt-1">
+              <div className="h-9 flex items-end gap-1 pt-1">
                 {activeSetlist.map((item, i) => (
-                  <div key={i} className="flex-1 bg-zinc-900 rounded-t overflow-hidden flex flex-col justify-end">
+                  <div key={i} className="flex-1 bg-white/[0.06] rounded-t overflow-hidden flex flex-col justify-end">
                     <div 
-                      className="w-full bg-[#D8163F]" 
+                      className="w-full bg-[#E53558] rounded-t" 
                       style={{ height: `${(item.energy / 10) * 100}%` }}
                     />
                   </div>
@@ -1007,28 +1018,28 @@ export default function MusicModule({
 
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
               {activeSetlist.map((item, idx) => (
-                <div key={idx} className="p-3 bg-black border border-zinc-800 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[#D8163F] font-bold w-4">#{item.pos}</span>
-                    <div>
-                      <div className="font-bold text-white">{item.track.title}</div>
-                      <div className="text-[10px] text-zinc-400">
-                        {item.track.artist} • <span className="text-[#22d3ee]">{item.track.key}</span> • {item.track.bpm} BPM • <span className="text-zinc-500">{item.note}</span>
+                <div key={idx} className="p-3 bg-[#1b1c22]/40 border border-white/[0.04] hover:border-white/[0.1] rounded-lg flex items-center justify-between text-xs transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-[#E53558] font-bold font-mono w-5 flex-shrink-0">#{item.pos}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-white truncate">{item.track.title}</div>
+                      <div className="text-[11px] text-zinc-400 truncate mt-0.5">
+                        {item.track.artist} • <span className="text-cyan-400 font-mono font-medium">{item.track.key}</span> • <span className="font-mono text-zinc-400">{item.track.bpm} BPM</span> • <span className="text-zinc-500">{item.note}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => playTrack(item.track)}
-                      className="p-1 text-zinc-400 hover:text-white"
+                      className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-zinc-400 hover:text-white transition-colors"
                       title="Preview Track"
                     >
                       <Play size={12} />
                     </button>
                     <button
                       onClick={() => removeFromSetlist(idx)}
-                      className="p-1 text-zinc-600 hover:text-red-500"
+                      className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-zinc-500 hover:text-[#E53558] transition-colors"
                       title="Remove from Setlist"
                     >
                       <Trash2 size={12} />
@@ -1046,22 +1057,22 @@ export default function MusicModule({
       {/* 8. VIEW: MUSIC RADAR (ARTIST & LABEL DIGGING)                             */}
       {/* ========================================================================= */}
       {currentMode === 'radar' && (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-5 space-y-4">
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-6 space-y-4 font-sans">
+          <div className="border border-white/[0.08] bg-[#14151a] p-5 rounded-xl space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase flex items-center gap-2">
-                  <Compass size={18} className="text-[#D8163F]" />
+                <h3 className="font-semibold text-base text-white tracking-wide uppercase flex items-center gap-2">
+                  <Compass size={18} className="text-[#E53558]" />
                   MUSIC RADAR // ARTIST & UNDERGROUND LABEL TRACKER
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-1">
                   Automated scraping & tracking of Bandcamp, Beatport, and SoundCloud secret accounts for unreleased weapons
                 </p>
               </div>
 
               <button
                 onClick={() => addToast({ title: 'RADAR REFRESHED', message: 'Scanned 14 label Bandcamp pages for new releases.', type: 'success' })}
-                className="px-3 py-1 bg-zinc-900 border border-zinc-700 hover:border-[#D8163F] text-xs font-bold text-zinc-300 hover:text-white flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-[#E53558]/50 text-xs font-medium text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors"
               >
                 <RefreshCw size={12} />
                 <span>Scan Labels Now</span>
@@ -1069,10 +1080,10 @@ export default function MusicModule({
             </div>
 
             {/* Monitored Labels Bar */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-zinc-500 font-bold text-[10px]">MONITORED LABELS:</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-zinc-500 font-mono text-[10px] uppercase">MONITORED LABELS:</span>
               {['XL Recordings', 'Hessle Audio', 'Ilian Tape', 'PAN', 'SK_eleven', 'Time Is Now', 'Sneaker Social Club'].map(label => (
-                <span key={label} className="px-2 py-0.5 bg-black border border-zinc-800 text-zinc-300 text-[10px]">
+                <span key={label} className="px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300 text-xs">
                   {label}
                 </span>
               ))}
@@ -1080,31 +1091,31 @@ export default function MusicModule({
           </div>
 
           {/* Digging Wishlist & Lookalikes Table */}
-          <div className="flex-1 overflow-auto custom-scrollbar border border-zinc-900 bg-zinc-950 p-4 space-y-3">
-            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-              <h4 className="font-bold text-xs text-white uppercase">
+          <div className="flex-1 overflow-auto custom-scrollbar border border-white/[0.08] rounded-xl bg-[#14151a]/50 p-5 space-y-3 shadow-sm">
+            <div className="flex justify-between items-center border-b border-white/[0.06] pb-2">
+              <h4 className="font-semibold text-xs text-white uppercase tracking-wider">
                 DIGGING RADAR WISHLIST ({diggingWishlist.length} RELEASES IDENTIFIED)
               </h4>
-              <span className="text-[10px] text-zinc-500">1-CLICK PURCHASE ➔ LOG TO FINANCE EXPENSES</span>
+              <span className="text-[11px] text-zinc-400 font-mono">1-CLICK PURCHASE ➔ LOG TO FINANCE EXPENSES</span>
             </div>
 
-            <div className="space-y-2 text-xs font-mono">
+            <div className="space-y-2 text-xs">
               {diggingWishlist.map(item => (
-                <div key={item.id} className="p-3 bg-black border border-zinc-800 hover:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div key={item.id} className="p-3.5 bg-[#1b1c22]/40 border border-white/[0.05] hover:border-white/[0.1] rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors">
                   <div>
-                    <div className="font-bold text-white text-[13px]">{item.title}</div>
-                    <div className="text-zinc-400 text-[11px] mt-0.5">
-                      {item.artist} • <span className="text-zinc-300">{item.label}</span> • <span className="text-[#22d3ee]">{item.key}</span> • {item.bpm} BPM
+                    <div className="font-medium text-white text-[13px]">{item.title}</div>
+                    <div className="text-zinc-400 text-xs mt-0.5">
+                      {item.artist} • <span className="text-zinc-300">{item.label}</span> • <span className="text-cyan-400 font-mono font-medium">{item.key}</span> • <span className="font-mono text-zinc-400">{item.bpm} BPM</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-emerald-400 font-bold mr-2">{item.price}</span>
+                    <span className="text-emerald-400 font-semibold font-mono mr-2">{item.price}</span>
                     <a
                       href={item.storeUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-white text-zinc-200 text-xs flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.2] text-zinc-200 text-xs flex items-center gap-1.5 transition-colors font-medium"
                     >
                       <ExternalLink size={12} />
                       <span>Bandcamp</span>
@@ -1117,7 +1128,7 @@ export default function MusicModule({
                           type: 'success',
                         });
                       }}
-                      className="px-3 py-1.5 bg-[#D8163F] text-black font-bold text-xs hover:bg-white transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-[#E53558] text-white font-medium text-xs hover:bg-[#ff3b66] transition-all shadow-[0_0_10px_rgba(229,53,88,0.3)]"
                     >
                       + Add to Digging Expense
                     </button>

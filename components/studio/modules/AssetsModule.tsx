@@ -148,7 +148,6 @@ export default function AssetsModule({
     fetchLiveAssets();
   }, []);
 
-  // Determine current mode
   const currentMode = useMemo(() => {
     switch (activeView) {
       case 'assets-dropzone':
@@ -163,16 +162,24 @@ export default function AssetsModule({
     }
   }, [activeView]);
 
+  const filteredAssets = useMemo(() => {
+    if (filterType === 'All') return assets;
+    if (filterType === 'Photos') return assets.filter(a => a.type === 'photo');
+    if (filterType === 'Videos') return assets.filter(a => a.type === 'video');
+    if (filterType === 'Flyers') return assets.filter(a => a.type === 'flyer');
+    return assets;
+  }, [assets, filterType]);
+
   const handleSyncDrive = () => {
     setIsSyncing(true);
     setTimeout(() => {
       setIsSyncing(false);
       addToast({
         title: 'GOOGLE DRIVE SYNCED',
-        message: 'Google Drive intake dropzone synchronized with Cloudflare R2.',
+        message: 'Checked /Website Assets folder. Found 4 intake assets ready for triage.',
         type: 'success',
       });
-    }, 1200);
+    }, 1500);
   };
 
   const handleTranscodeProxy = () => {
@@ -180,86 +187,81 @@ export default function AssetsModule({
     setTimeout(() => {
       setIsTranscoding(false);
       addToast({
-        title: '1080P PROXY READY',
-        message: 'Fast-start MP4 proxy created with front moov-atom.',
+        title: 'BATCH TRANSCODE COMPLETE',
+        message: 'Generated 1080p fast-start WebM/MP4 proxies for 4 pending media files.',
         type: 'success',
       });
-    }, 1200);
+    }, 1800);
   };
 
-  const filteredAssets = assets.filter(a => {
-    if (filterType === 'All') return true;
-    if (filterType === 'Photos') return a.type === 'photo';
-    if (filterType === 'Videos') return a.type === 'video';
-    if (filterType === 'Flyers') return a.type === 'flyer';
-    return true;
-  });
-
   return (
-    <div className="p-6 bg-black text-white font-mono space-y-6 select-none">
+    <div className="p-6 bg-transparent text-zinc-100 font-sans space-y-6 select-none">
       
       {/* 1. TOP MODULE NAVIGATION TABS */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
           <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-            <h2 className="font-avathe text-2xl text-white tracking-widest uppercase">
-              MODULE 03 // ASSETS & CLOUDFLARE R2
+            <span className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
+            <h2 className="font-semibold text-2xl text-white tracking-tight flex items-center gap-2">
+              <span>Assets & Cloudflare R2</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-400 font-normal font-mono border border-white/10">
+                03
+              </span>
             </h2>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            0-EGRESS CDN • GOOGLE DRIVE INTAKE • SMART CROP GUARD • 1-CLICK EPK BUILDER
+          <p className="text-xs text-zinc-400 mt-1">
+            0-egress CDN • Google Drive intake • Smart crop guard • 1-click EPK builder
           </p>
         </div>
 
-        {/* Sub-navigation Switcher Pills */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Sub-navigation Switcher Pills (Notion Segmented Control) */}
+        <div className="flex flex-wrap items-center gap-1 bg-[#14151a] border border-white/[0.08] p-1 rounded-xl">
           <button
             onClick={() => onNavigate ? onNavigate('assets-vault') : null}
-            className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
               currentMode === 'vault'
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]'
-                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <ImageIcon size={13} />
-            <span>🖼️ Asset Vault</span>
+            <ImageIcon size={13} className={currentMode === 'vault' ? 'text-[#8b5cf6]' : ''} />
+            <span>Asset Vault</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('assets-dropzone') : null}
-            className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
               currentMode === 'dropzone'
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]'
-                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <FolderOpen size={13} />
-            <span>📥 Intake Dropzone</span>
+            <FolderOpen size={13} className={currentMode === 'dropzone' ? 'text-[#3b82f6]' : ''} />
+            <span>Intake Dropzone</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('assets-r2') : null}
-            className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
               currentMode === 'r2'
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]'
-                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <Activity size={13} />
-            <span>⚡ R2 Storage Mirror</span>
+            <Activity size={13} className={currentMode === 'r2' ? 'text-[#06b6d4]' : ''} />
+            <span>R2 Storage Mirror</span>
           </button>
 
           <button
             onClick={() => onNavigate ? onNavigate('assets-epk') : null}
-            className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${
               currentMode === 'epk'
-                ? 'bg-[#D8163F] text-white border-[#D8163F] shadow-[0_0_10px_rgba(216,22,63,0.4)]'
-                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-white'
+                ? 'bg-white/[0.1] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <Share2 size={13} />
-            <span>📄 Press Kit / EPK Hub</span>
+            <Share2 size={13} className={currentMode === 'epk' ? 'text-[#10b981]' : ''} />
+            <span>Press Kit / EPK Hub</span>
           </button>
         </div>
       </div>
@@ -271,29 +273,29 @@ export default function AssetsModule({
         <div className="space-y-6">
           
           {/* Quick Actions & Stats Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950 border border-zinc-900 p-3 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#14151a] border border-white/[0.08] rounded-xl p-3.5 text-xs shadow-sm">
             <div className="flex items-center gap-4">
-              <span className="text-zinc-400">EDGE STORAGE: <strong className="text-white">4.82 GB</strong></span>
-              <span className="text-zinc-600">|</span>
-              <span className="text-zinc-400">PUBLISHED ASSETS: <strong className="text-emerald-400">4 Live</strong></span>
+              <span className="text-zinc-400">EDGE STORAGE: <strong className="text-white font-mono">4.82 GB</strong></span>
+              <span className="text-zinc-700">|</span>
+              <span className="text-zinc-400">PUBLISHED ASSETS: <strong className="text-emerald-400 font-mono">4 Live</strong></span>
             </div>
 
             <div className="flex items-center gap-2">
               <a
                 href="/api/epk/zip"
                 download="Henry_IX_Press_Kit_2026.zip"
-                className="px-3 py-1 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 text-zinc-200 hover:text-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 hover:border-emerald-500/40 text-zinc-200 hover:text-emerald-300 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
               >
-                <Download size={12} />
-                <span>DOWNLOAD EPK (.ZIP)</span>
+                <Download size={13} />
+                <span>Download EPK (.ZIP)</span>
               </a>
 
               <button 
                 onClick={triggerEmergencyPurge}
-                className="px-3 py-1 bg-red-950 border border-red-600 text-red-400 text-xs font-bold hover:bg-red-600 hover:text-black flex items-center gap-1.5 shadow-[0_0_10px_rgba(220,38,38,0.4)]"
+                className="px-3 py-1.5 rounded-lg bg-red-950/20 border border-red-500/30 text-red-300 hover:bg-red-900/30 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
               >
-                <ShieldAlert size={12} />
-                <span>EMERGENCY UNPUBLISH</span>
+                <ShieldAlert size={13} />
+                <span>Emergency Unpublish</span>
               </button>
             </div>
           </div>
@@ -303,14 +305,14 @@ export default function AssetsModule({
             
             {/* Left: Assets List */}
             <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 text-xs">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 text-xs">
+                <div className="flex items-center gap-1 bg-[#14151a] p-1 rounded-lg border border-white/[0.08]">
                   {(['All', 'Photos', 'Videos', 'Flyers'] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setFilterType(tab)}
-                      className={`px-2.5 py-1 rounded-sm border font-bold ${
-                        filterType === tab ? 'bg-zinc-800 text-white border-zinc-600' : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                        filterType === tab ? 'bg-white/[0.1] text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
                       {tab}
@@ -318,18 +320,18 @@ export default function AssetsModule({
                   ))}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-[#14151a] p-1 rounded-lg border border-white/[0.08]">
                   <button 
                     onClick={() => setViewMode('grid')}
-                    className={`p-1.5 border rounded ${viewMode === 'grid' ? 'border-[#D8163F] text-[#D8163F]' : 'border-zinc-800 text-zinc-500'}`}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/[0.1] text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
                   >
-                    <LayoutGrid size={13} />
+                    <LayoutGrid size={14} />
                   </button>
                   <button 
                     onClick={() => setViewMode('table')}
-                    className={`p-1.5 border rounded ${viewMode === 'table' ? 'border-[#D8163F] text-[#D8163F]' : 'border-zinc-800 text-zinc-500'}`}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === 'table' ? 'bg-white/[0.1] text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
                   >
-                    <List size={13} />
+                    <List size={14} />
                   </button>
                 </div>
               </div>
@@ -340,57 +342,57 @@ export default function AssetsModule({
                     <div 
                       key={asset.id}
                       onClick={() => setSelectedAsset(asset)}
-                      className={`p-2 border bg-zinc-950 hover:border-zinc-600 cursor-pointer space-y-2 transition-all ${
-                        selectedAsset?.id === asset.id ? 'border-[#D8163F] shadow-[0_0_15px_rgba(216,22,63,0.3)]' : 'border-zinc-900'
+                      className={`p-3 rounded-xl border bg-[#14151a] hover:border-white/20 cursor-pointer space-y-2.5 transition-all shadow-sm ${
+                        selectedAsset?.id === asset.id ? 'border-[#E53558] shadow-[0_0_20px_rgba(229,53,88,0.2)]' : 'border-white/[0.08]'
                       }`}
                     >
-                      <div className="aspect-square bg-black border border-zinc-900 flex items-center justify-center relative overflow-hidden">
-                        <div className="text-[10px] text-zinc-600 uppercase text-center p-2">
+                      <div className="aspect-square rounded-lg bg-[#0c0d10] border border-white/[0.06] flex items-center justify-center relative overflow-hidden">
+                        <div className="text-[10px] text-zinc-500 uppercase font-mono text-center p-2">
                           {asset.type.toUpperCase()}<br />{asset.dimensions}
                         </div>
                         {asset.published && (
-                          <span className="absolute top-1 right-1 px-1 py-0.5 bg-emerald-950/80 border border-emerald-500 text-emerald-400 text-[8px] font-bold">
+                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-medium">
                             LIVE
                           </span>
                         )}
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-white truncate">{asset.title}</div>
-                        <div className="text-[10px] text-zinc-500 truncate">{asset.event}</div>
+                        <div className="text-xs font-medium text-white truncate">{asset.title}</div>
+                        <div className="text-[11px] text-zinc-400 truncate">{asset.event}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="border border-zinc-900 bg-zinc-950 overflow-x-auto custom-scrollbar">
+                <div className="rounded-xl border border-white/[0.08] bg-[#14151a] overflow-x-auto custom-scrollbar shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-zinc-900 text-zinc-500 text-[10px]">
-                        <th className="p-2.5">TITLE</th>
-                        <th className="p-2.5">TYPE</th>
-                        <th className="p-2.5">EVENT</th>
-                        <th className="p-2.5">DIMENSIONS</th>
-                        <th className="p-2.5">STATUS</th>
-                        <th className="p-2.5 text-right">SIZE</th>
+                      <tr className="border-b border-white/[0.06] text-zinc-400 text-[10px] uppercase font-mono">
+                        <th className="p-3 font-medium">Title</th>
+                        <th className="p-3 font-medium">Type</th>
+                        <th className="p-3 font-medium">Event</th>
+                        <th className="p-3 font-medium">Dimensions</th>
+                        <th className="p-3 font-medium">Status</th>
+                        <th className="p-3 text-right font-medium">Size</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-900">
+                    <tbody className="divide-y divide-white/[0.04]">
                       {filteredAssets.map(asset => (
                         <tr 
                           key={asset.id} 
                           onClick={() => setSelectedAsset(asset)}
-                          className="hover:bg-zinc-900/50 cursor-pointer"
+                          className="hover:bg-white/[0.04] cursor-pointer transition-colors"
                         >
-                          <td className="p-2.5 font-bold text-white">{asset.title}</td>
-                          <td className="p-2.5 uppercase text-zinc-400">{asset.type}</td>
-                          <td className="p-2.5 text-zinc-400">{asset.event}</td>
-                          <td className="p-2.5 font-mono text-[11px] text-zinc-300">{asset.dimensions}</td>
-                          <td className="p-2.5">
-                            <span className={`px-1.5 py-0.5 text-[9px] font-bold border ${asset.published ? 'border-emerald-500 text-emerald-400 bg-emerald-950/40' : 'border-zinc-700 text-zinc-400'}`}>
+                          <td className="p-3 font-medium text-white">{asset.title}</td>
+                          <td className="p-3 uppercase text-zinc-400">{asset.type}</td>
+                          <td className="p-3 text-zinc-400">{asset.event}</td>
+                          <td className="p-3 font-mono text-[11px] text-zinc-300">{asset.dimensions}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border ${asset.published ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-white/10 text-zinc-400'}`}>
                               {asset.published ? 'PUBLISHED' : 'VAULT ONLY'}
                             </span>
                           </td>
-                          <td className="p-2.5 text-right font-mono text-zinc-400">{asset.size}</td>
+                          <td className="p-3 text-right font-mono text-zinc-400">{asset.size}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -400,17 +402,17 @@ export default function AssetsModule({
             </div>
 
             {/* Right: Smart Crop Guard Inspector */}
-            <div className="w-full lg:w-96 border border-zinc-900 bg-zinc-950 p-4 space-y-4">
-              <div className="border-b border-zinc-900 pb-2">
-                <h3 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
-                  <Smartphone size={13} className="text-[#D8163F]" />
-                  SMART CROP GUARD // SAFE ZONES
+            <div className="w-full lg:w-96 rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-4 shadow-sm">
+              <div className="border-b border-white/[0.08] pb-3">
+                <h3 className="font-semibold text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                  <Smartphone size={14} className="text-[#3b82f6]" />
+                  Smart Crop Guard // Safe Zones
                 </h3>
-                <p className="text-[10px] text-zinc-500">Check UI overlay obstructions for TikTok & Instagram</p>
+                <p className="text-[11px] text-zinc-400 mt-0.5">Check UI overlay obstructions for TikTok & Instagram</p>
               </div>
 
               {/* Crop Mode Switcher */}
-              <div className="grid grid-cols-4 gap-1 text-[10px]">
+              <div className="grid grid-cols-4 gap-1.5 text-[11px] bg-[#0c0d10] p-1 rounded-lg border border-white/10">
                 {[
                   { id: 'none', label: 'OFF' },
                   { id: 'tiktok', label: 'TIKTOK' },
@@ -420,8 +422,8 @@ export default function AssetsModule({
                   <button
                     key={m.id}
                     onClick={() => setSmartCropMode(m.id as any)}
-                    className={`py-1 border rounded-sm font-bold transition-colors ${
-                      smartCropMode === m.id ? 'bg-[#D8163F] text-white border-[#D8163F]' : 'bg-black border-zinc-800 text-zinc-400 hover:text-white'
+                    className={`py-1 rounded font-medium transition-colors ${
+                      smartCropMode === m.id ? 'bg-white/[0.12] text-white shadow-sm' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     {m.label}
@@ -430,16 +432,16 @@ export default function AssetsModule({
               </div>
 
               {/* Viewfinder Preview */}
-              <div className="aspect-[9/16] bg-black border border-zinc-800 relative overflow-hidden flex items-center justify-center p-4">
-                <div className="text-center text-zinc-600 text-xs">
-                  <div className="font-bold text-zinc-400">{selectedAsset?.title || 'Select an Asset'}</div>
-                  <div className="text-[10px] mt-1">{selectedAsset?.dimensions || ''}</div>
+              <div className="aspect-[9/16] rounded-lg bg-[#0c0d10] border border-white/10 relative overflow-hidden flex items-center justify-center p-4">
+                <div className="text-center text-zinc-500 text-xs">
+                  <div className="font-medium text-zinc-300">{selectedAsset?.title || 'Select an Asset'}</div>
+                  <div className="text-[10px] mt-1 font-mono text-zinc-500">{selectedAsset?.dimensions || ''}</div>
                 </div>
 
                 {/* Simulated Watermark */}
                 {watermarkActive && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none rotate-[-25deg]">
-                    <div className="text-white/20 text-xl font-bold tracking-widest font-mono border-2 border-white/20 px-4 py-2">
+                    <div className="text-white/20 text-lg font-bold tracking-widest font-mono border-2 border-white/20 px-4 py-2 rounded">
                       HENRY IX // PROMOTER PREVIEW
                     </div>
                   </div>
@@ -447,23 +449,23 @@ export default function AssetsModule({
 
                 {/* Smart Crop Overlays */}
                 {smartCropMode === 'tiktok' && (
-                  <div className="absolute inset-0 pointer-events-none border-2 border-red-500/60 p-3 flex flex-col justify-between">
+                  <div className="absolute inset-0 pointer-events-none border border-red-500/40 p-3 flex flex-col justify-between font-mono">
                     <div className="h-12 border-b border-dashed border-red-500/40 text-[9px] text-red-400">TikTok Top Header Safe Zone</div>
-                    <div className="self-end w-12 h-48 border-l border-dashed border-red-500/40 text-[9px] text-red-400 p-1">Right Action Buttons</div>
-                    <div className="h-16 border-t border-dashed border-red-500/40 text-[9px] text-red-400">Caption & Audio Title Area</div>
+                    <div className="self-end w-12 h-48 border-l border-dashed border-red-500/40 text-[9px] text-red-400 p-1">Action Icons</div>
+                    <div className="h-16 border-t border-dashed border-red-500/40 text-[9px] text-red-400">Caption & Audio Area</div>
                   </div>
                 )}
 
                 {smartCropMode === 'reels' && (
-                  <div className="absolute inset-0 pointer-events-none border-2 border-cyan-500/60 p-3 flex flex-col justify-between">
+                  <div className="absolute inset-0 pointer-events-none border border-cyan-500/40 p-3 flex flex-col justify-between font-mono">
                     <div className="h-10 border-b border-dashed border-cyan-500/40 text-[9px] text-cyan-400">Instagram Reels Top Margin</div>
                     <div className="self-end w-12 h-44 border-l border-dashed border-cyan-500/40 text-[9px] text-cyan-400 p-1">Like / Share Bar</div>
-                    <div className="h-14 border-t border-dashed border-cyan-500/40 text-[9px] text-cyan-400">Bottom Profile & Caption Safe Zone</div>
+                    <div className="h-14 border-t border-dashed border-cyan-500/40 text-[9px] text-cyan-400">Bottom Profile & Caption</div>
                   </div>
                 )}
 
                 {smartCropMode === '4:5' && (
-                  <div className="absolute inset-x-0 h-4/5 border-2 border-amber-400/80 pointer-events-none flex items-center justify-center">
+                  <div className="absolute inset-x-0 h-4/5 border-2 border-amber-400/60 pointer-events-none flex items-center justify-center font-mono">
                     <span className="text-amber-400/80 text-[10px] font-bold">4:5 PORTRAIT GRID SAFE ZONE</span>
                   </div>
                 )}
@@ -479,11 +481,11 @@ export default function AssetsModule({
                       type: 'info',
                     });
                   }}
-                  className={`w-full py-2 text-xs font-bold border transition-colors ${
-                    watermarkActive ? 'bg-amber-950 border-amber-500 text-amber-300' : 'bg-black border-zinc-700 text-zinc-300 hover:border-white'
+                  className={`w-full py-2.5 rounded-lg text-xs font-medium border transition-colors ${
+                    watermarkActive ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-white/[0.04] border-white/10 text-zinc-300 hover:bg-white/[0.08]'
                   }`}
                 >
-                  {watermarkActive ? '✓ WATERMARK OVERLAY ACTIVE' : 'BURN-IN PROMOTER WATERMARK'}
+                  {watermarkActive ? '✓ Watermark Overlay Active' : 'Burn-in Promoter Watermark'}
                 </button>
               </div>
             </div>
@@ -498,14 +500,14 @@ export default function AssetsModule({
       {/* ========================================================================= */}
       {currentMode === 'dropzone' && (
         <div className="space-y-6">
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase flex items-center gap-2">
-                  <UploadCloud size={18} className="text-[#22d3ee]" />
-                  GOOGLE DRIVE INTAKE DROPZONE // SAFE TRIAGE
+                <h3 className="font-semibold text-lg text-white tracking-tight flex items-center gap-2">
+                  <UploadCloud size={18} className="text-[#06b6d4]" />
+                  Google Drive Intake Dropzone // Safe Triage
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Raw uncompressed master folder watcher: Google Drive / Website Assets / Shoots & Gigs /
                 </p>
               </div>
@@ -514,7 +516,7 @@ export default function AssetsModule({
                 <button 
                   onClick={handleSyncDrive}
                   disabled={isSyncing}
-                  className="px-3 py-1.5 bg-[#D8163F] text-black font-bold text-xs hover:bg-white flex items-center gap-1.5 transition-colors"
+                  className="px-3.5 py-2 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-white font-medium text-xs flex items-center gap-1.5 transition-colors border border-white/10"
                 >
                   <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
                   <span>{isSyncing ? 'Scanning Drive...' : 'Scan Google Drive Now'}</span>
@@ -523,7 +525,7 @@ export default function AssetsModule({
                 <button 
                   onClick={handleTranscodeProxy}
                   disabled={isTranscoding}
-                  className="px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-white text-xs font-bold text-zinc-200 hover:text-white flex items-center gap-1.5 transition-colors"
+                  className="px-3.5 py-2 rounded-lg bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-xs font-medium text-zinc-200 hover:text-white flex items-center gap-1.5 transition-colors"
                 >
                   <Film size={12} />
                   <span>{isTranscoding ? 'Transcoding...' : 'Batch Transcode 1080p'}</span>
@@ -532,30 +534,30 @@ export default function AssetsModule({
             </div>
 
             {/* Ingestion Queue Table */}
-            <div className="overflow-x-auto custom-scrollbar border border-zinc-900 bg-black">
+            <div className="overflow-x-auto custom-scrollbar rounded-lg border border-white/[0.06] bg-[#0c0d10]">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-zinc-900 text-zinc-500 text-[10px]">
-                    <th className="p-3">FILENAME</th>
-                    <th className="p-3">SOURCE EVENT</th>
-                    <th className="p-3">FORMAT</th>
-                    <th className="p-3">RAW SIZE</th>
-                    <th className="p-3">TRIAGE STATUS</th>
-                    <th className="p-3 text-right">ACTION</th>
+                  <tr className="border-b border-white/[0.06] text-zinc-400 text-[10px] uppercase font-mono">
+                    <th className="p-3 font-medium">Filename</th>
+                    <th className="p-3 font-medium">Source Event</th>
+                    <th className="p-3 font-medium">Format</th>
+                    <th className="p-3 font-medium">Raw Size</th>
+                    <th className="p-3 font-medium">Triage Status</th>
+                    <th className="p-3 text-right font-medium">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-900 font-mono">
+                <tbody className="divide-y divide-white/[0.04] font-mono">
                   {DROPZONE_FILES.map((f) => (
-                    <tr key={f.id} className="hover:bg-zinc-900/40">
-                      <td className="p-3 font-bold text-white">{f.name}</td>
-                      <td className="p-3 text-zinc-400">{f.event}</td>
+                    <tr key={f.id} className="hover:bg-white/[0.04] transition-colors">
+                      <td className="p-3 font-medium text-white">{f.name}</td>
+                      <td className="p-3 text-zinc-400 font-sans">{f.event}</td>
                       <td className="p-3 text-zinc-500">{f.format}</td>
                       <td className="p-3 text-zinc-300">{f.size}</td>
                       <td className="p-3">
-                        <span className={`px-2 py-0.5 text-[9px] font-bold border ${
-                          f.status === 'Ready to Publish' ? 'border-emerald-500 text-emerald-400 bg-emerald-950/40' :
-                          f.status === 'Requires Crop' ? 'border-amber-500 text-amber-400 bg-amber-950/40' :
-                          'border-cyan-500 text-cyan-400 bg-cyan-950/40'
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-medium border ${
+                          f.status === 'Ready to Publish' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' :
+                          f.status === 'Requires Crop' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' :
+                          'border-cyan-500/30 text-cyan-400 bg-cyan-500/10'
                         }`}>
                           {f.status}
                         </span>
@@ -569,7 +571,7 @@ export default function AssetsModule({
                               type: 'success',
                             });
                           }}
-                          className="px-2.5 py-1 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 hover:text-emerald-400 text-[11px]"
+                          className="px-3 py-1 rounded-lg bg-white/[0.06] border border-white/10 hover:border-emerald-500/40 hover:text-emerald-300 text-[11px] font-sans transition-colors"
                         >
                           Approve & Push to R2
                         </button>
@@ -591,43 +593,43 @@ export default function AssetsModule({
           
           {/* R2 Metrics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-            <div className="p-4 bg-zinc-950 border border-zinc-900 space-y-1">
-              <span className="text-zinc-500 text-[10px] block">TOTAL STORAGE</span>
-              <div className="text-2xl font-bold text-white">4.82 GB</div>
-              <span className="text-emerald-400 text-[10px]">Cloudflare R2 (0 Egress Fees)</span>
+            <div className="p-4 rounded-xl bg-[#14151a] border border-white/[0.08] space-y-1.5 shadow-sm">
+              <span className="text-zinc-400 text-[10px] font-mono uppercase block">Total Storage</span>
+              <div className="text-2xl font-bold font-mono text-white">4.82 GB</div>
+              <span className="text-emerald-400 text-[11px]">Cloudflare R2 (0 Egress Fees)</span>
             </div>
-            <div className="p-4 bg-zinc-950 border border-zinc-900 space-y-1">
-              <span className="text-zinc-500 text-[10px] block">MONTHLY REQUESTS</span>
-              <div className="text-2xl font-bold text-white">384,210</div>
-              <span className="text-zinc-400 text-[10px]">Edge CDN Cached</span>
+            <div className="p-4 rounded-xl bg-[#14151a] border border-white/[0.08] space-y-1.5 shadow-sm">
+              <span className="text-zinc-400 text-[10px] font-mono uppercase block">Monthly Requests</span>
+              <div className="text-2xl font-bold font-mono text-white">384,210</div>
+              <span className="text-zinc-400 text-[11px]">Edge CDN Cached</span>
             </div>
-            <div className="p-4 bg-zinc-950 border border-zinc-900 space-y-1">
-              <span className="text-zinc-500 text-[10px] block">CACHE HIT RATIO</span>
-              <div className="text-2xl font-bold text-emerald-400">99.4%</div>
-              <span className="text-zinc-500 text-[10px]">London LHR Edge Primary</span>
+            <div className="p-4 rounded-xl bg-[#14151a] border border-white/[0.08] space-y-1.5 shadow-sm">
+              <span className="text-zinc-400 text-[10px] font-mono uppercase block">Cache Hit Ratio</span>
+              <div className="text-2xl font-bold font-mono text-emerald-400">99.4%</div>
+              <span className="text-zinc-400 text-[11px]">London LHR Edge Primary</span>
             </div>
-            <div className="p-4 bg-zinc-950 border border-zinc-900 space-y-1">
-              <span className="text-zinc-500 text-[10px] block">EGRESS COST</span>
-              <div className="text-2xl font-bold text-emerald-400">£0.00</div>
-              <span className="text-zinc-500 text-[10px]">100% Free Edge Delivery</span>
+            <div className="p-4 rounded-xl bg-[#14151a] border border-white/[0.08] space-y-1.5 shadow-sm">
+              <span className="text-zinc-400 text-[10px] font-mono uppercase block">Egress Cost</span>
+              <div className="text-2xl font-bold font-mono text-emerald-400">£0.00</div>
+              <span className="text-zinc-400 text-[11px]">100% Free Edge Delivery</span>
             </div>
           </div>
 
           {/* R2 Bucket Virtual Folder Explorer */}
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-3">
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-avathe text-xl text-white tracking-widest uppercase">
-                  CLOUDFLARE R2 BUCKET: assets.henryix.com
+                <h3 className="font-semibold text-lg text-white tracking-tight">
+                  Cloudflare R2 Bucket: assets.henryix.com
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Root CDN endpoint delivering all high-fidelity images, audio masters, and proxy video streams
                 </p>
               </div>
 
               <button
                 onClick={() => addToast({ title: 'GLOBAL CDN PURGED', message: 'Flushed Cloudflare edge cache (<5s worldwide).', type: 'success' })}
-                className="px-3 py-1.5 bg-red-950 border border-red-600 text-red-400 text-xs font-bold hover:bg-red-600 hover:text-black transition-colors"
+                className="px-3.5 py-1.5 rounded-lg bg-red-950/20 border border-red-500/30 text-red-300 text-xs font-medium hover:bg-red-900/30 transition-colors shadow-sm"
               >
                 Purge All Edge Caches
               </button>
@@ -640,20 +642,20 @@ export default function AssetsModule({
                 { name: '/Mixes/', desc: 'Master mix covers & high-bitrate lossy/lossless streaming audio', files: 18, size: '2.84 GB', url: 'https://assets.henryix.com/Mixes/' },
                 { name: '/Videos/', desc: '1080p fast-start MP4 and WebM video booth proxies', files: 14, size: '1.54 GB', url: 'https://assets.henryix.com/Videos/' },
               ].map(dir => (
-                <div key={dir.name} className="p-3.5 bg-black border border-zinc-800 hover:border-zinc-700 space-y-2">
+                <div key={dir.name} className="p-4 rounded-lg bg-[#0c0d10] border border-white/[0.06] hover:border-white/10 space-y-2.5 transition-all">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-white font-mono text-sm">{dir.name}</span>
-                    <span className="text-zinc-500 font-mono text-[11px]">{dir.files} Files • {dir.size}</span>
+                    <span className="font-medium text-white font-mono text-sm">{dir.name}</span>
+                    <span className="text-zinc-400 font-mono text-[11px]">{dir.files} Files • {dir.size}</span>
                   </div>
-                  <p className="text-zinc-400 text-[11px]">{dir.desc}</p>
-                  <div className="flex justify-between items-center pt-1 border-t border-zinc-900">
-                    <span className="text-[10px] text-zinc-600 truncate font-mono">{dir.url}</span>
+                  <p className="text-zinc-400 text-xs">{dir.desc}</p>
+                  <div className="flex justify-between items-center pt-2 border-t border-white/[0.06]">
+                    <span className="text-[10px] text-zinc-500 truncate font-mono">{dir.url}</span>
                     <button 
                       onClick={() => {
                         navigator.clipboard.writeText(dir.url);
                         addToast({ title: 'R2 URL COPIED', message: `Copied ${dir.url}`, type: 'info' });
                       }}
-                      className="text-zinc-400 hover:text-white p-1"
+                      className="text-zinc-400 hover:text-white p-1 rounded hover:bg-white/[0.06] transition-colors"
                       title="Copy URL"
                     >
                       <Copy size={12} />
@@ -672,13 +674,13 @@ export default function AssetsModule({
       {/* ========================================================================= */}
       {currentMode === 'epk' && (
         <div className="space-y-6">
-          <div className="border border-zinc-900 bg-zinc-950 p-5 space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-900 pb-4">
+          <div className="rounded-xl border border-white/[0.08] bg-[#14151a] p-5 space-y-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
               <div>
-                <h3 className="font-avathe text-2xl text-white tracking-widest uppercase">
-                  HENRY IX // OFFICIAL PRESS KIT & EPK HUB
+                <h3 className="font-semibold text-xl text-white tracking-tight">
+                  Official Press Kit & EPK Hub
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Promoter one-pager generator, unlisted portal tokens, and 1-click Henry_IX_Press_Kit_2026.zip export
                 </p>
               </div>
@@ -687,16 +689,16 @@ export default function AssetsModule({
                 <a
                   href="/api/epk/zip"
                   download="Henry_IX_Press_Kit_2026.zip"
-                  className="px-4 py-2 bg-[#D8163F] text-black font-bold text-xs hover:bg-white flex items-center gap-1.5 shadow-[0_0_12px_rgba(216,22,63,0.4)] transition-colors"
+                  className="px-4 py-2 rounded-lg bg-[#E53558] hover:bg-[#f43f5e] text-white font-medium text-xs flex items-center gap-1.5 transition-colors shadow-sm"
                 >
                   <Download size={13} />
-                  <span>DOWNLOAD COMPLETE ZIP (.ZIP)</span>
+                  <span>Download Complete ZIP (.ZIP)</span>
                 </a>
               </div>
             </div>
 
             {/* Secret Promoter Link Card */}
-            <div className="p-3 bg-black border border-emerald-900/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="p-3.5 rounded-lg bg-[#0c0d10] border border-emerald-500/20 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={15} className="text-emerald-400" />
                 <span className="text-zinc-300">
@@ -708,7 +710,7 @@ export default function AssetsModule({
                   navigator.clipboard.writeText('https://henryix.com/press/promoter');
                   addToast({ title: 'PORTAL LINK COPIED', message: 'Sent secret EPK link with 7-day token to clipboard.', type: 'success' });
                 }}
-                className="px-3 py-1 bg-zinc-900 border border-zinc-700 hover:border-white text-zinc-300 hover:text-white flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors text-xs font-medium"
               >
                 <Copy size={11} />
                 <span>Copy Promoter Access Link</span>
@@ -719,12 +721,12 @@ export default function AssetsModule({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               
               {/* Box 1: Artist Bio */}
-              <div className="p-4 bg-black border border-zinc-800 space-y-2">
-                <div className="font-bold text-white uppercase text-[11px] flex justify-between">
-                  <span>1. ARTIST BIOGRAPHY</span>
-                  <span className="text-zinc-500 font-normal">SHORT & FULL</span>
+              <div className="p-4 rounded-lg bg-[#0c0d10] border border-white/[0.06] space-y-2">
+                <div className="font-semibold text-white uppercase text-[11px] flex justify-between">
+                  <span>1. Artist Biography</span>
+                  <span className="text-zinc-500 font-normal font-mono text-[10px]">Short & Full</span>
                 </div>
-                <p className="text-zinc-400 text-[11px] leading-relaxed">
+                <p className="text-zinc-400 text-xs leading-relaxed">
                   HENRY IX is a London-based electronic music artist, DJ, and creative technologist exploring the intersections of underground UK bass music, hypnotic 140 dubplates, and pro DJ performance.
                 </p>
                 <button 
@@ -732,41 +734,41 @@ export default function AssetsModule({
                     navigator.clipboard.writeText('HENRY IX is a London-based electronic music artist, DJ, and creative technologist exploring the intersections of underground UK bass music, hypnotic 140 dubplates, and pro DJ performance.');
                     addToast({ title: 'BIO COPIED', message: 'Copied verified artist biography for promoter print.', type: 'info' });
                   }}
-                  className="text-[#D8163F] hover:underline text-[10px]"
+                  className="text-[#E53558] hover:underline text-[11px] font-medium"
                 >
                   Copy Short Bio (150 Words)
                 </button>
               </div>
 
               {/* Box 2: Press Photos */}
-              <div className="p-4 bg-black border border-zinc-800 space-y-2">
-                <div className="font-bold text-white uppercase text-[11px] flex justify-between">
-                  <span>2. 300DPI PRESS SHOTS</span>
-                  <span className="text-zinc-500 font-normal">3 ASSETS</span>
+              <div className="p-4 rounded-lg bg-[#0c0d10] border border-white/[0.06] space-y-2">
+                <div className="font-semibold text-white uppercase text-[11px] flex justify-between">
+                  <span>2. 300DPI Press Shots</span>
+                  <span className="text-zinc-500 font-normal font-mono text-[10px]">3 Assets</span>
                 </div>
-                <p className="text-zinc-400 text-[11px] leading-relaxed">
+                <p className="text-zinc-400 text-xs leading-relaxed">
                   High-resolution print photography captured at Corsica Studios and London studio spaces.
                 </p>
                 <button 
                   onClick={() => addToast({ title: 'PHOTOS DOWNLOADED', message: 'Downloaded 3x 300dpi hi-res press photos.', type: 'success' })}
-                  className="text-emerald-400 hover:underline text-[10px]"
+                  className="text-emerald-400 hover:underline text-[11px] font-medium"
                 >
                   Download All 3 Photos (.jpg)
                 </button>
               </div>
 
               {/* Box 3: Technical Rider */}
-              <div className="p-4 bg-black border border-zinc-800 space-y-2">
-                <div className="font-bold text-white uppercase text-[11px] flex justify-between">
-                  <span>3. CDJ-3000 TECH RIDER</span>
-                  <span className="text-zinc-500 font-normal">PDF READY</span>
+              <div className="p-4 rounded-lg bg-[#0c0d10] border border-white/[0.06] space-y-2">
+                <div className="font-semibold text-white uppercase text-[11px] flex justify-between">
+                  <span>3. CDJ-3000 Tech Rider</span>
+                  <span className="text-zinc-500 font-normal font-mono text-[10px]">PDF Ready</span>
                 </div>
-                <p className="text-zinc-400 text-[11px] leading-relaxed">
+                <p className="text-zinc-400 text-xs leading-relaxed">
                   Specification: 4x Pioneer CDJ-3000, 1x DJM-A9 or Allen & Heath Xone:96, Pro Link Hub, Booth monitors.
                 </p>
                 <button 
                   onClick={() => addToast({ title: 'TECH RIDER DOWNLOADED', message: 'Downloaded official Pioneer Tech Rider PDF.', type: 'success' })}
-                  className="text-[#22d3ee] hover:underline text-[10px]"
+                  className="text-[#06b6d4] hover:underline text-[11px] font-medium"
                 >
                   Download Tech Rider (.pdf)
                 </button>

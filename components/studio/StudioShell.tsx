@@ -190,7 +190,7 @@ export default function StudioShell({ children }: StudioShellProps) {
   }, []);
 
   return (
-    <div className="h-screen w-full bg-black text-white flex flex-col overflow-hidden font-mono select-none">
+    <div className="h-screen w-full bg-[#0c0d10] text-zinc-100 flex flex-col overflow-hidden font-sans select-none">
       {/* Non-blocking HUD Toasts Overlay */}
       <StudioToasts />
 
@@ -230,27 +230,27 @@ export default function StudioShell({ children }: StudioShellProps) {
         />
 
         {/* Pillar 2: Main Center Canvas */}
-        <div className="flex-1 flex flex-col min-w-0 bg-black relative">
+        <div className="flex-1 flex flex-col min-w-0 bg-[#0c0d10] relative">
           
           {/* Top App Bar */}
-          <header className="h-12 border-b border-zinc-900 bg-zinc-950 flex items-center justify-between px-4 flex-shrink-0 z-10">
-            <div className="text-zinc-400 font-mono text-xs flex items-center gap-3">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="font-avathe tracking-widest text-zinc-200">HENRY IX STUDIO</span>
-              <span className="text-zinc-600 hidden sm:inline">//</span>
-              <span className="text-zinc-500 hidden sm:inline uppercase text-[10px]">
-                {activeView.replace('-', ' / ')}
+          <header className="h-13 border-b border-white/[0.06] bg-[#14151a] flex items-center justify-between px-4 flex-shrink-0 z-10">
+            <div className="text-zinc-400 text-xs flex items-center gap-2.5">
+              <span className="w-2 h-2 bg-[#10b981] rounded-full" />
+              <span className="font-semibold text-zinc-100 tracking-tight">HENRY IX STUDIO</span>
+              <span className="text-zinc-600 hidden sm:inline">/</span>
+              <span className="text-zinc-400 hidden sm:inline capitalize font-medium text-xs">
+                {activeView.replace('music-', 'Music / ').replace('streaming-', 'Streaming / ').replace('assets-', 'Assets / ').replace('gigs-', 'Gigs / ').replace('social-', 'Social / ').replace('-', ' ')}
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               {/* Universal Quick Search Button */}
               <button 
                 onClick={() => setCommandPaletteOpen(true)}
-                className="hidden md:flex items-center gap-2 bg-black border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white px-3 py-1 rounded-sm text-xs transition-colors"
+                className="hidden md:flex items-center gap-2 bg-[#1b1c22] border border-white/[0.08] hover:border-white/20 text-zinc-400 hover:text-white px-2.5 py-1.5 rounded-lg text-xs transition-colors shadow-sm"
               >
-                <span>🔍 Quick Find</span>
-                <kbd className="text-[9px] bg-zinc-900 px-1 py-0.5 border border-zinc-800 text-zinc-500">⌘K</kbd>
+                <span>Quick Find</span>
+                <kbd className="text-[10px] font-mono bg-zinc-800 px-1.5 py-0.5 rounded border border-white/[0.08] text-zinc-400">⌘K</kbd>
               </button>
 
               {/* Notification Center Popover Trigger */}
@@ -288,10 +288,10 @@ export default function StudioShell({ children }: StudioShellProps) {
                     setRequestedDrawerTab(null);
                   }
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1 text-xs border rounded-sm transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all border ${
                   rightDrawerOpen && requestedDrawerTab === 'copilot'
-                    ? 'border-[#D8163F] text-[#D8163F] bg-[#D8163F]/10' 
-                    : 'border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600'
+                    ? 'border-[#E53558] text-[#E53558] bg-[#E53558]/10' 
+                    : 'border-white/[0.08] bg-[#1b1c22] text-zinc-300 hover:text-white hover:border-white/20'
                 }`}
                 title="Toggle Context Toolkit & AI Copilot"
               >
@@ -301,8 +301,7 @@ export default function StudioShell({ children }: StudioShellProps) {
           </header>
 
           {/* Canvas Scrollable Surface */}
-          <main className="flex-1 overflow-auto custom-scrollbar relative bg-black">
-            <div className="absolute inset-0 bayer-dither opacity-5 pointer-events-none z-0" />
+          <main className="flex-1 overflow-auto custom-scrollbar relative bg-[#0c0d10]">
             <div className="relative z-10 w-full h-full pb-20">
               {renderMainCanvas()}
             </div>
@@ -314,7 +313,7 @@ export default function StudioShell({ children }: StudioShellProps) {
           <div className="flex h-full relative" style={{ width: drawerWidth }}>
             {/* Draggable Resizer Handle */}
             <div 
-              className="w-1 cursor-col-resize hover:bg-[#D8163F]/80 active:bg-[#D8163F] bg-zinc-900 h-full absolute left-0 top-0 z-30 transition-colors"
+              className="w-1 cursor-col-resize hover:bg-[#E53558]/80 active:bg-[#E53558] bg-white/[0.06] h-full absolute left-0 top-0 z-30 transition-colors"
               onMouseDown={() => setIsDragging(true)}
             />
             

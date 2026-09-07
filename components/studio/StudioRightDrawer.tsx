@@ -2672,15 +2672,15 @@ export default function StudioRightDrawer({
 
   return (
     <div 
-      className="flex flex-col h-full bg-zinc-950 border-l border-zinc-900 font-mono text-white select-none z-20 relative overflow-hidden"
+      className="flex flex-col h-full bg-[#14151a] border-l border-white/[0.06] font-sans text-zinc-100 select-none z-20 relative overflow-hidden"
       style={{ width }}
     >
       {/* 1. TOP HEADER & MULTI-PANE ACTIONS */}
-      <div className="h-12 border-b border-zinc-900 px-3 flex items-center justify-between bg-black flex-shrink-0">
+      <div className="h-13 border-b border-white/[0.06] px-3.5 flex items-center justify-between bg-[#14151a] flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Bot size={15} className="text-[#D8163F]" />
-          <span className="font-avathe text-xs tracking-wider text-zinc-200 uppercase">
-            {moduleCategory} // TOOLKIT
+          <Bot size={15} className="text-[#E53558]" />
+          <span className="font-semibold text-xs tracking-tight text-zinc-100 capitalize">
+            {moduleCategory} Toolkit
           </span>
         </div>
 
@@ -2695,7 +2695,7 @@ export default function StudioRightDrawer({
               }
               addToast({ title: 'COPILOT ENGAGED', message: 'Ready to assist in current workspace.', type: 'info' });
             }}
-            className="p-1.5 rounded hover:bg-zinc-900 text-zinc-500 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/[0.06] text-zinc-400 hover:text-white transition-colors"
             title="Open AI Copilot"
           >
             <Bot size={13} />
@@ -2704,7 +2704,7 @@ export default function StudioRightDrawer({
           {/* Split Pane Toggle Button */}
           <button 
             onClick={() => setSplitPane(!splitPane)} 
-            className={`p-1.5 rounded hover:bg-zinc-900 transition-colors ${splitPane ? 'text-[#D8163F] bg-[#D8163F]/10' : 'text-zinc-500 hover:text-white'}`}
+            className={`p-1.5 rounded-lg transition-colors ${splitPane ? 'text-[#3b82f6] bg-[#3b82f6]/10' : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'}`}
             title={splitPane ? "Close Split View" : "Toggle Vertical Split Pane (Deck A / Deck B)"}
           >
             <Columns size={13} />
@@ -2714,7 +2714,7 @@ export default function StudioRightDrawer({
           {onToggleExpand && (
             <button 
               onClick={onToggleExpand} 
-              className={`p-1.5 rounded hover:bg-zinc-900 transition-colors ${isExpanded ? 'text-[#D8163F]' : 'text-zinc-500 hover:text-white'}`}
+              className={`p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors ${isExpanded ? 'text-[#3b82f6]' : 'text-zinc-400 hover:text-white'}`}
               title={isExpanded ? "Collapse to 380px" : "Expand 50-50 Half Screen"}
             >
               {isExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -2724,8 +2724,8 @@ export default function StudioRightDrawer({
           {/* Close Button */}
           <button 
             onClick={onClose} 
-            className="p-1.5 rounded hover:bg-zinc-900 text-zinc-500 hover:text-white transition-colors"
-            title="Dock / Close Right Drawer (Esc)"
+            className="p-1.5 rounded-lg hover:bg-white/[0.06] text-zinc-400 hover:text-white transition-colors"
+            title="Close Right Drawer (Esc)"
           >
             <X size={14} />
           </button>
@@ -2734,15 +2734,15 @@ export default function StudioRightDrawer({
 
       {/* 2. DYNAMIC MODULE-TAILORED TAB BAR (SINGLE PANE MODE) */}
       {!splitPane && (
-        <div className="flex items-center border-b border-zinc-900 bg-zinc-950 px-2 py-1.5 gap-1 overflow-x-auto custom-scrollbar flex-shrink-0 text-[10px]">
+        <div className="flex items-center border-b border-white/[0.06] bg-[#16181d] px-2.5 py-1.5 gap-1.5 overflow-x-auto custom-scrollbar flex-shrink-0 text-xs">
           {/* Universal Copilot Chip when copilot is active outside streaming */}
           {!currentModuleTabs.some((t) => t.id === activeTab) && activeTab === 'copilot' && (
             <button
               onClick={() => setActiveTab('copilot')}
-              className="px-2.5 py-1 rounded transition-colors whitespace-nowrap flex items-center gap-1.5 bg-[#D8163F] text-black font-bold shadow-[0_0_8px_rgba(216,22,63,0.4)] flex-shrink-0"
+              className="px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 bg-[#E53558] text-white font-medium shadow-sm shadow-[#E53558]/30 flex-shrink-0"
             >
               <Bot size={11} />
-              <span>🤖 Copilot</span>
+              <span>Copilot</span>
             </button>
           )}
           {currentModuleTabs.map((tab) => {
@@ -2752,14 +2752,14 @@ export default function StudioRightDrawer({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${
                   isTabActive 
-                    ? 'bg-[#D8163F] text-black font-bold shadow-[0_0_8px_rgba(216,22,63,0.4)]' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    ? 'bg-white/[0.08] text-white font-medium shadow-sm' 
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                 }`}
               >
-                <Icon size={11} />
-                <span>{tab.shortLabel}</span>
+                <Icon size={12} />
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -2768,20 +2768,19 @@ export default function StudioRightDrawer({
 
       {/* 3. MAIN WORKBENCH: FULL-HEIGHT vs VERTICAL SPLIT PANE */}
       {!splitPane ? (
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative">
-          <div className="absolute inset-0 bayer-dither opacity-5 pointer-events-none" />
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative bg-[#14151a]">
           {renderTabContent(activeTab)}
         </div>
       ) : (
         /* VERTICAL SPLIT PANE (TOP DECK A + BOTTOM DECK B) */
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[#14151a]">
           
           {/* TOP DECK A (PRIMARY CONTEXTUAL TOOL) */}
-          <div className="flex-1 flex flex-col min-h-0 border-b border-zinc-800 bg-zinc-950/60 overflow-hidden">
-            <div className="h-8 px-2 bg-black border-b border-zinc-900 flex items-center justify-between flex-shrink-0 text-[10px] gap-2">
-              <div className="flex items-center gap-1.5 font-bold text-zinc-300 min-w-0 flex-shrink truncate">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D8163F] flex-shrink-0" />
-                <span className="uppercase text-[9px] truncate">DECK A // {activeTab.replace('-', ' ')}</span>
+          <div className="flex-1 flex flex-col min-h-0 border-b border-white/[0.06] bg-[#14151a] overflow-hidden">
+            <div className="h-8 px-2.5 bg-[#16181d] border-b border-white/[0.06] flex items-center justify-between flex-shrink-0 text-xs gap-2">
+              <div className="flex items-center gap-1.5 font-medium text-zinc-300 min-w-0 flex-shrink truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E53558] flex-shrink-0" />
+                <span className="capitalize text-[11px] truncate">Deck A • {activeTab.replace('-', ' ')}</span>
               </div>
 
               {/* Module Tabs for Deck A */}
@@ -2790,12 +2789,12 @@ export default function StudioRightDrawer({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap transition-colors ${
-                      activeTab === tab.id ? 'bg-[#D8163F] text-black font-bold' : 'text-zinc-500 hover:text-white'
+                    className={`px-2 py-0.5 rounded text-[10px] whitespace-nowrap transition-colors ${
+                      activeTab === tab.id ? 'bg-[#E53558] text-white font-medium' : 'text-zinc-400 hover:text-white'
                     }`}
                     title={tab.label}
                   >
-                    {tab.shortLabel}
+                    {tab.label}
                   </button>
                 ))}
               </div>
@@ -2807,34 +2806,34 @@ export default function StudioRightDrawer({
           </div>
 
           {/* SKEUOMORPHIC SPLIT DIVIDER & DECK B SELECTOR */}
-          <div className="h-7 bg-black border-y border-zinc-800 px-2 flex items-center justify-between text-[9px] text-zinc-500 font-mono tracking-wider flex-shrink-0 gap-2">
-            <span className="font-bold text-zinc-400 truncate">═ DECK B ═</span>
+          <div className="h-7 bg-[#16181d] border-y border-white/[0.06] px-2.5 flex items-center justify-between text-[10px] text-zinc-400 font-mono tracking-wider flex-shrink-0 gap-2">
+            <span className="font-semibold text-zinc-300 truncate">DECK B</span>
             <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar flex-shrink-0">
               <button
                 onClick={() => setSplitBottomTab('copilot')}
-                className={`px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap transition-colors ${
-                  splitBottomTab === 'copilot' ? 'text-black font-bold bg-[#D8163F]' : 'text-zinc-500 hover:text-white'
+                className={`px-2 py-0.5 rounded text-[10px] whitespace-nowrap transition-colors ${
+                  splitBottomTab === 'copilot' ? 'text-white font-medium bg-[#3b82f6]' : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                🤖 Copilot
+                Copilot
               </button>
               {currentModuleTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setSplitBottomTab(tab.id)}
-                  className={`px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap transition-colors ${
-                    splitBottomTab === tab.id ? 'text-black font-bold bg-[#D8163F]' : 'text-zinc-500 hover:text-white'
+                  className={`px-2 py-0.5 rounded text-[10px] whitespace-nowrap transition-colors ${
+                    splitBottomTab === tab.id ? 'text-white font-medium bg-[#3b82f6]' : 'text-zinc-400 hover:text-white'
                   }`}
                   title={tab.label}
                 >
-                  {tab.shortLabel}
+                  {tab.label}
                 </button>
               ))}
             </div>
           </div>
 
           {/* BOTTOM DECK B (SECONDARY TOOL) */}
-          <div className="flex-1 flex flex-col min-h-0 bg-zinc-950 overflow-y-auto custom-scrollbar p-3">
+          <div className="flex-1 flex flex-col min-h-0 bg-[#14151a] overflow-y-auto custom-scrollbar p-3">
             {renderTabContent(splitBottomTab)}
           </div>
         </div>
