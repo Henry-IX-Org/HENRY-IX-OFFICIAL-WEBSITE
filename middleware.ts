@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -26,6 +26,7 @@ function isDevEnvironment(hostname: string): boolean {
   return (
     lower.includes('localhost') ||
     lower.includes('127.0.0.1') ||
+    lower.endsWith('.workers.dev') ||
     process.env.NODE_ENV !== 'production'
   );
 }

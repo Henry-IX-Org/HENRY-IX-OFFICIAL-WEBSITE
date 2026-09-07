@@ -27,9 +27,6 @@
   "queues": {
     "producers": [
       { "binding": "EMAIL_QUEUE", "queue": "contact-emails" }
-    ],
-    "consumers": [
-      { "queue": "contact-emails", "max_batch_size": 10 }
     ]
   },
   "observability": {
@@ -42,12 +39,18 @@
     }
   },
   "vars": {
-    "NEXT_PUBLIC_SANITY_DATASET": "production",
-    "NEXT_PUBLIC_SANITY_PROJECT_ID": "r6mln4n3",
     "NEXT_PUBLIC_USE_CLOUDFLARE_R2": "true",
     "R2_BUCKET_NAME": "websiteassets",
     "R2_ENDPOINT": "https://c7c5ff43a8ae174ad91e2668de0ad7f0.r2.cloudflarestorage.com",
     "NEXT_PUBLIC_STORAGE_BASE_URL": "https://pub-c7c5ff43a8ae174ad91e2668de0ad7f0.r2.dev",
-    "GOOGLE_CALENDAR_ID": "5b5f645880a3408ee94d4cd64091ed3f84a52cdeb901923f11c0cdfbb793555a@group.calendar.google.com"
+    "GOOGLE_CALENDAR_ID": "5b5f645880a3408ee94d4cd64091ed3f84a52cdeb901923f11c0cdfbb793555a@group.calendar.google.com",
+    "NOTION_ASSETS_DB_ID": "6472955a-5f46-46ee-beb0-e1d0404f8ca1",
+    "NOTION_SETS_DB_ID": "00c67473-24ed-4b74-a194-4364f640a13d",
+    "NOTION_SET_TRACKS_DB_ID": "cb8a2ef8-2785-48b9-8e41-dcf2b9a7c36a",
+    "NOTION_MUSIC_LIBRARY_DB_ID": "36b39285-d06b-4f46-a76c-5ff8e14d2880",
+    "NOTION_BOOKINGS_DB_ID": "40826b67-e077-4713-a899-d532c81d9429",
+    "NOTION_CLIENTS_DB_ID": "693e5e41-ce91-4cf1-8a9d-b4b6fc70678f",
+    "NOTION_FINANCE_DB_ID": "787f1742-dfb8-4cba-a0ea-73595f4c40b8",
+    "NOTION_CONTENT_CALENDAR_DB_ID": "48e1a1ef-6916-43b9-a2cb-05bb8508f75c"
   }
 }
