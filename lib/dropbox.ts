@@ -13,8 +13,46 @@ export interface DropboxAccountInfo {
 // In-memory cache for temporary streaming links (valid for 4 hours; cached for 3.5 hours)
 const linkCache = new Map<string, { link: string; expiresAt: number }>();
 
-function getAccessToken(): string {
-  return process.env.DROPBOX_ACCESS_TOKEN || '';
+let inMemoryAccessToken = process.env.DROPBOX_ACCESS_TOKEN || '';
+let tokenExpiryTime = Date.now() + 14_000_000; // ~4 hours
+
+export async function getValidAccessToken(): Promise<string> {
+  const refreshToken = process.env.DROPBOX_REFRESH_TOKEN;
+  const appKey = process.env.DROPBOX_APP_KEY;
+  const appSecret = process.env.DROPBOX_APP_SECRET;
+
+  // Auto-refresh when token is within 5 minutes of expiring or missing
+  if ((!inMemoryAccessToken || Date.now() > tokenExpiryTime - 300_000) && refreshToken && appKey && appSecret) {
+    try {
+      const creds = Buffer.from(`${appKey}:${appSecret}`).toString('base64');
+      const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${creds}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+        }),
+      });
+
+      if (res.ok) {
+        const data: any = await res.json();
+        if (data.access_token) {
+          inMemoryAccessToken = data.access_token;
+          tokenExpiryTime = Date.now() + (data.expires_in || 14400) * 1000;
+          return inMemoryAccessToken;
+        }
+      } else {
+        console.warn('[Dropbox Refresh Error]', await res.text());
+      }
+    } catch (err) {
+      console.warn('[Dropbox Auto-Refresh Warning]', err);
+    }
+  }
+
+  return inMemoryAccessToken || process.env.DROPBOX_ACCESS_TOKEN || '';
 }
 
 /**
@@ -54,7 +92,7 @@ export function resolveDropboxPath(fileLocation: string): string | null {
  * The link supports HTTP Range requests for instant seeking and Web Audio processing.
  */
 export async function getDropboxTemporaryLink(path: string): Promise<string | null> {
-  const token = getAccessToken();
+  const token = await getValidAccessToken();
   if (!token || !path) return null;
 
   // Check cache
@@ -99,7 +137,7 @@ export async function getDropboxTemporaryLink(path: string): Promise<string | nu
  * Fallback search: If an exact folder path has moved or changed, search Dropbox for the audio filename.
  */
 export async function searchDropboxAudioFile(query: string): Promise<string | null> {
-  const token = getAccessToken();
+  const token = await getValidAccessToken();
   if (!token || !query) return null;
 
   try {
@@ -180,7 +218,7 @@ export async function getAudioStreamForTrack(track: {
  * Returns connected account status for Settings modal
  */
 export async function getDropboxAccountInfo(): Promise<DropboxAccountInfo> {
-  const token = getAccessToken();
+  const token = await getValidAccessToken();
   if (!token) {
     return { accountId: '', name: '', email: '', connected: false };
   }
