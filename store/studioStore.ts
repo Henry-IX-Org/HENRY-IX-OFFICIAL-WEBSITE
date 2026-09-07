@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { StudioUserProfile } from '@/lib/studioAuth';
 
 export interface CuePoint {
   letter: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
@@ -90,7 +91,6 @@ export interface StudioSettings {
   ditherEnabled: boolean;
   density: 'compact' | 'standard' | 'spacious';
   fontScale: string;
-  masterPin: string;
   panicDuration: string;
   homeAddress: string;
   safetyBuffer: string;
@@ -98,6 +98,9 @@ export interface StudioSettings {
 }
 
 export interface StudioState {
+  // Authentication & Current Operator
+  currentUser: StudioUserProfile | null;
+
   // Navigation & UI
   activeView: string;
   sidebarCollapsed: boolean;
@@ -185,6 +188,11 @@ export interface StudioState {
   fetchRealGigs: () => Promise<void>;
   fetchContentPosts: () => Promise<void>;
   setGigs: (gigs: StudioGig[]) => void;
+
+  // Authentication Actions
+  setCurrentUser: (user: StudioUserProfile | null) => void;
+  updateCurrentUser: (updater: Partial<StudioUserProfile>) => void;
+  fetchCurrentSession: () => Promise<StudioUserProfile | null>;
 
   // Settings Actions
   updateSettings: (patch: Partial<StudioSettings>) => void;
@@ -400,6 +408,9 @@ export const useStudioStore = create<StudioState>()(
       smartCropMode: 'none',
       watermarkActive: false,
 
+      // Authentication & Current Operator
+      currentUser: null,
+
       // Social
       instagramGrid: DEFAULT_POSTS,
 
@@ -410,7 +421,6 @@ export const useStudioStore = create<StudioState>()(
         ditherEnabled: true,
         density: 'standard',
         fontScale: '100',
-        masterPin: '180800',
         panicDuration: '1.5',
         homeAddress: 'London, UK',
         safetyBuffer: '30',
@@ -743,6 +753,26 @@ export const useStudioStore = create<StudioState>()(
           gigs,
           activeGigId: gigs.length > 0 ? gigs[0].id : '',
         });
+      },
+
+      // Authentication Actions
+      setCurrentUser: (user) => set({ currentUser: user }),
+      updateCurrentUser: (updater) => set((s) => ({
+        currentUser: s.currentUser ? { ...s.currentUser, ...updater } : null,
+      })),
+      fetchCurrentSession: async () => {
+        try {
+          const res = await fetch('/api/studio/auth/session');
+          const data = (await res.json()) as any;
+          if (data.authenticated && data.user) {
+            set({ currentUser: data.user });
+            return data.user;
+          }
+          set({ currentUser: null });
+          return null;
+        } catch {
+          return null;
+        }
       },
 
       // Settings
