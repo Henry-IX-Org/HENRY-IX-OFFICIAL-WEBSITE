@@ -1,38 +1,67 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import React from 'react';
 import { RightDrawerTab } from './types';
 
-// Tab Driver Registry (Dynamic Load on Demand, SSR False)
+// Module 01: Streaming
+import TelemetryTab from './tabs/streaming/TelemetryTab';
+import LiveChatTab from './tabs/streaming/LiveChatTab';
+import ClipsTab from './tabs/streaming/ClipsTab';
+import CopilotTab from './tabs/shared/CopilotTab';
+
+// Module 02: Music
+import DJUtilityTab from './tabs/music/DJUtilityTab';
+import HarmonicMatchTab from './tabs/music/HarmonicMatchTab';
+import SetlistTab from './tabs/music/SetlistTab';
+import StoryDnaTab from './tabs/music/StoryDnaTab';
+
+// Module 03: Assets
+import AssetInspectorTab from './tabs/assets/AssetInspectorTab';
+import SmartCropTab from './tabs/assets/SmartCropTab';
+import R2SyncTab from './tabs/assets/R2SyncTab';
+import EPKBuilderTab from './tabs/assets/EPKBuilderTab';
+
+// Module 04: Gigs
+import LogisticsTab from './tabs/gigs/LogisticsTab';
+import ChecklistTab from './tabs/gigs/ChecklistTab';
+import FinanceTab from './tabs/gigs/FinanceTab';
+import AdmissionsTab from './tabs/gigs/AdmissionsTab';
+
+// Module 05: Social
+import PromoBuilderTab from './tabs/social/PromoBuilderTab';
+import GridPreviewTab from './tabs/social/GridPreviewTab';
+import StoryCardTab from './tabs/social/StoryCardTab';
+import VipBroadcastTab from './tabs/social/VipBroadcastTab';
+
+// Tab Driver Registry (Direct static mapping to eliminate async ChunkLoadError)
 export const DRAWER_TAB_REGISTRY: Record<RightDrawerTab, React.ComponentType> = {
   // Module 01: Streaming
-  'stream-telemetry': dynamic(() => import('./tabs/streaming/TelemetryTab'), { ssr: false }),
-  'live-chat': dynamic(() => import('./tabs/streaming/LiveChatTab'), { ssr: false }),
-  'copilot': dynamic(() => import('./tabs/shared/CopilotTab'), { ssr: false }),
-  'stream-clips': dynamic(() => import('./tabs/streaming/ClipsTab'), { ssr: false }),
+  'stream-telemetry': TelemetryTab,
+  'live-chat': LiveChatTab,
+  'copilot': CopilotTab,
+  'stream-clips': ClipsTab,
 
   // Module 02: Music
-  'dj-utility': dynamic(() => import('./tabs/music/DJUtilityTab'), { ssr: false }),
-  'harmonic-match': dynamic(() => import('./tabs/music/HarmonicMatchTab'), { ssr: false }),
-  'setlist': dynamic(() => import('./tabs/music/SetlistTab'), { ssr: false }),
-  'story-dna': dynamic(() => import('./tabs/music/StoryDnaTab'), { ssr: false }),
+  'dj-utility': DJUtilityTab,
+  'harmonic-match': HarmonicMatchTab,
+  'setlist': SetlistTab,
+  'story-dna': StoryDnaTab,
 
   // Module 03: Assets
-  'assets': dynamic(() => import('./tabs/assets/AssetInspectorTab'), { ssr: false }),
-  'crop-watermark': dynamic(() => import('./tabs/assets/SmartCropTab'), { ssr: false }),
-  'r2-sync': dynamic(() => import('./tabs/assets/R2SyncTab'), { ssr: false }),
-  'epk': dynamic(() => import('./tabs/assets/EPKBuilderTab'), { ssr: false }),
+  'assets': AssetInspectorTab,
+  'crop-watermark': SmartCropTab,
+  'r2-sync': R2SyncTab,
+  'epk': EPKBuilderTab,
 
   // Module 04: Gigs
-  'logistics': dynamic(() => import('./tabs/gigs/LogisticsTab'), { ssr: false }),
-  'checklist': dynamic(() => import('./tabs/gigs/ChecklistTab'), { ssr: false }),
-  'finance': dynamic(() => import('./tabs/gigs/FinanceTab'), { ssr: false }),
-  'admissions': dynamic(() => import('./tabs/gigs/AdmissionsTab'), { ssr: false }),
+  'logistics': LogisticsTab,
+  'checklist': ChecklistTab,
+  'finance': FinanceTab,
+  'admissions': AdmissionsTab,
 
   // Module 05: Social
-  'promo': dynamic(() => import('./tabs/social/PromoBuilderTab'), { ssr: false }),
-  'grid-preview': dynamic(() => import('./tabs/social/GridPreviewTab'), { ssr: false }),
-  'story-card': dynamic(() => import('./tabs/social/StoryCardTab'), { ssr: false }),
-  'vip-broadcast': dynamic(() => import('./tabs/social/VipBroadcastTab'), { ssr: false }),
+  'promo': PromoBuilderTab,
+  'grid-preview': GridPreviewTab,
+  'story-card': StoryCardTab,
+  'vip-broadcast': VipBroadcastTab,
 };

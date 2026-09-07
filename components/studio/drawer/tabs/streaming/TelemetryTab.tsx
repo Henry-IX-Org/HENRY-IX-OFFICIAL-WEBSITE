@@ -79,7 +79,7 @@ export default function TelemetryTab() {
         <div className="pt-2 border-t border-white/[0.08] flex flex-wrap gap-2">
           <button
             onClick={handleMarkClip}
-            className="flex-1 min-w-[120px] py-2 rounded-lg bg-[#E53558] text-white font-medium text-xs hover:bg-[#d82a4d] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+            className="flex-1 min-w-[120px] py-2 rounded-lg bg-[#D8163F] text-white font-medium text-xs hover:bg-[#c21337] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
           >
             <Sparkles size={13} />
             <span>Mark 60s Clip</span>

@@ -23,6 +23,53 @@ import { DRAWER_TAB_REGISTRY } from './drawer/registry';
 export type { RightDrawerTab, TabConfig, StudioRightDrawerProps };
 export { MODULE_TABS, VIEW_DEFAULT_TABS, getActiveModuleCategory };
 
+interface TabErrorBoundaryProps {
+  tabName: string;
+  children: React.ReactNode;
+}
+
+interface TabErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class TabErrorBoundary extends React.Component<TabErrorBoundaryProps, TabErrorBoundaryState> {
+  constructor(props: TabErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): TabErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(`Error in drawer tab [${this.props.tabName}]:`, error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 rounded-xl border border-red-900/40 bg-red-950/20 text-xs space-y-2 font-sans m-2">
+          <div className="text-red-400 font-semibold font-mono flex items-center gap-1.5">
+            <span>⚠️</span> Tab Rendering Error ({this.props.tabName})
+          </div>
+          <p className="text-zinc-400 text-[11px]">
+            {this.state.error?.message || 'An unexpected error occurred while loading this tab.'}
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-mono transition-colors"
+          >
+            Retry Tab
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function StudioRightDrawer({
   isOpen,
   onClose,
@@ -88,7 +135,18 @@ export default function StudioRightDrawer({
 
   const renderTabContent = (tabKey: RightDrawerTab) => {
     const Component = DRAWER_TAB_REGISTRY[tabKey] || DRAWER_TAB_REGISTRY['copilot'];
-    return <Component />;
+    if (!Component) {
+      return (
+        <div className="p-4 text-xs text-zinc-400 font-mono">
+          Tab [{tabKey}] currently unavailable.
+        </div>
+      );
+    }
+    return (
+      <TabErrorBoundary tabName={tabKey}>
+        <Component />
+      </TabErrorBoundary>
+    );
   };
 
   return (
