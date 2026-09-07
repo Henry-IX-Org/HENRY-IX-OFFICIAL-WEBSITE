@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playClick } from '@/lib/audioUtils';
+import { TurnstileWidget, TurnstileWidgetHandle } from './TurnstileWidget';
 
 export { GigSchedule as Schedule } from './GigSchedule';
 export { NewsletterForm as MailingList } from './NewsletterForm';
@@ -14,13 +15,35 @@ const SPRING_CONFIG = { type: "spring" as const, stiffness: 300, damping: 20 };
 
 export function MerchVault({ isDepth }: { isDepth: boolean }) {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'submitted'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'submitted' | 'error'>('idle');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !turnstileToken) return;
     playClick(900, 'sine', 0.03);
-    setStatus('submitted');
+    setStatus('loading');
+
+    try {
+      const res = await fetch('/api/notifications/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, turnstileToken }),
+      });
+
+      if (res.ok) {
+        setStatus('submitted');
+      } else {
+        setStatus('error');
+        turnstileRef.current?.reset();
+        setTurnstileToken('');
+      }
+    } catch {
+      setStatus('error');
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
+    }
   };
 
   return (
@@ -53,22 +76,33 @@ export function MerchVault({ isDepth }: { isDepth: boolean }) {
             <span>Access Granted</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex w-full md:w-auto items-stretch gap-2">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ENTER EMAIL..."
-              className="bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary font-mono tracking-wider w-full md:w-56"
+          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row w-full md:w-auto items-center gap-3">
+            <div className="flex w-full md:w-auto items-stretch gap-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ENTER EMAIL..."
+                className="bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary font-mono tracking-wider w-full md:w-56"
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading' || !turnstileToken}
+                className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold px-4 py-2 text-xs uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <span>{status === 'loading' ? 'Joining...' : 'Join'}</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+            <TurnstileWidget
+              ref={turnstileRef}
+              action="subscribe"
+              onVerify={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken('')}
+              onExpire={() => setTurnstileToken('')}
+              className="my-0"
             />
-            <button
-              type="submit"
-              className="bg-primary hover:bg-primary/90 text-black font-bold px-4 py-2 text-xs uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer shrink-0"
-            >
-              <span>Join</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
           </form>
         )}
       </div>

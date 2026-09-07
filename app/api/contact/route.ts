@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { saveContactSubmissionToD1, queueEmailPayload, verifyTurnstileToken } from '@/lib/cloudflare';
+import { saveContactSubmissionToD1, queueEmailPayload } from '@/lib/cloudflare';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 export async function POST(req: Request) {
   try {
@@ -26,15 +27,14 @@ export async function POST(req: Request) {
     const cleanSubject = subject ? String(subject).trim().slice(0, 150) : '';
     const cleanMessage = String(message).trim().slice(0, 3000);
 
-    // Verify Turnstile if token is provided
-    if (turnstileToken) {
-      const isHuman = await verifyTurnstileToken(turnstileToken);
-      if (!isHuman) {
-        return NextResponse.json(
-          { error: 'Turnstile verification failed.' },
-          { status: 400 }
-        );
-      }
+    // Verify Turnstile (Action: contact)
+    const clientIp = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken, 'contact', clientIp);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { error: 'Security verification failed. Please refresh and try again.' },
+        { status: 403 }
+      );
     }
 
     // Save to D1 database

@@ -1,13 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createNotionSubscriberLead } from '@/lib/notion';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json().catch(() => ({}))) as { subscription?: any; email?: string };
+    const body = (await req.json().catch(() => ({}))) as {
+      subscription?: any;
+      email?: string;
+      turnstileToken?: string;
+      'cf-turnstile-response'?: string;
+    };
     const { subscription, email } = body;
+    const token = body.turnstileToken || body['cf-turnstile-response'];
+
+    // Gate on Turnstile bot verification (Action: 'subscribe')
+    const clientIp = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    const turnstileCheck = await verifyTurnstileToken(token, 'subscribe', clientIp);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { error: 'Security verification failed. Please refresh and try again.' },
+        { status: 403 }
+      );
+    }
 
     if (!subscription && !email) {
       return NextResponse.json({ error: 'Missing subscription details or email' }, { status: 400 });

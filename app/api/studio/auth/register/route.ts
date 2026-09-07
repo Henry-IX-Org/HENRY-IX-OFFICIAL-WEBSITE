@@ -8,11 +8,23 @@ import {
 } from '@/lib/studioAuth';
 import type { StudioRole } from '@/lib/studioPermissions';
 import { ALL_STUDIO_ROLES } from '@/lib/studioPermissions';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as any;
     const { email, name, role, inviteToken } = body;
+    const turnstileToken = body.turnstileToken || body['cf-turnstile-response'];
+
+    // Cloudflare Turnstile Bot Verification (Action: 'studio_auth')
+    const clientIp = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken, 'studio_auth', clientIp);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { error: 'Security verification failed. Please complete the security check and try again.' },
+        { status: 403 }
+      );
+    }
 
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email address required' }, { status: 400 });

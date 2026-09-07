@@ -21,6 +21,7 @@ import {
 import { playTactileClick, playNotificationChime } from '@/lib/studioAudioFeedback';
 import type { StudioRole } from '@/lib/studioPermissions';
 import { ALL_STUDIO_ROLES, ROLE_METADATA } from '@/lib/studioPermissions';
+import { TurnstileWidget, TurnstileWidgetHandle } from '@/components/TurnstileWidget';
 
 type AuthView = 'sign-in' | 'register';
 
@@ -35,6 +36,10 @@ export default function StudioPage() {
   const [regEmail, setRegEmail] = useState('');
   const [regRole, setRegRole] = useState<StudioRole>('manager');
   const [inviteToken, setInviteToken] = useState<string | null>(null);
+
+  // Turnstile Bot Protection State
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   // UI State
   const [isLoading, setIsLoading] = useState(false);
@@ -123,6 +128,11 @@ export default function StudioPage() {
       return;
     }
 
+    if (!turnstileToken) {
+      setErrorMessage('Please complete the security verification challenge to proceed.');
+      return;
+    }
+
     playTactileClick();
     setIsLoading(true);
     setErrorMessage(null);
@@ -132,12 +142,14 @@ export default function StudioPage() {
       const res = await fetch('/api/studio/auth/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', email: emailToUse }),
+        body: JSON.stringify({ action: 'login', email: emailToUse, turnstileToken }),
       });
       const data = (await res.json()) as any;
 
       if (!res.ok) {
         setErrorMessage(data.error || 'Sign in failed. Please check credentials or register.');
+        turnstileRef.current?.reset();
+        setTurnstileToken('');
         return;
       }
 
@@ -146,6 +158,8 @@ export default function StudioPage() {
       setIsAuthenticated(true);
     } catch {
       setErrorMessage('Unable to connect to studio server. Please retry.');
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +183,11 @@ export default function StudioPage() {
       return;
     }
 
+    if (!turnstileToken) {
+      setErrorMessage('Please complete the security verification challenge to proceed.');
+      return;
+    }
+
     playTactileClick();
     setIsLoading(true);
     setErrorMessage(null);
@@ -183,12 +202,15 @@ export default function StudioPage() {
           email: cleanEmail,
           role: regRole,
           inviteToken: inviteToken || undefined,
+          turnstileToken,
         }),
       });
       const data = (await res.json()) as any;
 
       if (!res.ok) {
         setErrorMessage(data.error || 'Registration failed. Please try again.');
+        turnstileRef.current?.reset();
+        setTurnstileToken('');
         return;
       }
 
@@ -197,6 +219,8 @@ export default function StudioPage() {
       setIsAuthenticated(true);
     } catch {
       setErrorMessage('Server connection failed during registration.');
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
     } finally {
       setIsLoading(false);
     }
@@ -383,6 +407,8 @@ export default function StudioPage() {
                   playTactileClick();
                   setAuthView('sign-in');
                   setErrorMessage(null);
+                  setTurnstileToken('');
+                  turnstileRef.current?.reset();
                 }}
                 className={`py-2 px-3 rounded-md font-medium transition-colors flex items-center justify-center gap-1.5 ${
                   authView === 'sign-in'
@@ -400,6 +426,8 @@ export default function StudioPage() {
                   playTactileClick();
                   setAuthView('register');
                   setErrorMessage(null);
+                  setTurnstileToken('');
+                  turnstileRef.current?.reset();
                 }}
                 className={`py-2 px-3 rounded-md font-medium transition-colors flex items-center justify-center gap-1.5 ${
                   authView === 'register'
@@ -430,9 +458,18 @@ export default function StudioPage() {
                   </div>
                 </div>
 
+                <TurnstileWidget
+                  ref={turnstileRef}
+                  action="studio_auth"
+                  onVerify={(token) => setTurnstileToken(token)}
+                  onError={() => setTurnstileToken('')}
+                  onExpire={() => setTurnstileToken('')}
+                  className="my-2"
+                />
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !turnstileToken}
                   className="w-full py-2.5 px-4 bg-[#D8163F] hover:bg-[#c21337] active:bg-[#a8102f] text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                 >
                   {isLoading ? (
@@ -541,9 +578,18 @@ export default function StudioPage() {
                   </p>
                 </div>
 
+                <TurnstileWidget
+                  ref={turnstileRef}
+                  action="studio_auth"
+                  onVerify={(token) => setTurnstileToken(token)}
+                  onError={() => setTurnstileToken('')}
+                  onExpire={() => setTurnstileToken('')}
+                  className="my-2"
+                />
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !turnstileToken}
                   className="w-full py-2.5 px-4 bg-[#D8163F] hover:bg-[#c21337] active:bg-[#a8102f] text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm mt-2"
                 >
                   {isLoading ? (

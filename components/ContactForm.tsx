@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download, FileText, Cpu, Mail, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playClick, playTick } from '@/lib/audioUtils';
+import { TurnstileWidget, TurnstileWidgetHandle } from './TurnstileWidget';
 
 const SPRING_CONFIG = { type: "spring" as const, stiffness: 300, damping: 20 };
 
@@ -26,14 +27,18 @@ export function ContactForm({ isDepth = false }: ContactFormProps) {
     message: '',
   });
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) return;
     setStatus('sending');
     playClick(900, 'sine', 0.05);
 
     const fullPayload = {
       ...formData,
+      turnstileToken,
       subject: `[BOOKING] ${eventType} - ${region} (${eventDate || 'DATE TBD'})`,
       message: `--- PRO DJ BOOKING SPECIFICATION ---\n` +
         `EVENT TYPE: ${eventType}\n` +
@@ -55,9 +60,13 @@ export function ContactForm({ isDepth = false }: ContactFormProps) {
         setStatus('sent');
       } else {
         setStatus('error');
+        turnstileRef.current?.reset();
+        setTurnstileToken('');
       }
     } catch {
       setStatus('error');
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
     }
   };
 
@@ -352,10 +361,18 @@ export function ContactForm({ isDepth = false }: ContactFormProps) {
             />
           </div>
 
+          <TurnstileWidget
+            ref={turnstileRef}
+            action="contact"
+            onVerify={(token) => setTurnstileToken(token)}
+            onError={() => setTurnstileToken('')}
+            onExpire={() => setTurnstileToken('')}
+          />
+
           <button
             type="submit"
-            disabled={status === 'sending'}
-            className="w-full bg-primary hover:bg-primary/90 text-black font-mono font-bold text-xs tracking-[0.2em] uppercase py-4 transition-all cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-neon-glow"
+            disabled={status === 'sending' || !turnstileToken}
+            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-black font-mono font-bold text-xs tracking-[0.2em] uppercase py-4 transition-all cursor-pointer flex items-center justify-center gap-2 mt-2 shadow-neon-glow"
           >
             <span>{status === 'sending' ? 'DISPATCHING BOOKING...' : 'DISPATCH BOOKING INQUIRY'}</span>
             <ArrowRight className="w-4 h-4" />
