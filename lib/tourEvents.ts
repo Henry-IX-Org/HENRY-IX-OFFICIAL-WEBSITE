@@ -9,6 +9,7 @@
  */
 
 import { getNotionBookings, NotionBooking } from './notion';
+import { fetchWithKVCache } from './cloudflare';
 
 export interface TourEvent {
   id: string;
@@ -554,10 +555,13 @@ export async function fetchGoogleCalendarGigs(): Promise<TourEvent[] | null> {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
   if (!calendarId) return null;
 
-  try {
-    const url = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
-    const res = await fetch(url, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
+  return fetchWithKVCache(
+    `gcal_events_${calendarId}`,
+    async () => {
+      try {
+        const url = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calendarId)}/public/basic.ics`;
+        const res = await fetch(url, { next: { revalidate: 3600 } });
+        if (!res.ok) return null;
 
     const icsText = await res.text();
     const parsedEvents: any[] = [];
@@ -648,6 +652,9 @@ export async function fetchGoogleCalendarGigs(): Promise<TourEvent[] | null> {
     console.warn('[TourEvents] Google Calendar parsing error:', err);
     return null;
   }
+    },
+    3600
+  );
 }
 
 /**
@@ -660,12 +667,18 @@ export async function fetchPublicTourEvents(): Promise<{
   source: 'notion' | 'calendar' | 'verified';
   count: number;
 }> {
-  // 1. Attempt Notion Bookings
+  // 1. Attempt Notion Bookings (Cached in Cloudflare KV)
   try {
-    const bookings = await getNotionBookings().catch((err) => {
-      console.warn('[TourEvents] Notion query error, falling back:', err);
-      return [];
-    });
+    const bookings = await fetchWithKVCache(
+      'notion_tour_bookings',
+      async () => {
+        return await getNotionBookings().catch((err) => {
+          console.warn('[TourEvents] Notion query error, falling back:', err);
+          return [];
+        });
+      },
+      1800
+    );
 
     if (Array.isArray(bookings) && bookings.length > 0) {
       // Filter for confirmed/contract gigs:

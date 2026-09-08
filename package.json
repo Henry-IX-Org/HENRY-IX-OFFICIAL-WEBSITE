@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf .open-next && opennextjs-cloudflare build",
+    "build": "node -e \"try{require('fs').rmSync('.open-next',{recursive:true,force:true})}catch(e){}\" && opennextjs-cloudflare build",
     "build:next": "next build",
     "start": "next start",
     "lint": "next lint",

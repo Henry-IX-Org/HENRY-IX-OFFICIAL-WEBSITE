@@ -3,6 +3,9 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', 'motion'],
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

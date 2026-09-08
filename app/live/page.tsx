@@ -1,15 +1,24 @@
 import LiveClient from './live-client';
 import { Metadata } from 'next';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
-  title: 'Live Transmission Broadcasts | HENRY IX',
-  description: 'Tune in to live streaming performance sets, studio rehearsals, and archives for DJ Henry IX.',
+  title: 'Live Stream & Studio Sessions | HENRY IX',
+  description: 'Tune in to live streaming DJ sets, studio rehearsals, and multi-camera live broadcasts from DJ Henry IX in London.',
+  keywords: [
+    'HENRY IX Live',
+    'Live DJ Stream',
+    'UK Garage Stream',
+    'London DJ Live',
+    'Studio Broadcast',
+  ],
   alternates: {
     canonical: 'https://henryix.com/live',
   },
   openGraph: {
-    title: 'Live Transmission Broadcasts | HENRY IX',
-    description: 'Tune in to live streaming performance sets, studio rehearsals, and archives for DJ Henry IX.',
+    title: 'Live Stream & Studio Sessions | HENRY IX',
+    description: 'Tune in to live streaming DJ sets, studio rehearsals, and multi-camera live broadcasts from DJ Henry IX in London.',
     url: 'https://henryix.com/live',
     siteName: 'HENRY IX DJ',
     locale: 'en_GB',

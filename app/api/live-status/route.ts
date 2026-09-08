@@ -100,14 +100,23 @@ export async function POST(req: NextRequest) {
               : `🚨 BROADCAST ALERT: Going Live in ${parsedCountdown} Minutes! | HENRY IX`;
 
             const bodyHtml = `
-              <div style="background-color:#000000; color:#ffffff; font-family:'OCR A', monospace; padding:30px; border:2px solid #D8163F;">
-                <h1 style="color:#D8163F; letter-spacing:2px;">HENRY IX TRANSMISSION SIGNAL</h1>
-                <p style="font-size:16px;">${subjectText}</p>
-                <p style="color:#a1a1aa;">Tune in directly on the official site for real-time low-latency visuals and high-fidelity audio.</p>
-                <div style="margin-top:25px;">
-                  <a href="https://henryix.com/live" style="background-color:#D8163F; color:#ffffff; padding:12px 24px; text-decoration:none; font-weight:bold; display:inline-block;">TUNE IN TO LIVE TRANSMISSION</a>
+              <div style="background-color:#000000; color:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding:36px; border:1px solid #27272a; max-width:560px; margin:0 auto; border-radius:12px;">
+                <div style="margin-bottom:24px;">
+                  <span style="font-family:'Courier New', monospace; font-size:11px; font-weight:700; letter-spacing:2px; color:#D8163F; text-transform:uppercase;">HENRY IX // LIVE</span>
                 </div>
-                <p style="margin-top:30px; font-size:11px; color:#52525b;">HENRY IX DJ STUDIO // BROADCAST CENTER</p>
+                <h1 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 12px 0; line-height:1.3;">${streamTitle}</h1>
+                <p style="color:#a1a1aa; font-size:14px; line-height:1.6; margin:0 0 24px 0;">Live streaming now with low-latency visuals and high-fidelity audio.</p>
+                <div>
+                  <a href="https://henryix.com/live" style="background-color:#D8163F; color:#ffffff; padding:12px 28px; text-decoration:none; font-weight:600; font-size:13px; border-radius:8px; display:inline-block; letter-spacing:0.5px;">WATCH LIVE STREAM</a>
+                </div>
+                <div style="margin-top:40px; padding-top:20px; border-top:1px solid #18181b; font-size:11px; color:#71717a; font-family:'Courier New', monospace;">
+                  <p style="margin:0 0 6px 0; color:#52525b;">HENRY IX OFFICIAL BROADCAST</p>
+                  <p style="margin:0;">
+                    <a href="https://henryix.com/preferences" style="color:#a1a1aa; text-decoration:underline;">Email Preferences</a>
+                    &nbsp;•&nbsp;
+                    <a href="https://henryix.com/unsubscribe" style="color:#a1a1aa; text-decoration:underline;">Unsubscribe</a>
+                  </p>
+                </div>
               </div>
             `;
 
@@ -116,6 +125,10 @@ export async function POST(req: NextRequest) {
               to: recipientEmails.slice(0, 50),
               subject: subjectText,
               html: bodyHtml,
+              headers: {
+                'List-Unsubscribe': '<https://henryix.com/unsubscribe>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
             });
             console.log(`Email alert sent via Resend from ${fromEmail} to ${recipientEmails.length} subscribers.`);
           }

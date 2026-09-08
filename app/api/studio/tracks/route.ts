@@ -89,13 +89,20 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
-      tracks: studioTracks,
-      nextCursor: page.nextCursor,
-      hasMore: page.hasMore,
-      count: studioTracks.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        tracks: studioTracks,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        count: studioTracks.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Error fetching studio tracks from Notion:', error);
     return NextResponse.json(

@@ -1,6 +1,8 @@
 import ContactClient from './contact-client';
 import { Metadata } from 'next';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Book DJ Henry IX | Contact & Inquiries',
   description: 'Book DJ Henry IX for live club events, festivals, private sessions, and corporate bookings. Send inquiries directly through our secure contact portal.',

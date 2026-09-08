@@ -14,6 +14,13 @@ function safeCompare(a: string, b: string): boolean {
   return result === 0 && a.length === b.length;
 }
 
+export const dynamic = 'force-static';
+
+export async function generateStaticParams() {
+  const expectedKey = process.env.PROMOTER_EPK_KEY || 'henryix-epk-press-2026';
+  return [{ key: expectedKey }];
+}
+
 export default async function PressKitPage({ params }: { params: Promise<{ key: string }> }) {
   const resolvedParams = await params;
   const expectedKey = process.env.PROMOTER_EPK_KEY || 'henryix-epk-press-2026';

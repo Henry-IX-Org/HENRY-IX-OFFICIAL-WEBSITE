@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import PageShell from '@/components/PageShell';
 import Link from 'next/link';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Privacy Policy & Legal Disclosures | HENRY IX',
   description: 'Official UK GDPR and PECR Privacy Policy, Cookie Policy, and Legal Disclosures for HENRY IX.',
@@ -121,6 +123,10 @@ export default function PrivacyPage() {
               <div className="border-l-2 border-purple-400 pl-3 py-1">
                 <strong className="text-white block">Resend Email API:</strong>
                 <span className="text-zinc-400 font-sans text-xs">Transactional email infrastructure for dispatching newsletter notifications and booking confirmation responses.</span>
+              </div>
+              <div className="border-l-2 border-red-500 pl-3 py-1">
+                <strong className="text-white block">Pinterest API:</strong>
+                <span className="text-zinc-400 font-sans text-xs">Integrated within the private backstage Studio for authenticating and syncing visual moodboards, stage concept design references, and album art inspiration boards. Pinterest access tokens and board metadata are stored securely, used exclusively for private creative direction, and never shared, sold, or used for third-party advertising.</span>
               </div>
             </div>
           </section>

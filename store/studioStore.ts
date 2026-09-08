@@ -234,9 +234,9 @@ export interface StudioState {
   isLoadingTracks: boolean;
   isLoadingGigs: boolean;
   isLoadingSocial: boolean;
-  fetchRealTracks: (search?: string, genre?: string) => Promise<void>;
-  fetchRealGigs: () => Promise<void>;
-  fetchContentPosts: () => Promise<void>;
+  fetchRealTracks: (search?: string, genre?: string, force?: boolean) => Promise<void>;
+  fetchRealGigs: (force?: boolean) => Promise<void>;
+  fetchContentPosts: (force?: boolean) => Promise<void>;
   setGigs: (gigs: StudioGig[]) => void;
 
   // Authentication Actions
@@ -1087,8 +1087,15 @@ export const useStudioStore = create<StudioState>()(
         });
       },
 
-      // Real Data Actions
-      fetchRealTracks: async (search?: string, genre?: string) => {
+      // Real Data Actions with In-Memory Caching & Deduplication
+      fetchRealTracks: async (search?: string, genre?: string, force = false) => {
+        const state = get();
+        if (state.isLoadingTracks) return;
+        // If tracks are already cached in memory without active search/filter, avoid redundant fetch
+        if (!force && !search && (!genre || genre === 'All') && state.trackCollection.length > DEFAULT_TRACKS.length) {
+          return;
+        }
+
         set({ isLoadingTracks: true });
         try {
           const params = new URLSearchParams();
@@ -1117,7 +1124,11 @@ export const useStudioStore = create<StudioState>()(
         }
       },
 
-      fetchRealGigs: async () => {
+      fetchRealGigs: async (force = false) => {
+        const state = get();
+        if (state.isLoadingGigs) return;
+        if (!force && state.gigs.length > 0) return;
+
         set({ isLoadingGigs: true });
         try {
           const res = await fetch('/api/studio/gigs');
@@ -1139,7 +1150,11 @@ export const useStudioStore = create<StudioState>()(
         }
       },
 
-      fetchContentPosts: async () => {
+      fetchContentPosts: async (force = false) => {
+        const state = get();
+        if (state.isLoadingSocial) return;
+        if (!force && state.instagramGrid.length > 0) return;
+
         set({ isLoadingSocial: true });
         try {
           const res = await fetch('/api/studio/social');

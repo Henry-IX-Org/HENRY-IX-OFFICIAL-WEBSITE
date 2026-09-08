@@ -40,9 +40,10 @@ export default function LiveBroadcastView({
   const [naturalDirector, setNaturalDirector] = useState(false);
   const [intermissionCountdown, setIntermissionCountdown] = useState<number | null>(null);
 
-  // Audio & Transient Engine
-  const [audioLevel, setAudioLevel] = useState<number>(45);
+  // Audio & Transient Engine (Direct DOM refs avoid 60-120 FPS React reconciliation loops)
   const [isMicLive, setIsMicLive] = useState(false);
+  const meterBarRef = useRef<HTMLDivElement>(null);
+  const meterTextRef = useRef<HTMLSpanElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -205,6 +206,8 @@ export default function LiveBroadcastView({
       audioContextRef.current?.close();
       audioContextRef.current = null;
       setIsMicLive(false);
+      if (meterBarRef.current) meterBarRef.current.style.width = '0%';
+      if (meterTextRef.current) meterTextRef.current.textContent = '0%';
       addToast({
         title: 'BOOTH MIC DISCONNECTED',
         message: 'Audio input monitor disabled.',
@@ -247,7 +250,15 @@ export default function LiveBroadcastView({
           bassSum += dataArray[i];
         }
         const avgBass = bassSum / 8;
-        setAudioLevel(Math.min(100, Math.round((avgBass / 255) * 100)));
+        const level = Math.min(100, Math.round((avgBass / 255) * 100));
+
+        // Direct DOM mutation avoids 60-120 React component reconciliation cycles per second
+        if (meterBarRef.current) {
+          meterBarRef.current.style.width = `${level}%`;
+        }
+        if (meterTextRef.current) {
+          meterTextRef.current.textContent = `${level}%`;
+        }
 
         if (naturalDirector && avgBass > 220 && Date.now() - lastSwitchTime > 14000) {
           lastSwitchTime = Date.now();
@@ -351,16 +362,17 @@ export default function LiveBroadcastView({
             </span>
           </div>
 
-          {/* Audio Transient Level Meter */}
+          {/* Audio Transient Level Meter (Decoupled DOM refs) */}
           <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
             <span>VU INGEST:</span>
             <div className="w-32 h-2.5 rounded-full bg-[#0c0d10] border border-white/10 overflow-hidden flex p-0.5">
               <div
+                ref={meterBarRef}
                 className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-[#E53558] transition-all duration-75"
-                style={{ width: `${audioLevel}%` }}
+                style={{ width: '0%' }}
               />
             </div>
-            <span className="text-zinc-400 w-8 text-right">{audioLevel}%</span>
+            <span ref={meterTextRef} className="text-zinc-400 w-8 text-right">0%</span>
           </div>
         </div>
 

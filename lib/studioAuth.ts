@@ -43,12 +43,19 @@ export interface ConnectedOAuthAccount {
 }
 
 export interface UserConnectedService {
-  id: 'spotify' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs';
+  id: 'spotify' | 'arena' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs';
   name: string;
   connected: boolean;
   accountName?: string;
+  accountUsername?: string;
+  avatarUrl?: string;
+  profileUrl?: string;
   connectedAt?: string;
   detail?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  scopes?: string[];
 }
 
 export interface StudioUserProfile {
@@ -377,7 +384,7 @@ export async function getOrCreateUserByEmail(
 // -------------------------------------------------------------
 export async function toggleUserConnectedService(
   userId: string,
-  serviceId: 'spotify' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs',
+  serviceId: 'spotify' | 'arena' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs',
   connected: boolean,
   accountName?: string
 ): Promise<StudioUserProfile | null> {
@@ -393,6 +400,12 @@ export async function toggleUserConnectedService(
     existing.connected = connected;
     if (accountName) existing.accountName = accountName;
     existing.connectedAt = connected ? new Date().toISOString() : undefined;
+    if (!connected) {
+      // Clear token fields on disconnect
+      existing.accessToken = undefined;
+      existing.refreshToken = undefined;
+      existing.expiresAt = undefined;
+    }
   } else {
     user.connectedServices.push({
       id: serviceId,
@@ -404,6 +417,113 @@ export async function toggleUserConnectedService(
   }
 
   return await saveUser(user);
+}
+
+export async function saveUserOAuthConnection(
+  userId: string,
+  serviceId: 'spotify' | 'arena' | 'soundcloud' | 'google_drive' | 'dropbox',
+  tokens: {
+    accessToken: string;
+    refreshToken?: string;
+    expiresAt?: number;
+    scope?: string;
+  },
+  profile?: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+    profileUrl?: string;
+  }
+): Promise<StudioUserProfile | null> {
+  const user = await getUserById(userId);
+  if (!user) return null;
+
+  if (!user.connectedServices) {
+    user.connectedServices = [];
+  }
+
+  const serviceNames: Record<string, string> = {
+    spotify: 'Spotify Web API',
+    arena: 'Are.na Visual Research',
+    soundcloud: 'SoundCloud API',
+    google_drive: 'Google Drive Audio',
+    dropbox: 'Dropbox Cloud Audio',
+  };
+
+  const existingIndex = user.connectedServices.findIndex(s => s.id === serviceId);
+  const updatedService: UserConnectedService = {
+    id: serviceId,
+    name: serviceNames[serviceId] || serviceId.toUpperCase(),
+    connected: true,
+    accountName: profile?.displayName || profile?.username || 'Connected Account',
+    accountUsername: profile?.username,
+    avatarUrl: profile?.avatarUrl,
+    profileUrl: profile?.profileUrl,
+    connectedAt: new Date().toISOString(),
+    detail: `Linked as ${profile?.displayName || profile?.username || 'User'}`,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    expiresAt: tokens.expiresAt,
+    scopes: tokens.scope ? tokens.scope.split(' ') : undefined,
+  };
+
+  if (existingIndex >= 0) {
+    user.connectedServices[existingIndex] = updatedService;
+  } else {
+    user.connectedServices.push(updatedService);
+  }
+
+  return await saveUser(user);
+}
+
+export async function disconnectUserOAuthConnection(
+  userId: string,
+  serviceId: 'spotify' | 'arena' | 'soundcloud' | 'google_drive' | 'dropbox' | 'obs'
+): Promise<StudioUserProfile | null> {
+  const user = await getUserById(userId);
+  if (!user) return null;
+
+  if (!user.connectedServices) {
+    user.connectedServices = [];
+  }
+
+  const service = user.connectedServices.find(s => s.id === serviceId);
+  if (service) {
+    service.connected = false;
+    service.accessToken = undefined;
+    service.refreshToken = undefined;
+    service.expiresAt = undefined;
+    service.connectedAt = undefined;
+  }
+
+  return await saveUser(user);
+}
+
+// Strips sensitive tokens and secrets before returning user objects to clients
+export function sanitizeUserForClient(user: StudioUserProfile): any {
+  return {
+    ...user,
+    passwordHash: undefined,
+    passwordSalt: undefined,
+    totp: {
+      enabled: Boolean(user.totp?.enabled),
+      verifiedAt: user.totp?.verifiedAt,
+    },
+    connectedServices: (user.connectedServices || []).map(s => ({
+      id: s.id,
+      name: s.name,
+      connected: s.connected,
+      accountName: s.accountName,
+      accountUsername: s.accountUsername,
+      avatarUrl: s.avatarUrl,
+      profileUrl: s.profileUrl,
+      connectedAt: s.connectedAt,
+      detail: s.detail,
+      isExpired: s.expiresAt ? Date.now() > s.expiresAt : false,
+      // accessToken and refreshToken are explicitly omitted
+    })),
+  };
 }
 
 // -------------------------------------------------------------

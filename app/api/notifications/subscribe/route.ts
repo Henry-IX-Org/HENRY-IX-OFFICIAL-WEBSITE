@@ -45,15 +45,26 @@ export async function POST(req: NextRequest) {
         console.warn('[Subscribe API] Notion lead creation warning:', err);
       });
 
-      // 2. Optional: Add contact to Resend Audience if configured
-      if (process.env.RESEND_API_KEY && process.env.RESEND_AUDIENCE_ID) {
+      // 2. Add contact to Resend Audience & Topics if configured
+      if (process.env.RESEND_API_KEY) {
         try {
+          const audienceId = process.env.RESEND_AUDIENCE_ID || '8790686e-ed87-41f6-a038-ef2d8ea248b1';
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.contacts.create({
             email: cleanEmail,
             unsubscribed: false,
-            audienceId: process.env.RESEND_AUDIENCE_ID,
+            audienceId,
           });
+
+          // If topics are passed, assign them
+          const topicsArray = (body as any)?.topics;
+          if (Array.isArray(topicsArray) && topicsArray.length > 0) {
+            await (resend.contacts.topics.update as any)({
+              audienceId,
+              email: cleanEmail,
+              topics: topicsArray.map((t: string) => ({ id: t, subscription: 'opt_in' })),
+            }).catch(() => {});
+          }
         } catch (resendErr) {
           console.warn('[Subscribe API] Resend contact creation warning:', resendErr);
         }

@@ -255,10 +255,10 @@ export default function PersistentAudioPlayer({
     }
   }, [activeModule, isPlaying, togglePlay, setIsMuted]);
 
-  // Playback timer tick
+  // Playback timer tick (only active for synth preview fallback; native audio uses timeupdate)
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-    if (isPlaying) {
+    if (isPlaying && !isStreamingDropbox) {
       timer = setInterval(() => {
         setCurrentTime((prev) => {
           if (prev >= currentTrack.duration) {
@@ -272,7 +272,7 @@ export default function PersistentAudioPlayer({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isPlaying, currentTrack.duration, setCurrentTime, togglePlay]);
+  }, [isPlaying, isStreamingDropbox, currentTrack.duration, setCurrentTime, togglePlay]);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);

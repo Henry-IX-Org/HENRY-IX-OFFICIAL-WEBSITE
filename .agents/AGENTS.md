@@ -11,16 +11,42 @@ Focus on building a portfolio showcase, live streaming setups, ticket booking sy
 
 ### Strict Content Authenticity & UI Copy Rules
 * **Full AI Coding Autonomy:** The user does not code. AI independently handles all technical implementation, Next.js architecture, TypeScript, Tailwind CSS, API routes, audio DSP, and cloud infrastructure.
-* **Section Naming & Copy Consultation:** Whenever creating a new UI section, panel, button, or feature (e.g. naming a section "Mix Library"), ask Henry what he prefers to call it or present 2–3 curated options for him to approve.
+* **Tone of Voice — Grounded, Minimal & Professional (Zero Sci-Fi / Cyberpunk Roleplay):**
+  * **Visuals ≠ Voice:** The UI looks like precision, high-end audio hardware (OLED black, matte textures, red LED accents, tactile switches, clean typography). However, **the written copy must be grounded, direct, minimal, and authentic to a real touring electronic music producer and DJ.**
+  * **Strictly Banned Words & Jargon:** NEVER use cheesy sci-fi, terminal, or military roleplay language in UI copy, buttons, or email text.
+    * Banned: `transmission`, `transmission signals`, `sever signals`, `telemetry` (when used for chat/comments), `frequencies` (used as a gimmick for emails), `tactical spectrum`, `bootleg sanitation`, `mutation committed`, `cyberpunk`.
+  * **Concise Plain English:** Keep labels and copy short, confident, and functional:
+    * Use "Live Stream", not "Live Transmission Signal".
+    * Use "Live Chat", not "Telemetry Chat & Comments".
+    * Use "Email Preferences" or "Alerts", not "Transmission Spectrum Console".
+    * Use "Unsubscribe", not "Sever Transmission Signal".
+  * **No Filler Text:** Eliminate pretentious techno-babble and extra descriptive paragraphs that exist just to sound "techy". Think how Teenage Engineering, Pioneer DJ, or Bicep communicate: understated, punchy, and confident.
+* **Section Naming & Copy Consultation:** Whenever creating a new UI section, panel, button, or feature (e.g. naming a section "Mix Library"), ask Henry what he prefers to call it or present 2–3 curated, clean options.
 * **Central Copy & Media Configuration:** All visible UI copy, titles, descriptions, and track lists must route through `lib/siteContent.ts`, `lib/mixes.ts`, and Notion so Henry can edit text and audio in one central place without touching code logic.
 * **Zero Autonomous AI Media:** No synthetic AI music, AI-generated audio, or AI-rendered imagery may ever be published under the name HENRY IX without explicit human review and approval.
+
+### Taste Calibration & Visual Moodboard Protocol
+* **"Aesthetic" = Visual Only:** Whenever Henry describes an aesthetic, vibe, or style, it refers **strictly and exclusively to the visual design** (materials, physical hardware textures, lighting, typography, tactile layout). It must NEVER leak into the written voice, UI copy, or email text.
+* **The "AI Average" Trap:** Recognize that AI models default to an "averaged-out" generalization of design and culture, which frequently leads to cheesy, clichéd tropes (sci-fi roleplay, cartoonish cyberpunk jargon, fake terminal telemetry). Henry’s aesthetic is rooted in authentic London underground club culture, refined pro DJ hardware, and minimalist brutalism. Never substitute authentic subculture with generic AI stereotypes.
+* **Proactive Moodboard & Reference Requests:** Whenever starting a new UI section, visual feature, or redesigning an existing panel, the AI must:
+  1. Ask Henry if he has specific references, moodboards, or images (Pinterest, Cosmos, Are.na, screenshots, or hardware gear models).
+  2. Read and analyze any image or link provided to calibrate the exact visual language before writing UI code.
+  3. Ask clarifying questions about materials (e.g. matte aluminum vs. brushed steel, LED brightness, contrast) instead of assuming.
+* **Continuous Taste Alignment:** Listen closely to Henry’s specific aesthetic feedback and continuously align with his refined personal taste rather than reverting to statistical averages.
 
 ---
 
 ## 2. Visual Design System
 
-### A. Color Palette
-Follow the core retro-futuristic dark mode theme:
+### A. Core Aesthetic DNA & Influences
+Calibrated directly from Henry's Are.na moodboard (`henry-ix`):
+* **Future Medieval & Occult Brutalism:** Blackletter / gothic geometry, heraldic framing, ornamental symmetry, armor and dark metallic textures.
+* **Graphic & Glitch Language:** John Provencher generative textures, Ditherboy & Script Slayer 1-bit / 2-bit Bayer dithering (`.bayer-dither`), Velvetyne typographic spirit.
+* **Pro Audio Hardware Precision:** Matte OLED black surfaces, tactile switches, faders, discrete status LEDs (Pioneer DJ / Teenage Engineering grade).
+* **Absolute Ban on Sci-Fi / Cyberpunk:** Never substitute this aesthetic with 80s neon synthwave, spaceships, or cheesy terminal roleplay.
+
+### B. Color Palette
+Follow the dark mode theme:
 * **Background:** Absolute Black (`#000000`, `bg-black`).
 * **Primary Accent Color:** HENRY IX Red (`#D8163F`, `var(--color-primary)`).
 * **Primary Glow:** `rgba(216, 22, 63, 0.45)` (`var(--color-primary-glow)`).

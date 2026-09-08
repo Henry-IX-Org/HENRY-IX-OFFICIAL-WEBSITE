@@ -60,12 +60,19 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
-      gigs,
-      sets: notionSets,
-      count: gigs.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        gigs,
+        sets: notionSets,
+        count: gigs.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Error in Studio Gigs API:', error);
     return NextResponse.json(

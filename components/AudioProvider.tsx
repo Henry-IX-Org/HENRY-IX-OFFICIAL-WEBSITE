@@ -43,7 +43,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isStudio]);
 
-  // ── Preload track waveforms dynamically on client mount ───────────────────
+  // ── Preload track waveforms dynamically only on Mixes / CDJ view ────────
+  const isCDJView = useAudioStore(s => s.isCDJView);
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isStudioSub =
@@ -55,6 +56,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }
     }
     if (isStudio) return;
+    if (pathname !== '/mixes' && !isCDJView) return;
 
     import('@/app/trackWaveforms.json')
       .then((m) => {
@@ -73,7 +75,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(err => console.error('Failed to import trackWaveforms:', err));
-  }, [isStudio]);
+  }, [isStudio, pathname, isCDJView]);
 
   // ── Body scroll lock while preloader is active ─────────────────────────────
   useEffect(() => {
@@ -212,10 +214,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           const audio = audioEngine.audioElements[deckId];
           const deck = useAudioStore.getState().decks[deckId];
           if (audio && deck?.url && !audioEngine.loadedUrls[deckId]) {
-            audio.preload = 'auto';
+            audio.preload = 'none';
             audio.src = new URL(deck.url, window.location.origin).href;
             audioEngine.loadedUrls[deckId] = deck.url;
-            audio.load();
           }
         });
       }, 500);

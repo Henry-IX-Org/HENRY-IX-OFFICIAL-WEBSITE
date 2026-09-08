@@ -10,7 +10,7 @@ interface ActionCard {
   targetId?: string;
   before: string;
   after: string;
-  type: 'metadata' | 'logistics' | 'promo' | 'stream';
+  type: 'metadata' | 'logistics' | 'promo' | 'stream' | 'email';
   applied: boolean;
 }
 
@@ -126,6 +126,22 @@ export default function CopilotTab() {
             },
           },
         ]);
+      } else if (lower.includes('email') || lower.includes('broadcast') || lower.includes('newsletter') || lower.includes('resend') || lower.includes('subscriber') || lower.includes('blast') || lower.includes('fan')) {
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            sender: 'ai',
+            text: 'Staging email broadcast via Resend to subscribers. Verified domain auth configured (henryix.com). Review staged diff before committing.',
+            actionCard: {
+              id: `action-${Date.now()}`,
+              title: 'DISPATCH SUBSCRIBER BROADCAST (RESEND)',
+              before: 'Channel: Idle • Audience: General',
+              after: 'Dispatch: "HENRY IX Broadcast" -> broadcasts@henryix.com',
+              type: 'email',
+              applied: false,
+            },
+          },
+        ]);
       } else {
         setChatMessages((prev) => [
           ...prev,
@@ -148,6 +164,8 @@ export default function CopilotTab() {
       addToast({ title: 'STREAM CLIP MARKED', message: 'Staged 60s highlight to assets dropzone.', type: 'success' });
     } else if (card.type === 'promo') {
       addToast({ title: 'PROMO STAGED', message: `4 promo posts scheduled for ${activeGig.venue}.`, type: 'success' });
+    } else if (card.type === 'email') {
+      addToast({ title: 'BROADCAST DISPATCHED', message: 'Triggered subscriber broadcast via Resend (broadcasts@henryix.com).', type: 'success' });
     }
 
     setChatMessages((prev) => {

@@ -70,7 +70,13 @@ export default function CookieConsentBanner({ onConsentSaved }: CookieConsentBan
     <>
       <AnimatePresence>
         {isVisible && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-md select-none overflow-y-auto custom-scrollbar">
+          <div 
+            role="dialog" 
+            aria-modal="true" 
+            aria-labelledby="cookie-banner-title" 
+            aria-describedby="cookie-banner-desc"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-md select-none overflow-y-auto custom-scrollbar"
+          >
             <motion.div
               initial={{ scale: 0.92, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -88,22 +94,22 @@ export default function CookieConsentBanner({ onConsentSaved }: CookieConsentBan
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col">
-                    <h3 className="text-white text-xs md:text-sm font-black tracking-[0.15em] uppercase">
-                      COOKIE & TELEMETRY PROTOCOL
-                    </h3>
-                    <span className="text-[9px] text-zinc-500 font-mono tracking-wider uppercase">
-                      PRIVACY_SETTINGS // UK_GDPR_COMPLIANT
+                    <h2 id="cookie-banner-title" className="text-white text-xs md:text-sm font-black tracking-[0.15em] uppercase">
+                      COOKIE & STORAGE PREFERENCES
+                    </h2>
+                    <span className="text-[9px] text-zinc-400 font-mono tracking-wider uppercase">
+                      PRIVACY // UK GDPR COMPLIANT
                     </span>
                   </div>
                 </div>
 
-                <span className="text-[8px] font-bold px-2 py-0.5 bg-red-950/60 border border-primary/40 text-primary uppercase tracking-widest shrink-0">
-                  v2.4_STAGED
+                <span className="text-[9px] font-bold px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-300 uppercase tracking-wider shrink-0">
+                  SETTINGS
                 </span>
               </div>
 
               {/* Concise Policy Text */}
-              <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-sans">
+              <p id="cookie-banner-desc" className="text-xs text-zinc-300 leading-relaxed mb-6 font-sans">
                 We use local storage and essential cookies to manage Web Audio DSP nodes, crossfader state, and peak waveform caches. No third-party data broker tracking.
               </p>
 
@@ -111,15 +117,15 @@ export default function CookieConsentBanner({ onConsentSaved }: CookieConsentBan
               <div className="grid grid-cols-3 gap-2 mb-6 text-[9.5px]">
                 <div className="bg-zinc-950 border border-zinc-900 p-2.5 flex flex-col gap-1 items-start">
                   <span className="text-emerald-400 font-bold tracking-wider">[ESSENTIAL]</span>
-                  <span className="text-zinc-500 text-[8.5px]">Web Audio DSP</span>
+                  <span className="text-zinc-400 text-[9px]">Web Audio DSP</span>
                 </div>
                 <div className="bg-zinc-950 border border-zinc-900 p-2.5 flex flex-col gap-1 items-start">
-                  <span className="text-zinc-400 font-bold tracking-wider">[ANALYTICS]</span>
-                  <span className="text-zinc-500 text-[8.5px]">Performance Metrics</span>
+                  <span className="text-zinc-300 font-bold tracking-wider">[ANALYTICS]</span>
+                  <span className="text-zinc-400 text-[9px]">Site Metrics</span>
                 </div>
                 <div className="bg-zinc-950 border border-zinc-900 p-2.5 flex flex-col gap-1 items-start">
-                  <span className="text-cyan-400 font-bold tracking-wider">[WIDGETS]</span>
-                  <span className="text-zinc-500 text-[8.5px]">Stream & Audio</span>
+                  <span className="text-cyan-400 font-bold tracking-wider">[MEDIA]</span>
+                  <span className="text-zinc-400 text-[9px]">Audio Players</span>
                 </div>
               </div>
 
@@ -127,7 +133,8 @@ export default function CookieConsentBanner({ onConsentSaved }: CookieConsentBan
               <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
                 <button
                   onClick={handleAcceptAll}
-                  className="w-full sm:flex-1 py-3 px-4 bg-primary hover:bg-red-600 text-black font-black uppercase text-xs tracking-widest rounded-none transition-all cursor-pointer active:scale-95 shadow-[0_0_15px_rgba(216,22,63,0.3)] flex items-center justify-center gap-2"
+                  aria-label="Accept all cookies and audio storage"
+                  className="w-full sm:flex-1 py-3 px-4 bg-primary hover:bg-red-600 text-white font-black uppercase text-xs tracking-widest rounded-none transition-all cursor-pointer active:scale-95 shadow-[0_0_15px_rgba(216,22,63,0.3)] flex items-center justify-center gap-2"
                 >
                   <Check className="w-4 h-4" />
                   ACCEPT ALL
@@ -135,6 +142,7 @@ export default function CookieConsentBanner({ onConsentSaved }: CookieConsentBan
 
                 <button
                   onClick={handleRejectNonEssential}
+                  aria-label="Accept essential cookies only"
                   className="w-full sm:flex-1 py-3 px-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold uppercase text-xs tracking-wider rounded-none transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                 >
                   ESSENTIAL ONLY
@@ -145,6 +153,7 @@ export default function CookieConsentBanner({ onConsentSaved }: CookieConsentBan
                     playClick(800, 'sine', 0.02);
                     setIsModalOpen(true);
                   }}
+                  aria-label="Customize cookie preferences"
                   className="w-full sm:w-auto py-3 px-3.5 bg-black hover:bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white font-bold uppercase text-xs tracking-wider rounded-none transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
                 >
                   <Settings className="w-3.5 h-3.5" />

@@ -95,6 +95,7 @@ export function FloatingPlayer() {
                 key={id}
                 onClick={() => handleDeckSelect(id)}
                 title={`Switch to Deck ${id}`}
+                aria-label={`Switch to Deck ${id}`}
                 className={`relative px-2 py-0.5 text-[10px] font-bold font-mono transition-all border ${
                   isSel
                     ? `${col.badge} font-black ${col.glow}`
@@ -146,6 +147,7 @@ export function FloatingPlayer() {
         {!isHovered && (
           <button
             onClick={() => audioEngine.togglePlayGlobal(selectedDeckId)}
+            aria-label={deck.isPlaying ? "Pause audio" : "Play audio"}
             className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-transform active:scale-95 ${
               deck.isPlaying ? `${activeColor.bg} text-black ${activeColor.glow}` : 'bg-zinc-800 hover:bg-zinc-700 text-white'
             }`}
@@ -174,6 +176,7 @@ export function FloatingPlayer() {
           <button
             onClick={() => seekDelta(-10)}
             title="Rewind 10s"
+            aria-label="Rewind 10 seconds"
             className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all font-mono text-xs flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,6 +188,7 @@ export function FloatingPlayer() {
           {/* Main Expanded Play / Pause Toggle */}
           <button
             onClick={() => audioEngine.togglePlayGlobal(selectedDeckId)}
+            aria-label={deck.isPlaying ? "Pause audio" : "Play audio"}
             className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 ${
               deck.isPlaying ? `${activeColor.bg} text-black ${activeColor.glow}` : 'bg-zinc-800 hover:bg-zinc-700 text-white'
             }`}
@@ -200,6 +204,7 @@ export function FloatingPlayer() {
           <button
             onClick={() => seekDelta(10)}
             title="Fast Forward 10s"
+            aria-label="Fast forward 10 seconds"
             className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all font-mono text-xs flex items-center gap-1"
           >
             <span className="text-[9px] font-bold">+10s</span>

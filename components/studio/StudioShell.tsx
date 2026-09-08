@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
-import SettingsModal from './SettingsModal';
 import NotificationCenter from './NotificationCenter';
-import CommandPalette from './CommandPalette';
 import PersistentAudioPlayer, { PlayerDisplayState } from './PersistentAudioPlayer';
 import StudioRightDrawer, { RightDrawerTab } from './StudioRightDrawer';
 import StudioToasts from './StudioToasts';
@@ -12,15 +11,59 @@ import { useStudioStore } from '@/store/studioStore';
 import { canAccessModule, ROLE_METADATA } from '@/lib/studioPermissions';
 import { Lock } from 'lucide-react';
 
-// Module Component Imports
-import StreamingModule from './modules/StreamingModule';
-import MusicModule from './modules/MusicModule';
-import LibraryOrganiserDashboard from './modules/LibraryOrganiserDashboard';
-import HardwareUtilities from './modules/HardwareUtilities';
-import AssetsModule from './modules/AssetsModule';
-import GigsModule from './modules/GigsModule';
-import DoorScanner from './modules/DoorScanner';
-import SocialModule from './modules/SocialModule';
+// Lightweight Skeleton Fallback for On-Demand Workstation Modules
+const ModuleLoadingSkeleton = ({ title }: { title: string }) => (
+  <div className="p-6 space-y-4 animate-pulse">
+    <div className="flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-[#D8163F] animate-ping" />
+      <span className="font-mono text-xs text-zinc-400 tracking-wider uppercase">
+        INITIALIZING {title}...
+      </span>
+    </div>
+    <div className="h-6 w-48 bg-white/[0.06] rounded-md" />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+      <div className="h-44 bg-[#14151a] border border-white/[0.06] rounded-xl" />
+      <div className="h-44 bg-[#14151a] border border-white/[0.06] rounded-xl" />
+      <div className="h-44 bg-[#14151a] border border-white/[0.06] rounded-xl" />
+    </div>
+  </div>
+);
+
+// Dynamic Lazy Loaded Workstation Modules & Modals
+const StreamingModule = dynamic(() => import('./modules/StreamingModule'), {
+  loading: () => <ModuleLoadingSkeleton title="Streaming Suite" />,
+  ssr: false,
+});
+const MusicModule = dynamic(() => import('./modules/MusicModule'), {
+  loading: () => <ModuleLoadingSkeleton title="Music Library" />,
+  ssr: false,
+});
+const LibraryOrganiserDashboard = dynamic(() => import('./modules/LibraryOrganiserDashboard'), {
+  loading: () => <ModuleLoadingSkeleton title="Library Organiser" />,
+  ssr: false,
+});
+const HardwareUtilities = dynamic(() => import('./modules/HardwareUtilities'), {
+  loading: () => <ModuleLoadingSkeleton title="Hardware Utilities" />,
+  ssr: false,
+});
+const AssetsModule = dynamic(() => import('./modules/AssetsModule'), {
+  loading: () => <ModuleLoadingSkeleton title="Asset Vault" />,
+  ssr: false,
+});
+const GigsModule = dynamic(() => import('./modules/GigsModule'), {
+  loading: () => <ModuleLoadingSkeleton title="Gigs & Logistics" />,
+  ssr: false,
+});
+const DoorScanner = dynamic(() => import('./modules/DoorScanner'), {
+  loading: () => <ModuleLoadingSkeleton title="Door Scanner" />,
+  ssr: false,
+});
+const SocialModule = dynamic(() => import('./modules/SocialModule'), {
+  loading: () => <ModuleLoadingSkeleton title="Social Scouting Grid" />,
+  ssr: false,
+});
+const SettingsModal = dynamic(() => import('./SettingsModal'), { ssr: false });
+const CommandPalette = dynamic(() => import('./CommandPalette'), { ssr: false });
 
 interface StudioShellProps {
   children?: React.ReactNode;

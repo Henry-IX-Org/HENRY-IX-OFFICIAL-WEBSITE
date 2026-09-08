@@ -1,8 +1,8 @@
 import EventsClient from './events-client';
 import { Metadata } from 'next';
 import { fetchPublicTourEvents, TourEvent } from '@/lib/tourEvents';
-
-export const revalidate = 60;
+export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Live Performance Schedule & Events | HENRY IX',

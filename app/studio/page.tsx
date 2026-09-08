@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import StudioShell from '@/components/studio/StudioShell';
+import dynamic from 'next/dynamic';
+
+const StudioShell = dynamic(() => import('@/components/studio/StudioShell'), {
+  loading: () => (
+    <div className="h-screen w-full bg-[#0c0d10] flex items-center justify-center font-mono text-xs text-zinc-400 select-none">
+      <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-[#14151a] border border-white/[0.08] shadow-2xl">
+        <span className="w-2 h-2 rounded-full bg-[#D8163F] animate-ping" />
+        <span className="tracking-wider">INITIALIZING STUDIO CONSOLE...</span>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
+
 import BrandLogo from '@/components/studio/BrandLogo';
 import { useStudioStore } from '@/store/studioStore';
 import { 

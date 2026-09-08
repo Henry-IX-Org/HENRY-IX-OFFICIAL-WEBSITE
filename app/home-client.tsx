@@ -360,6 +360,23 @@ export default function HomeClient() {
     >
       <HeroNode isDepth={isDepth} preloaderComplete={preloaderComplete} />
       <NavigationNode />
+
+      {/* Semantic Crawlable Overview for Search Engines & Screen Readers */}
+      <section className="sr-only" aria-label="About HENRY IX">
+        <h2>HENRY IX — London Electronic Music Producer & DJ</h2>
+        <p>
+          HENRY IX is a London-based electronic music producer and high-energy DJ specializing in UK Garage (UKG), Speed Garage, and Underground Bassline. Known for raw CDJ performance, signature mix series including Knight Club, Royal Court, and Corner New Cross, and London club residency sets. Explore the virtual CDJ mixer, stream live studio sessions, and view upcoming tour dates.
+        </p>
+        <nav aria-label="Main Navigation">
+          <ul>
+            <li><a href="/mixes">DJ Mixes & Virtual CDJ Vault</a></li>
+            <li><a href="/events">Upcoming Tour Dates & Performance Schedule</a></li>
+            <li><a href="/live">Live Stream & Studio Sessions</a></li>
+            <li><a href="/gallery">Visual Archive & Event Photography</a></li>
+            <li><a href="/contact">Promoter Bookings & Contact</a></li>
+          </ul>
+        </nav>
+      </section>
     </motion.main>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface ThreeBandColorWaveformProps {
   audioBuffer?: AudioBuffer | null;
@@ -18,7 +18,10 @@ export const HOT_CUE_COLORS = {
   Vocal: 'rgba(234,179,8,1)' // Yellow
 };
 
-export const ThreeBandColorWaveform: React.FC<ThreeBandColorWaveformProps> = ({
+const BAR_WIDTH = 2;
+const GAP = 1;
+
+export const ThreeBandColorWaveform: React.FC<ThreeBandColorWaveformProps> = React.memo(({
   audioBuffer,
   progress = 0,
   onScrub,
@@ -29,6 +32,26 @@ export const ThreeBandColorWaveform: React.FC<ThreeBandColorWaveformProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const numBars = Math.floor(width / (BAR_WIDTH + GAP));
+
+  // Precompute static 3-band bar heights once per canvas dimension resize
+  const bars = useMemo(() => {
+    return Array.from({ length: numBars }, (_, i) => {
+      const x = i * (BAR_WIDTH + GAP);
+      const lowHeight = Math.abs(Math.sin(i * 0.1)) * (height * 0.4) + 10;
+      const midHeight = Math.abs(Math.cos(i * 0.15)) * (height * 0.3) + 5;
+      const highHeight = Math.abs(Math.sin(i * 0.05 + 1)) * (height * 0.2) + 2;
+
+      const totalHeight = lowHeight + midHeight + highHeight;
+      return {
+        x,
+        lows: (lowHeight / totalHeight) * height * 0.8,
+        mids: (midHeight / totalHeight) * height * 0.8,
+        highs: (highHeight / totalHeight) * height * 0.8,
+      };
+    });
+  }, [numBars, height]);
+
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -37,48 +60,81 @@ export const ThreeBandColorWaveform: React.FC<ThreeBandColorWaveformProps> = ({
 
     ctx.clearRect(0, 0, width, height);
 
-    // If no buffer, draw mock 3-band waveform (CDJ-3000 style)
-    // Lows: Blue, Mids: Amber/Orange, Highs: White/Grey
-    const barWidth = 2;
-    const gap = 1;
-    const numBars = Math.floor(width / (barWidth + gap));
-
     const playheadX = progress * width;
+    const centerY = height / 2;
+    const splitIndex = Math.min(bars.length, Math.max(0, Math.floor(playheadX / (BAR_WIDTH + GAP))));
 
-    for (let i = 0; i < numBars; i++) {
-      const x = i * (barWidth + gap);
-      
-      const lowHeight = Math.abs(Math.sin(i * 0.1)) * (height * 0.4) + 10;
-      const midHeight = Math.abs(Math.cos(i * 0.15)) * (height * 0.3) + 5;
-      const highHeight = Math.abs(Math.sin(i * 0.05 + 1)) * (height * 0.2) + 2;
-      
-      const totalHeight = lowHeight + midHeight + highHeight;
-      const normalizedLows = (lowHeight / totalHeight) * height * 0.8;
-      const normalizedMids = (midHeight / totalHeight) * height * 0.8;
-      const normalizedHighs = (highHeight / totalHeight) * height * 0.8;
-
-      const isPlayed = x < playheadX;
-      
-      const drawBand = (yBase: number, h: number, color: string, playedColor: string) => {
-        ctx.fillStyle = isPlayed ? playedColor : color;
-        ctx.fillRect(x, (height / 2) - yBase - h, barWidth, h);
-        ctx.fillRect(x, (height / 2) + yBase, barWidth, h);
-      };
-
-      drawBand(normalizedLows + normalizedMids, normalizedHighs, '#3f3f46', '#e4e4e7');
-      drawBand(normalizedLows, normalizedMids, '#0891b2', '#06b6d4');
-      drawBand(0, normalizedLows, '#2563eb', '#3b82f6');
+    // Batch Highs - Played (White/Light Grey)
+    ctx.beginPath();
+    for (let i = 0; i < splitIndex; i++) {
+      const b = bars[i];
+      const yBase = b.lows + b.mids;
+      ctx.rect(b.x, centerY - yBase - b.highs, BAR_WIDTH, b.highs);
+      ctx.rect(b.x, centerY + yBase, BAR_WIDTH, b.highs);
     }
+    ctx.fillStyle = '#e4e4e7';
+    ctx.fill();
 
+    // Batch Highs - Unplayed (Zinc Dark Grey)
+    ctx.beginPath();
+    for (let i = splitIndex; i < bars.length; i++) {
+      const b = bars[i];
+      const yBase = b.lows + b.mids;
+      ctx.rect(b.x, centerY - yBase - b.highs, BAR_WIDTH, b.highs);
+      ctx.rect(b.x, centerY + yBase, BAR_WIDTH, b.highs);
+    }
+    ctx.fillStyle = '#3f3f46';
+    ctx.fill();
+
+    // Batch Mids - Played (Bright Cyan)
+    ctx.beginPath();
+    for (let i = 0; i < splitIndex; i++) {
+      const b = bars[i];
+      ctx.rect(b.x, centerY - b.lows - b.mids, BAR_WIDTH, b.mids);
+      ctx.rect(b.x, centerY + b.lows, BAR_WIDTH, b.mids);
+    }
+    ctx.fillStyle = '#06b6d4';
+    ctx.fill();
+
+    // Batch Mids - Unplayed (Deep Cyan)
+    ctx.beginPath();
+    for (let i = splitIndex; i < bars.length; i++) {
+      const b = bars[i];
+      ctx.rect(b.x, centerY - b.lows - b.mids, BAR_WIDTH, b.mids);
+      ctx.rect(b.x, centerY + b.lows, BAR_WIDTH, b.mids);
+    }
+    ctx.fillStyle = '#0891b2';
+    ctx.fill();
+
+    // Batch Lows - Played (Vibrant Blue)
+    ctx.beginPath();
+    for (let i = 0; i < splitIndex; i++) {
+      const b = bars[i];
+      ctx.rect(b.x, centerY - b.lows, BAR_WIDTH, b.lows);
+      ctx.rect(b.x, centerY, BAR_WIDTH, b.lows);
+    }
+    ctx.fillStyle = '#3b82f6';
+    ctx.fill();
+
+    // Batch Lows - Unplayed (Dark Blue)
+    ctx.beginPath();
+    for (let i = splitIndex; i < bars.length; i++) {
+      const b = bars[i];
+      ctx.rect(b.x, centerY - b.lows, BAR_WIDTH, b.lows);
+      ctx.rect(b.x, centerY, BAR_WIDTH, b.lows);
+    }
+    ctx.fillStyle = '#2563eb';
+    ctx.fill();
+
+    // Playhead Needle
     ctx.fillStyle = '#E53558';
     ctx.fillRect(playheadX, 0, 2, height);
-    
+
     ctx.shadowBlur = 8;
     ctx.shadowColor = 'rgba(229, 53, 88, 0.4)';
     ctx.fillRect(playheadX - 1, 0, 4, height);
     ctx.shadowBlur = 0;
-
-  }, [progress, width, height, audioBuffer]);
+  }, [progress, width, height, bars]);
 
   useEffect(() => {
     drawWaveform();
@@ -138,6 +194,8 @@ export const ThreeBandColorWaveform: React.FC<ThreeBandColorWaveformProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ThreeBandColorWaveform.displayName = 'ThreeBandColorWaveform';
 
 export default ThreeBandColorWaveform;

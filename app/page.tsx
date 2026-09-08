@@ -1,15 +1,30 @@
 import HomeClient from './home-client';
 import { Metadata } from 'next';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
-  title: 'HENRY IX | DJ',
-  description: 'Explore the world of HENRY IX. Listen to iconic DJ sets in a wide range of genres including house, techno, edm, pop, R&B, Hip-Hop and Rap, Queer Disco and House and more. Mix your own songs using the online interactive CDJs, watch current live streams or catch up on old ones. See and book upcoming events and contact him.',
+  title: 'HENRY IX | London DJ & Electronic Music Producer',
+  description: 'Official website of HENRY IX. High-energy UK Garage, Speed Garage, and underground bassline sets. Stream live sets, virtual CDJ sessions, and view London tour dates.',
+  keywords: [
+    'HENRY IX',
+    'Henry IX DJ',
+    'London DJ',
+    'UK Garage',
+    'UKG',
+    'Speed Garage',
+    'Underground Bassline',
+    'Knight Club',
+    'Corner New Cross',
+    'Live DJ Sets',
+    'CDJ-3000',
+  ],
   alternates: {
     canonical: 'https://henryix.com',
   },
   openGraph: {
-    title: 'HENRY IX | DJ',
-    description: 'Explore the world of HENRY IX. Listen to iconic DJ sets in a wide range of genres including house, techno, edm, pop, R&B, Hip-Hop and Rap, Queer Disco and House and more. Mix your own songs using the online interactive CDJs, watch current live streams or catch up on old ones. See and book upcoming events and contact him.',
+    title: 'HENRY IX | London DJ & Electronic Music Producer',
+    description: 'Official website of HENRY IX. High-energy UK Garage, Speed Garage, and underground bassline sets. Stream live sets, virtual CDJ sessions, and view London tour dates.',
     url: 'https://henryix.com',
     siteName: 'HENRY IX DJ',
     images: [
@@ -25,8 +40,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'HENRY IX | DJ',
-    description: 'Explore the world of HENRY IX. Listen to iconic DJ sets in a wide range of genres.',
+    title: 'HENRY IX | London DJ & Electronic Music Producer',
+    description: 'Official website of HENRY IX. High-energy UK Garage, Speed Garage, and underground bassline sets.',
     images: ['https://henryix.com/og-image.jpg'],
   },
 };

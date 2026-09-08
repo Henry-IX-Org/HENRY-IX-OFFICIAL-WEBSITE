@@ -66,6 +66,13 @@ export default function SiteFooter() {
               PRIVACY POLICY
             </Link>
             <span className="text-zinc-700">•</span>
+            <Link 
+              href="/terms" 
+              className="hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              TERMS OF SERVICE
+            </Link>
+            <span className="text-zinc-700">•</span>
             <button
               onClick={openPreferences}
               className="hover:text-zinc-200 transition-colors cursor-pointer uppercase text-[9px]"
