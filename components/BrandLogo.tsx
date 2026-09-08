@@ -23,7 +23,7 @@ export default function BrandLogo({
   color = '#D8163F',
   className = '',
   showText = false,
-  subText = 'STUDIO',
+  subText = '',
 }: BrandLogoProps) {
   const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 64;
 

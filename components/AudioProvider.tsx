@@ -6,56 +6,19 @@ import { useAudioStore } from '@/store/audioStore';
 import { audioEngine } from '@/lib/AudioEngine';
 import { playLockoutBlip } from '@/lib/audioUtils';
 import { FloatingPlayer } from '@/components/FloatingPlayer';
-import { isStudioContext } from '@/lib/studioRouting';
 
 // Context wrapper for backward compatibility with components using useAudio()
 export const AudioContext = createContext<any>(null);
 export const useAudio = () => useContext(AudioContext);
 
-export { isStudioContext };
-
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isStudioSubdomain =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'studio.henryix.com' ||
-     window.location.hostname.startsWith('studio.localhost') ||
-     window.location.hostname.startsWith('studio.'));
-  const isStudio = isStudioSubdomain || isStudioContext(pathname);
   const preloaderComplete = useAudioStore(s => s.preloaderComplete);
   const [mountedDecks, setMountedDecks] = React.useState<number[]>([]);
-
-  // ── Teardown public audio playback on entering Studio context ──────────────
-  useEffect(() => {
-    if (isStudio) {
-      try {
-        [1, 2, 3, 4].forEach(deckId => {
-          const el = audioEngine.audioElements[deckId];
-          if (el && !el.paused) {
-            el.pause();
-          }
-        });
-        const actx = (audioEngine as any).audioCtx;
-        if (actx && actx.state === 'running') {
-          actx.suspend().catch(() => {});
-        }
-      } catch (e) {}
-    }
-  }, [isStudio]);
 
   // ── Preload track waveforms dynamically only on Mixes / CDJ view ────────
   const isCDJView = useAudioStore(s => s.isCDJView);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isStudioSub =
-        window.location.hostname === 'studio.henryix.com' ||
-        window.location.hostname.startsWith('studio.localhost') ||
-        window.location.hostname.startsWith('studio.');
-      if (isStudioSub || window.location.pathname.startsWith('/studio')) {
-        return;
-      }
-    }
-    if (isStudio) return;
     if (pathname !== '/mixes' && !isCDJView) return;
 
     import('@/app/trackWaveforms.json')
@@ -75,11 +38,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(err => console.error('Failed to import trackWaveforms:', err));
-  }, [isStudio, pathname, isCDJView]);
+  }, [pathname, isCDJView]);
 
   // ── Body scroll lock while preloader is active ─────────────────────────────
   useEffect(() => {
-    if (typeof window === 'undefined' || isStudio) return;
+    if (typeof window === 'undefined') return;
 
     if (!preloaderComplete) {
       document.body.style.overflow = 'hidden';
@@ -88,11 +51,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       document.body.style.overflow = '';
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
-  }, [preloaderComplete, isStudio]);
+  }, [preloaderComplete]);
 
   // ── Load saved state from LocalStorage on mount ────────────────────────────
   useEffect(() => {
-    if (typeof window === 'undefined' || isStudio) return;
+    if (typeof window === 'undefined') return;
 
     try {
       const saved = localStorage.getItem('henryix_audio_settings');
@@ -107,11 +70,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.warn('Failed to load settings from localStorage:', e);
     }
-  }, [isStudio]);
+  }, []);
 
   // ── Save settings to LocalStorage on store change ──────────────────────────
   useEffect(() => {
-    if (typeof window === 'undefined' || isStudio) return;
+    if (typeof window === 'undefined') return;
 
     const unsubscribe = useAudioStore.subscribe(
       state => ({
@@ -128,33 +91,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }
     );
     return unsubscribe;
-  }, [isStudio]);
+  }, []);
 
   // ── First gesture user interaction unlock to satisfy browser security ──────
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isStudioHost =
-        window.location.hostname === 'studio.henryix.com' ||
-        window.location.hostname.startsWith('studio.localhost') ||
-        window.location.hostname.startsWith('studio.');
-      if (isStudioHost || window.location.pathname.startsWith('/studio')) {
-        return;
-      }
-    }
-    if (isStudio) return;
-
     const unlockAudio = () => {
-      if (typeof window !== 'undefined') {
-        const isStudioHost =
-          window.location.hostname === 'studio.henryix.com' ||
-          window.location.hostname.startsWith('studio.localhost') ||
-          window.location.hostname.startsWith('studio.');
-        if (isStudioHost || window.location.pathname.startsWith('/studio')) {
-          return;
-        }
-      }
-      if (isStudio) return;
-
       audioEngine.initAudioDSP();
       [1, 2, 3, 4].forEach(deckId => {
         audioEngine.ensureDeckInitialized(deckId);
@@ -170,17 +111,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener('touchstart', unlockAudio, { capture: true });
 
     const handleVisibility = () => {
-      if (typeof window !== 'undefined') {
-        const isStudioHost =
-          window.location.hostname === 'studio.henryix.com' ||
-          window.location.hostname.startsWith('studio.localhost') ||
-          window.location.hostname.startsWith('studio.');
-        if (isStudioHost || window.location.pathname.startsWith('/studio')) {
-          return;
-        }
-      }
-      if (isStudio) return;
-
       const actx = audioEngine.initAudioDSP();
       if (actx) {
         if (document.hidden) {
@@ -200,15 +130,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener('touchstart', unlockAudio, { capture: true });
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [isStudio]);
+  }, []);
 
   // ── Preload local audio tracks after preloader is done ─────────────────────
   useEffect(() => {
-    if (isStudio) return;
-
     if (preloaderComplete) {
       const timer = setTimeout(() => {
-        if (isStudio) return;
         [1, 2, 3, 4].forEach(deckId => {
           audioEngine.ensureDeckInitialized(deckId);
           const audio = audioEngine.audioElements[deckId];
@@ -222,12 +149,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [preloaderComplete, isStudio]);
+  }, [preloaderComplete]);
 
   // ── Subscribe to decks scMode to lazily mount SoundCloud players ───────────
   useEffect(() => {
-    if (isStudio) return;
-
     const unsubscribe = useAudioStore.subscribe(
       state => [1, 2, 3, 4].map(id => state.decks[id]?.scMode ?? false),
       (scModes: boolean[]) => {
@@ -250,12 +175,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }
     );
     return unsubscribe;
-  }, [mountedDecks, isStudio]);
+  }, [mountedDecks]);
 
   // ── Lazy load SoundCloud API Script and initialize widgets ─────────────────
   useEffect(() => {
-    if (isStudio) return;
-
     const loadAndInit = () => {
       if ((window as any).SC) {
         mountedDecks.forEach(id => {
@@ -279,12 +202,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (mountedDecks.length > 0) {
       loadAndInit();
     }
-  }, [mountedDecks, isStudio]);
+  }, [mountedDecks]);
 
   // ── Global media session toggler registry ──────────────────────────────────
   useEffect(() => {
-    if (isStudio) return;
-
     (window as any).togglePlayGlobal = (deckIdInput?: number) => {
       const { decks: d, leftActiveDeck: lad } = useAudioStore.getState();
       const activeDeck = [1, 2, 3, 4].map(id => d[id]).find(dk => dk.isPlaying) || d[lad] || d[1];
@@ -292,11 +213,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       audioEngine.togglePlayGlobal(deckId);
     };
     return () => { delete (window as any).togglePlayGlobal; };
-  }, [isStudio]);
+  }, []);
 
   // ── Native OS Media Session API (Lockscreen / Control Center controls) ─────
   useEffect(() => {
-    if (typeof window === 'undefined' || !('mediaSession' in navigator) || isStudio) return;
+    if (typeof window === 'undefined' || !('mediaSession' in navigator)) return;
 
     const unsubscribe = useAudioStore.subscribe(
       state => [1, 2, 3, 4].map(id => ({
@@ -351,46 +272,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
 
     return () => unsubscribe();
-  }, [isStudio]);
+  }, []);
 
   // ── Construct Context value mapped to AudioEngine refs and math ───────────
   const contextValue = useMemo(() => {
-    if (isStudio) {
-      return {
-        // Dummy/no-op refs and methods in studio context to prevent any audio execution
-        audioElementsRef: { current: { 1: null, 2: null, 3: null, 4: null } },
-        playPendingRef: { current: { 1: false, 2: false, 3: false, 4: false } },
-        scratchingRef: { current: { 1: false, 2: false, 3: false, 4: false } },
-        widgetRefs: { current: { 1: null, 2: null, 3: null, 4: null } },
-        initAudioDSP: () => null,
-        loadLocalFile: () => Promise.resolve(),
-        seekLocalBuffer: () => {},
-        togglePlayGlobal: () => {},
-        handleCueDown: () => {},
-        handleCueUp: () => {},
-        setTemporaryCue: () => {},
-        halveLoop: () => {},
-        doubleLoop: () => {},
-        loadTrack: () => {},
-        playTrack: () => {},
-        alignSyncPlayback: () => {},
-        playLockoutBlip: () => {},
-        get isMuted() { return false; },
-        setIsMuted: () => {},
-        get preloaderComplete() { return true; },
-        setPreloaderComplete: () => {},
-        get decks() { return useAudioStore.getState().decks; },
-        setDecks: () => {},
-        get crossfader() { return 0.5; },
-        get leftActiveDeck() { return 1; },
-        get rightActiveDeck() { return 2; },
-        get analyserNode() { return null; },
-        get deckAnalysers() { return { 1: null, 2: null, 3: null, 4: null }; }
-      };
-    }
-
     return {
-      // Live refs and methods for public site
       audioElementsRef: { current: audioEngine.audioElements },
       playPendingRef: { current: audioEngine.playPending },
       scratchingRef: { current: audioEngine.scratching },
@@ -420,15 +306,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       get analyserNode() { return audioEngine.getAnalyserNode(); },
       get deckAnalysers() { return audioEngine.getDeckAnalysers(); }
     };
-  }, [isStudio]);
-
-  if (isStudio) {
-    return (
-      <AudioContext.Provider value={contextValue}>
-        {children}
-      </AudioContext.Provider>
-    );
-  }
+  }, []);
 
   return (
     <AudioContext.Provider value={contextValue}>

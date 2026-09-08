@@ -7,7 +7,6 @@ import SiteHeader from '@/components/SiteHeader';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
 import SiteFooter from '@/components/SiteFooter';
 import { useAudioStore } from '@/store/audioStore';
-import { isStudioContext } from '@/lib/studioRouting';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -94,19 +93,5 @@ function PublicChromeLayout({ children }: { children?: React.ReactNode }) {
 }
 
 export default function ClientLayoutWrappers({ children }: { children?: React.ReactNode }) {
-  const pathname = usePathname();
-
-  // -- Layout Isolation Boundary: Bypass public chrome on /studio or studio subdomain --
-  const isStudioSubdomain =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'studio.henryix.com' ||
-     window.location.hostname.startsWith('studio.localhost') ||
-     window.location.hostname.startsWith('studio.'));
-  const isStudio = isStudioSubdomain || isStudioContext(pathname);
-
-  if (isStudio) {
-    return <>{children}</>;
-  }
-
   return <PublicChromeLayout>{children}</PublicChromeLayout>;
 }

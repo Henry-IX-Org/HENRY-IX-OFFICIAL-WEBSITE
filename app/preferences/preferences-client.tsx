@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Bell, Disc, Ticket, Star, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import PageShell from '@/components/PageShell';
-import BrandLogo from '@/components/studio/BrandLogo';
+import BrandLogo from '@/components/BrandLogo';
 import { siteContent } from '@/lib/siteContent';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {

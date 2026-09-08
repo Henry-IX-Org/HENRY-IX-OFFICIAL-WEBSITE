@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import AdmZip from 'adm-zip';
-import { authenticateStudioRequest } from '@/lib/studioAuth';
-
 export const dynamic = 'force-dynamic';
 
 function safeCompare(a: string, b: string): boolean {
@@ -22,12 +20,11 @@ export async function GET(req: NextRequest) {
     const key = searchParams.get('key');
     const expectedKey = process.env.PROMOTER_EPK_KEY || 'henryix-epk-press-2026';
 
-    const user = await authenticateStudioRequest(req);
     const isKeyValid = Boolean(key && safeCompare(key, expectedKey));
 
-    if (!user && !isKeyValid) {
+    if (!isKeyValid) {
       return NextResponse.json(
-        { error: 'Unauthorized: Valid promoter key or studio session required' },
+        { error: 'Unauthorized: Valid promoter key required' },
         { status: 401 }
       );
     }

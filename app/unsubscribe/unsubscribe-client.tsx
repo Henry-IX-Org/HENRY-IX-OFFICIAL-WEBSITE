@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2, ArrowLeft, Sliders } from 'lucide-react';
 import PageShell from '@/components/PageShell';
-import BrandLogo from '@/components/studio/BrandLogo';
+import BrandLogo from '@/components/BrandLogo';
 import { siteContent } from '@/lib/siteContent';
 
 export default function UnsubscribeClient() {
