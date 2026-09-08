@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getNotionBookings } from '@/lib/notion';
+import { getLiveInputStatus } from '@/lib/cloudflareStream';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,10 +17,10 @@ function safeCompare(a: string, b: string): boolean {
   return result === 0 && a.length === b.length;
 }
 
-// Global live transmission state for Studio OBS bridge & public reflection
-const globalLiveState = {
-  status: 'standby', // 'standby' | 'upcoming' | 'live' | 'ended'
-  title: 'HENRY IX // LIVE TRANSMISSION',
+// Fallback/cache state for live broadcast metadata
+let liveBroadcastState = {
+  status: 'offline' as 'offline' | 'upcoming' | 'live',
+  title: 'HENRY IX // LIVE',
   playbackId: '',
   obsStreamKey: '',
   countdownMinutes: 5,
@@ -31,10 +32,36 @@ const globalLiveState = {
 };
 
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    state: globalLiveState,
-  });
+  try {
+    // 1. Check live ingest status from Cloudflare Stream
+    const cfStream = await getLiveInputStatus();
+
+    // If Cloudflare Stream reports connected OBS feed, dynamically mark live
+    const isActuallyLive = cfStream.isLive || liveBroadcastState.status === 'live';
+    const effectiveStatus = isActuallyLive
+      ? 'live'
+      : liveBroadcastState.status === 'upcoming'
+      ? 'upcoming'
+      : 'offline';
+
+    const effectivePlaybackId = cfStream.playbackId || liveBroadcastState.playbackId;
+
+    return NextResponse.json({
+      success: true,
+      state: {
+        ...liveBroadcastState,
+        status: effectiveStatus,
+        playbackId: effectivePlaybackId,
+        title: cfStream.title || liveBroadcastState.title,
+        isLive: isActuallyLive,
+      },
+    });
+  } catch (error) {
+    return NextResponse.json({
+      success: true,
+      state: liveBroadcastState,
+    });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -44,11 +71,13 @@ export async function POST(req: NextRequest) {
       secret,
       action,
       streamUrl,
+      playbackId,
       obsStreamKey,
       countdownMinutes = 5,
       notifySubscribers = true,
       currentTrack,
       bpm,
+      title,
     } = body;
 
     const configuredSecret = process.env.LIVE_STATUS_SECRET;
@@ -66,27 +95,30 @@ export async function POST(req: NextRequest) {
     const offsetMs = isNaN(parsedCountdown) ? 5 * 60 * 1000 : parsedCountdown * 60 * 1000;
     const isImmediate = parsedCountdown === 0 || action === 'immediate' || action === 'live';
 
-    if (currentTrack) globalLiveState.currentTrack = currentTrack;
-    if (bpm) globalLiveState.bpm = Number(bpm) || 136;
+    if (currentTrack) liveBroadcastState.currentTrack = currentTrack;
+    if (bpm) liveBroadcastState.bpm = Number(bpm) || 140;
+    if (title) liveBroadcastState.title = title;
 
     if (action === 'publish' || action === 'live' || action === 'upcoming' || action === 'immediate') {
       const targetStatus = isImmediate ? 'live' : 'upcoming';
-      const scheduledTime = isImmediate ? new Date().toISOString() : new Date(Date.now() + offsetMs).toISOString();
+      const scheduledTime = isImmediate
+        ? new Date().toISOString()
+        : new Date(Date.now() + offsetMs).toISOString();
 
-      globalLiveState.status = targetStatus;
-      globalLiveState.countdownMinutes = parsedCountdown;
-      globalLiveState.scheduledTime = scheduledTime;
-      globalLiveState.endedAt = null;
-      if (streamUrl) globalLiveState.playbackId = streamUrl;
-      if (obsStreamKey) globalLiveState.obsStreamKey = obsStreamKey;
-      globalLiveState.lastUpdated = new Date().toISOString();
+      liveBroadcastState.status = targetStatus;
+      liveBroadcastState.countdownMinutes = parsedCountdown;
+      liveBroadcastState.scheduledTime = scheduledTime;
+      liveBroadcastState.endedAt = null;
+      if (playbackId || streamUrl) liveBroadcastState.playbackId = playbackId || streamUrl;
+      if (obsStreamKey) liveBroadcastState.obsStreamKey = obsStreamKey;
+      liveBroadcastState.lastUpdated = new Date().toISOString();
 
       // Resend Email Alert Dispatch (@henryix.com)
       if (notifySubscribers && process.env.RESEND_API_KEY) {
         try {
           const resend = new Resend(process.env.RESEND_API_KEY);
           const fromEmail = process.env.RESEND_FROM_EMAIL || 'HENRY IX Broadcasts <broadcasts@henryix.com>';
-          const streamTitle = globalLiveState.title;
+          const streamTitle = liveBroadcastState.title;
 
           // Fetch subscriber leads from Notion
           const bookings = await getNotionBookings().catch(() => []);
@@ -96,13 +128,13 @@ export async function POST(req: NextRequest) {
 
           if (recipientEmails.length > 0) {
             const subjectText = isImmediate
-              ? `🔴 LIVE NOW: ${streamTitle} | HENRY IX`
-              : `🚨 BROADCAST ALERT: Going Live in ${parsedCountdown} Minutes! | HENRY IX`;
+              ? `LIVE NOW: ${streamTitle} | HENRY IX`
+              : `Going Live in ${parsedCountdown} Minutes | HENRY IX`;
 
             const bodyHtml = `
               <div style="background-color:#000000; color:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding:36px; border:1px solid #27272a; max-width:560px; margin:0 auto; border-radius:12px;">
                 <div style="margin-bottom:24px;">
-                  <span style="font-family:'Courier New', monospace; font-size:11px; font-weight:700; letter-spacing:2px; color:#D8163F; text-transform:uppercase;">HENRY IX // LIVE</span>
+                  <span style="font-family:'Courier New', monospace; font-size:11px; font-weight:700; letter-spacing:2px; color:#D8163F; text-transform:uppercase;">HENRY IX // LIVE BROADCAST</span>
                 </div>
                 <h1 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 12px 0; line-height:1.3;">${streamTitle}</h1>
                 <p style="color:#a1a1aa; font-size:14px; line-height:1.6; margin:0 0 24px 0;">Live streaming now with low-latency visuals and high-fidelity audio.</p>
@@ -130,7 +162,6 @@ export async function POST(req: NextRequest) {
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
               },
             });
-            console.log(`Email alert sent via Resend from ${fromEmail} to ${recipientEmails.length} subscribers.`);
           }
         } catch (emailErr) {
           console.warn('Resend email notification warning:', emailErr);
@@ -142,16 +173,16 @@ export async function POST(req: NextRequest) {
         message: isImmediate ? 'Broadcast status set to LIVE NOW' : `Countdown scheduled for ${parsedCountdown} minutes`,
         status: targetStatus,
         scheduledTime,
-        state: globalLiveState,
+        state: liveBroadcastState,
       });
     }
 
-    if (action === 'done' || action === 'ended' || action === 'archive') {
-      globalLiveState.status = 'ended';
-      globalLiveState.endedAt = new Date().toISOString();
-      globalLiveState.lastUpdated = new Date().toISOString();
+    if (action === 'done' || action === 'ended' || action === 'offline' || action === 'archive') {
+      liveBroadcastState.status = 'offline';
+      liveBroadcastState.endedAt = new Date().toISOString();
+      liveBroadcastState.lastUpdated = new Date().toISOString();
 
-      return NextResponse.json({ success: true, message: 'Broadcast concluded', state: globalLiveState });
+      return NextResponse.json({ success: true, message: 'Broadcast concluded', state: liveBroadcastState });
     }
 
     return NextResponse.json({ error: 'Invalid action provided' }, { status: 400 });

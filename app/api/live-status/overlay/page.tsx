@@ -76,7 +76,7 @@ export default function OverlayPage() {
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-[#D8163F] animate-pulse shadow-[0_0_8px_rgba(216,22,63,0.8)]" />
                   <span className="text-zinc-400 uppercase">
-                    ON AIR // LOW-LATENCY TRANSMISSION
+                    ON AIR // LIVE BROADCAST
                   </span>
                 </div>
                 <span className="text-zinc-500">HENRYIX.COM</span>

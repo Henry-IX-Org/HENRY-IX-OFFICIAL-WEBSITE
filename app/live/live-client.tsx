@@ -6,63 +6,69 @@ import dynamic from 'next/dynamic';
 import PageShell from '@/components/PageShell';
 import { playClick, playTick } from '@/lib/audioUtils';
 import { cn } from '@/lib/utils';
+import { getCloudflareStreamPlaybackUrl, BroadcastHistoryItem } from '@/lib/cloudflareStream';
+import { Radio, Play, Disc, Calendar, Volume2, Clock } from 'lucide-react';
 
-const HlsPlayer = dynamic(() => Promise.resolve(({ src, title }: { src: string; title: string }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+const HlsPlayer = dynamic(
+  () =>
+    Promise.resolve(({ src, title }: { src: string; title: string }) => {
+      const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+      useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
 
-    let hls: any;
+        let hls: any;
 
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = src;
-    } else {
-      import('hls.js').then(({ default: Hls }) => {
-        if (Hls.isSupported()) {
-          hls = new Hls({
-            enableWorker: true,
-            lowLatencyMode: true,
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = src;
+        } else {
+          import('hls.js').then(({ default: Hls }) => {
+            if (Hls.isSupported()) {
+              hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+              });
+              hls.loadSource(src);
+              hls.attachMedia(video);
+            }
           });
-          hls.loadSource(src);
-          hls.attachMedia(video);
         }
-      });
-    }
 
-    return () => {
-      if (hls) {
-        hls.destroy();
-      }
-    };
-  }, [src]);
+        return () => {
+          if (hls) {
+            hls.destroy();
+          }
+        };
+      }, [src]);
 
-  return (
-    <video
-      ref={videoRef}
-      controls
-      playsInline
-      className="w-full h-full object-contain"
-      title={title}
-      autoPlay
-      muted
-    />
-  );
-}), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full aspect-video bg-[#09090b] flex items-center justify-center border border-zinc-800 text-zinc-500 font-mono text-xs">
-      INITIALIZING HLS PLAYBACK...
-    </div>
-  )
-});
+      return (
+        <video
+          ref={videoRef}
+          controls
+          playsInline
+          className="w-full h-full object-contain"
+          title={title}
+          autoPlay
+          muted
+        />
+      );
+    }),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full aspect-video bg-[#09090b] flex items-center justify-center border border-zinc-900 text-zinc-500 font-mono text-xs">
+        CONNECTING TO STREAM FEED...
+      </div>
+    ),
+  }
+);
 
 function getYouTubeEmbedId(url: string) {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  return match && match[2].length === 11 ? match[2] : null;
 }
 
 function getTwitchChannel(url: string) {
@@ -78,31 +84,24 @@ interface ChatMessage {
   time: string;
 }
 
-const CHAT_USERS = [
-  'CyberPulse', 'DeepVibes', 'TechnoSam', 'IbizaFlyer', 
-  'AcidWarp', 'BassHead', 'VaporDJ', 'EchoLine', 'Synapse'
+const LIVE_CHAT_SEED: ChatMessage[] = [
+  { id: '1', user: 'Alex_LDN', text: 'Locked in! Sounding heavy.', time: '22:01' },
+  { id: '2', user: 'DubPlate_99', text: 'Track ID on this bassline?', time: '22:03' },
+  { id: '3', user: 'SouthLondoner', text: '4-deck mixing is crazy tonight 🔥', time: '22:05' },
 ];
 
-const CHAT_PHRASES = [
-  'This track is absolutely insane! 🔥',
-  'What a transition... smooth as butter.',
-  'HENRY IX on the decks is unmatched.',
-  'Greeting from London! Love the visualizer.',
-  'BPM is hitting perfectly right now.',
-  'Wait, whats the ID on this tune?',
-  'That bass drop is massive!',
-  'Unreal set, locked in from Berlin!',
-  'The Pioneer simulation is so dope.'
+const INCOMING_CHAT_SIM = [
+  'Transition was lethal 🔥',
+  'Volume turned all the way up in Bristol.',
+  'That vocal chop is insane.',
+  'CDJ work on point tonight.',
+  'Is this getting released anytime soon?',
+  'Unreal energy right now.',
 ];
 
-interface HistoryItem {
-  id: string;
-  title: string;
-  playbackId: string;
-  date: string;
-  resolution: string;
-  endedAt?: string | null;
-}
+const INCOMING_USERS = [
+  'Elena_K', 'Marcus_T', 'BasslineJunkie', 'VaultSessions', 'Sub_Bass_01'
+];
 
 interface LiveClientProps {
   initialSettings: {
@@ -115,55 +114,66 @@ interface LiveClientProps {
     resolution: string;
     latency: string;
   };
-  history: HistoryItem[];
+  history: BroadcastHistoryItem[];
 }
 
 export default function LiveClient({ initialSettings, history }: LiveClientProps) {
   const [activeStream, setActiveStream] = useState(initialSettings);
+  const [currentTrack, setCurrentTrack] = useState('HENRY IX - DUBPLATE SPECIAL [UNRELEASED]');
+  const [currentBpm, setCurrentBpm] = useState<number>(138);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(LIVE_CHAT_SEED);
+  const [chatInput, setChatInput] = useState('');
   const [preCountdownSecs, setPreCountdownSecs] = useState<number | null>(null);
-  const [postCountdownSecs, setPostCountdownSecs] = useState<number | null>(null);
-  const [forceOnline, setForceOnline] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Poll live status from Cloudflare Stream & website API
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    const updateTimers = () => {
-      const now = Date.now();
+    const pollStatus = async () => {
+      try {
+        const res = await fetch('/api/live-status');
+        if (res.ok) {
+          const data: any = await res.json();
+          if (data?.state) {
+            const s = data.state;
+            setActiveStream(prev => ({
+              ...prev,
+              status: s.status,
+              title: s.title || prev.title,
+              playbackId: s.playbackId || prev.playbackId,
+              scheduledTime: s.scheduledTime,
+              endedAt: s.endedAt,
+            }));
+            if (s.currentTrack) setCurrentTrack(s.currentTrack);
+            if (s.bpm) setCurrentBpm(Number(s.bpm));
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully
+      }
+    };
 
-      // 1. Pre-show countdown: if status is 'upcoming' and scheduledTime is set
-      if (activeStream.status === 'upcoming' && activeStream.scheduledTime) {
-        const diff = Math.floor((new Date(activeStream.scheduledTime).getTime() - now) / 1000);
+    pollStatus();
+    const interval = setInterval(pollStatus, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Countdown timer for upcoming scheduled streams
+  useEffect(() => {
+    if (activeStream.status === 'upcoming' && activeStream.scheduledTime) {
+      const timer = setInterval(() => {
+        const now = Date.now();
+        const diff = Math.floor((new Date(activeStream.scheduledTime!).getTime() - now) / 1000);
         if (diff > 0) {
           setPreCountdownSecs(diff);
         } else {
           setPreCountdownSecs(null);
-          // Countdown finished -> dynamically switch local stream view status to live!
           setActiveStream(prev => ({ ...prev, status: 'live' }));
         }
-      } else {
-        setPreCountdownSecs(null);
-      }
-
-      // 2. Post-show countdown: if status is 'ended' and endedAt is set
-      if (activeStream.status === 'ended' && activeStream.endedAt) {
-        const diff = Math.floor((new Date(activeStream.endedAt).getTime() + 30 * 60 * 1000 - now) / 1000);
-        if (diff > 0) {
-          setPostCountdownSecs(diff);
-        } else {
-          setPostCountdownSecs(null);
-          // 30 minute grace period expired -> switch back to standby / offline!
-          setActiveStream(prev => ({ ...prev, status: 'standby' }));
-        }
-      } else {
-        setPostCountdownSecs(null);
-      }
-    };
-
-    updateTimers();
-    timer = setInterval(updateTimers, 1000);
-
-    return () => clearInterval(timer);
-  }, [activeStream.status, activeStream.scheduledTime, activeStream.endedAt]);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+    setPreCountdownSecs(null);
+  }, [activeStream.status, activeStream.scheduledTime]);
 
   const formatCountdown = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -171,401 +181,326 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: '1', user: 'System', text: 'ESTABLISHING PORT TRANSMISSION ON COORD_51.5074...', time: '16:00' },
-    { id: '2', user: 'System', text: 'DECODING AUDIO LAYER // AUDIO_RATE: 320KBPS...', time: '16:00' },
-    { id: '3', user: 'System', text: 'STREAM FEED ONLINE. CHANNEL STABLE.', time: '16:01' }
-  ]);
-  
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll chat box
+  // Auto-scroll chat
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [chatMessages]);
 
-  // Simulate incoming live chat messages
+  // Subtle background chat simulation
   useEffect(() => {
     const addMessageInterval = setInterval(() => {
       const now = new Date();
       const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      const newUser = CHAT_USERS[Math.floor(Math.random() * CHAT_USERS.length)];
-      const newText = CHAT_PHRASES[Math.floor(Math.random() * CHAT_PHRASES.length)];
-      
+      const newUser = INCOMING_USERS[Math.floor(Math.random() * INCOMING_USERS.length)];
+      const newText = INCOMING_CHAT_SIM[Math.floor(Math.random() * INCOMING_CHAT_SIM.length)];
+
       const newMsg: ChatMessage = {
         id: performance.now().toString(),
         user: newUser,
         text: newText,
-        time: timeStr
+        time: timeStr,
       };
 
-      setChatMessages(prev => [...prev.slice(-30), newMsg]);
+      setChatMessages(prev => [...prev.slice(-25), newMsg]);
       playTick();
-    }, 4500 + Math.random() * 3500);
+    }, 9000 + Math.random() * 8000);
 
     return () => clearInterval(addMessageInterval);
   }, []);
 
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const userMsg: ChatMessage = {
+      id: performance.now().toString(),
+      user: 'You',
+      text: chatInput.trim(),
+      time: timeStr,
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    playClick(800, 'sine', 0.02);
+  };
+
+  // Determine video render element
+  const renderVideoPlayer = () => {
+    const playbackId = activeStream.playbackId;
+
+    if (!playbackId) {
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black p-6 text-center select-none">
+          <div className="flex flex-col items-center gap-3">
+            <Radio className="w-8 h-8 text-[#D8163F] opacity-70 animate-pulse" />
+            <span className="text-xs font-bold tracking-widest text-[#D8163F] uppercase">
+              BROADCAST OFFLINE
+            </span>
+            <p className="text-[10px] font-mono text-zinc-500 max-w-xs leading-relaxed">
+              No live OBS broadcast is currently transmitting. Select a recorded session below to watch.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    const ytId = getYouTubeEmbedId(playbackId);
+    if (ytId) {
+      return (
+        <iframe
+          src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+          title={activeStream.title}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="w-full h-full"
+        />
+      );
+    }
+
+    const twitchChannel = getTwitchChannel(playbackId);
+    if (twitchChannel) {
+      const parentDomain = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      return (
+        <iframe
+          src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${parentDomain}&autoplay=true`}
+          frameBorder="0"
+          allowFullScreen
+          scrolling="no"
+          className="w-full h-full"
+        />
+      );
+    }
+
+    // Direct HLS stream link (.m3u8)
+    if (playbackId.endsWith('.m3u8') || playbackId.startsWith('http')) {
+      return <HlsPlayer src={playbackId} title={activeStream.title} />;
+    }
+
+    // Cloudflare Stream Player (Universal iframe)
+    const { iframeUrl } = getCloudflareStreamPlaybackUrl(playbackId);
+    return (
+      <iframe
+        src={`${iframeUrl}?autoplay=true&muted=true&preload=auto`}
+        title={activeStream.title}
+        frameBorder="0"
+        allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+        className="w-full h-full"
+      />
+    );
+  };
+
+  const isLive = activeStream.status === 'live';
 
   return (
     <PageShell>
-      <main className="min-h-[100dvh] text-zinc-100 selection:bg-primary/30 selection:text-primary pt-24 pb-20 px-4 md:px-8 w-full relative overflow-y-auto custom-scrollbar">
-        
+      <main className="min-h-[100dvh] text-zinc-100 selection:bg-[#D8163F]/30 selection:text-[#D8163F] pt-24 pb-20 px-4 md:px-8 w-full relative overflow-y-auto custom-scrollbar">
         {/* Section Header */}
-        <div className="relative z-10 mb-8 md:mb-12 flex flex-col items-center text-center">
+        <div className="relative z-10 mb-8 md:mb-10 flex flex-col items-center text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <h1
-              className="glitch font-avathe font-black text-primary text-[clamp(2rem,6vh,5.5rem)] leading-none tracking-wider uppercase select-none"
-              data-text="LIVE TRANSMISSION"
-            >
+            <h1 className="font-avathe font-bold text-white text-[clamp(2rem,5vw,4.5rem)] leading-none tracking-wider uppercase select-none">
               LIVE STREAM
             </h1>
+            <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.25em] mt-3">
+              DIRECT OBS STUDIO BROADCAST // CLOUDFLARE STREAM
+            </p>
           </motion.div>
         </div>
 
         {/* Master Content Layout */}
-        <div className="relative z-10 w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-stretch select-none font-mono">
-          
+        <div className="relative z-10 w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch select-none font-mono">
           {/* Stream Player Container (2/3 width) */}
-          <div className="lg:col-span-2 bg-black border border-zinc-900 rounded-none p-4 md:p-6 relative flex flex-col gap-4">
-            {/* Carbon texture background */}
-            <div className="absolute inset-0 opacity-[0.015] pointer-events-none z-0" style={{
-              backgroundImage: 'radial-gradient(#fff 1.5px, transparent 1.5px)',
-              backgroundSize: '16px 16px'
-            }} />
-
-            {/* Top Stats Bar */}
-            <div className="w-full flex justify-between items-center text-[7.5px] text-zinc-500 uppercase tracking-widest border-b border-zinc-900 pb-2 z-10">
-              <span className="flex items-center gap-1.5 text-zinc-300">
-                {activeStream.status === 'live' ? (
+          <div className="lg:col-span-2 bg-[#09090b] border border-white/[0.08] p-4 md:p-5 relative flex flex-col gap-4">
+            {/* Top Status Bar */}
+            <div className="w-full flex justify-between items-center text-[9px] text-zinc-500 uppercase tracking-widest border-b border-white/[0.06] pb-2 z-10">
+              <span className="flex items-center gap-2 text-zinc-300 font-bold">
+                {isLive ? (
                   <>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D8163F] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#D8163F]"></span>
                     </span>
-                    LIVE BROADCAST ACTIVE
+                    <span className="text-[#D8163F] font-bold">ON AIR // LIVE BROADCAST</span>
                   </>
                 ) : activeStream.status === 'upcoming' ? (
                   <>
                     <span className="relative flex h-2 w-2">
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
                     </span>
-                    UPCOMING TRANSMISSION SCHEDULED
-                  </>
-                ) : activeStream.status === 'ended' ? (
-                  <>
-                    <span className="relative flex h-2 w-2">
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
-                    </span>
-                    TRANSMISSION CONCLUDED
+                    UPCOMING STREAM SCHEDULED
                   </>
                 ) : (
                   <>
                     <span className="relative flex h-2 w-2">
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-600"></span>
                     </span>
-                    OFFLINE / LAST BROADCAST ARCHIVE
+                    OFFLINE // BROADCAST ARCHIVE
                   </>
                 )}
               </span>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setForceOnline(!forceOnline)}
-                  className={cn(
-                    "px-2 py-0.5 font-mono text-[7px] font-black uppercase tracking-widest rounded-none border transition-all cursor-pointer",
-                    forceOnline 
-                      ? "border-primary text-primary bg-primary/5 animate-pulse" 
-                      : "border-zinc-900 text-zinc-500 hover:text-zinc-300 bg-black"
-                  )}
-                  title="Toggle Test Signal Generator Bypass"
-                >
-                  {forceOnline ? "[ BYPASS: ON ]" : "[ BYPASS: OFF ]"}
-                </button>
-                <span className="font-bold text-primary">PORT_3000 // DECODER_ENGAGED</span>
+
+              <div className="flex items-center gap-3 text-[9px] text-zinc-500">
+                <span className="text-zinc-400 font-bold">1080P60 HD</span>
+                <span>•</span>
+                <span className="text-zinc-400 font-bold">320 KBPS</span>
               </div>
             </div>
 
             {/* Video Viewport Chassis */}
-            <div className="relative w-full aspect-video rounded-none overflow-hidden border border-zinc-900 bg-black z-10 flex flex-col items-center justify-center">
-              {activeStream.status === 'live' || activeStream.status === 'archived' || forceOnline ? (
-                (() => {
-                  const ytId = getYouTubeEmbedId(activeStream.playbackId);
-                  const twitchChannel = getTwitchChannel(activeStream.playbackId);
-
-                  if (ytId) {
-                    return (
-                      <iframe
-                        src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
-                        title={activeStream.title}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                        className="w-full h-full"
-                      />
-                    );
-                  }
-
-                  if (twitchChannel) {
-                    const parentDomain = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-                    return (
-                      <iframe
-                        src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${parentDomain}&autoplay=true`}
-                        frameBorder="0"
-                        allowFullScreen
-                        scrolling="no"
-                        className="w-full h-full"
-                      />
-                    );
-                  }
-
-                  return (
-                    <HlsPlayer
-                      src={activeStream.playbackId}
-                      title={activeStream.title}
-                    />
-                  );
-                })()
-              ) : activeStream.status === 'upcoming' ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black p-6 text-center select-none overflow-hidden">
-                  <div className="flex flex-col gap-4 relative z-10 items-center">
-                    <span className="text-primary font-black text-xs md:text-sm tracking-[0.3em] uppercase animate-pulse">
-                      [ UPCOMING_TRANSMISSION ]
-                    </span>
-                    <span className="text-[14px] md:text-[18px] font-sans font-bold text-zinc-200 tracking-wider max-w-sm uppercase">
-                      {activeStream.title}
-                    </span>
-                    {preCountdownSecs !== null ? (
-                      <div className="flex flex-col gap-1.5 mt-2 bg-zinc-950 border border-zinc-900 rounded-none px-6 py-2 font-mono items-center">
-                        <span className="text-[10px] text-zinc-500 tracking-widest uppercase">TRANSMISSION EN ROUTE:</span>
-                        <span className="text-lg text-primary font-black tracking-widest animate-pulse">
-                          {formatCountdown(preCountdownSecs)}
-                        </span>
-                      </div>
-                    ) : (
-                      activeStream.scheduledTime && (
-                        <div className="flex flex-col gap-1.5 mt-2 bg-zinc-950 border border-zinc-900 rounded-none px-4 py-2 font-mono">
-                          <span className="text-[10px] text-zinc-500 tracking-widest uppercase">Scheduled Start Time:</span>
-                          <span className="text-xs text-primary font-bold">
-                            {new Date(activeStream.scheduledTime).toLocaleString('en-GB', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              timeZoneName: 'short'
-                            })}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-
-                  {/* Diagnostic details */}
-                  <div className="absolute bottom-4 left-4 right-4 flex justify-between text-[7px] text-zinc-600 uppercase font-black tracking-widest border-t border-zinc-900/60 pt-2.5">
-                    <span>SYS_MODE: SCHEDULED</span>
-                    <span>SIGNAL: READY_FOR_CARRIER</span>
-                    <span>TARGET: {activeStream.title}</span>
-                  </div>
-                </div>
-              ) : activeStream.status === 'ended' && postCountdownSecs !== null ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black p-6 text-center select-none overflow-hidden">
-                  <div className="flex flex-col gap-4 relative z-10 items-center">
-                    <span className="text-primary font-black text-xs md:text-sm tracking-[0.3em] uppercase animate-pulse">
-                      [ TRANSMISSION_CONCLUDED ]
-                    </span>
-                    <span className="text-[11px] md:text-[13px] font-sans font-bold text-zinc-300 tracking-wider max-w-sm uppercase leading-relaxed">
-                      THE LIVE BROADCAST HAS ENDED. THANK YOU FOR TUNING IN.
-                    </span>
-                    <div className="flex flex-col gap-1.5 mt-2 bg-zinc-950 border border-zinc-900 rounded-none px-6 py-2 font-mono items-center">
-                      <span className="text-[10px] text-zinc-500 tracking-widest uppercase">System Standby In:</span>
-                      <span className="text-sm text-primary font-black tracking-widest">
-                        {formatCountdown(postCountdownSecs)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Diagnostic details */}
-                  <div className="absolute bottom-4 left-4 right-4 flex justify-between text-[7px] text-zinc-600 uppercase font-black tracking-widest border-t border-zinc-900/60 pt-2.5">
-                    <span>SYS_MODE: STANDBY_COUNTDOWN</span>
-                    <span>SIGNAL: TERM_CARRIER</span>
-                    <span>TARGET: {activeStream.title}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black p-6 text-center select-none overflow-hidden">
-                  
-                  {/* Test Pattern Color Bars */}
-                  <div className="flex h-3.5 w-44 rounded-sm overflow-hidden mb-6 border border-zinc-900 opacity-60">
-                    <div className="w-[14.28%] h-full bg-zinc-100" />
-                    <div className="w-[14.28%] h-full bg-yellow-400" />
-                    <div className="w-[14.28%] h-full bg-cyan-400" />
-                    <div className="w-[14.28%] h-full bg-green-500" />
-                    <div className="w-[14.28%] h-full bg-pink-500" style={{ backgroundColor: '#ec4899' }} />
-                    <div className="w-[14.28%] h-full bg-red-500" />
-                    <div className="w-[14.28%] h-full bg-blue-600" />
-                  </div>
-
-                  <div className="flex flex-col items-center gap-3 p-6 text-center relative z-10">
-                    <div className="w-3 h-3 rounded-full bg-primary animate-ping mb-2" />
-                    <span className="text-xs font-black tracking-[0.2em] text-primary uppercase">
-                      OFFLINE SIGNAL DETECTED
-                    </span>
-                    <p className="text-[9px] text-zinc-500 max-w-xs leading-relaxed">
-                      Live encoder feed currently unassigned. Toggle system bypass or select a past transmission below.
-                    </p>
-                    <div className="mt-4 p-3 bg-zinc-950 border border-zinc-900 rounded-none text-[8px] text-zinc-400 font-mono flex flex-col gap-1">
-                      <span>SIGNAL: LOSS_OF_CARRIER</span>
-                      <span>TARGET: {activeStream.title}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className="relative w-full aspect-video overflow-hidden border border-white/[0.08] bg-black z-10 flex flex-col items-center justify-center">
+              {renderVideoPlayer()}
             </div>
 
-            {/* Bottom Info deck */}
-            <div className="bg-black border border-zinc-900 p-3.5 rounded-none z-10 text-left">
-              <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-bold">STREAM DIAGNOSTICS</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2 text-[8px] text-zinc-400 font-bold uppercase tracking-wider">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[6.5px] text-zinc-600">RESOLUTION</span>
-                  <span className="text-primary font-black">{activeStream.resolution}</span>
+            {/* Live Track & BPM Bar */}
+            <div className="bg-black/70 border border-white/[0.06] p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Disc className="w-4 h-4 text-[#D8163F] animate-spin shrink-0" style={{ animationDuration: '3s' }} />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[8px] text-zinc-500 uppercase tracking-widest">NOW PLAYING:</span>
+                  <span className="text-xs text-white font-bold truncate tracking-wide">
+                    {currentTrack}
+                  </span>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[6.5px] text-zinc-600">CODEC LAYER</span>
-                  <span className="text-white">H.264 // HE-AAC</span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[6.5px] text-zinc-600">TARGET BITRATE</span>
-                  <span className="text-white">6800 KBPS</span>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-bold tracking-wider shrink-0">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900 border border-white/[0.08]">
+                  <span className="text-[8px] text-zinc-500">BPM</span>
+                  <span className="text-[#D8163F] font-mono">{currentBpm}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Terminal Live Chat Container (1/3 width) */}
-          <div className="bg-black border border-zinc-900 rounded-none p-4 md:p-6 flex flex-col justify-between h-[450px] lg:h-auto select-none">
-            {/* Terminal Top info */}
-            <div className="w-full border-b border-zinc-900 pb-2 flex justify-between items-center text-[7.5px] text-zinc-500 uppercase tracking-widest font-bold">
-              <span>CHAT FEED TERMINAL</span>
-              <span className="text-primary font-black">SYS_LOG</span>
+          {/* Live Chat Container (1/3 width) */}
+          <div className="bg-[#09090b] border border-white/[0.08] p-4 flex flex-col justify-between h-[420px] lg:h-auto select-none">
+            <div className="w-full border-b border-white/[0.06] pb-2 flex justify-between items-center text-[9px] text-zinc-400 uppercase tracking-widest font-bold">
+              <span>LIVE CHAT</span>
+              <span className="text-[#D8163F]">{isLive ? 'ACTIVE' : 'FEED'}</span>
             </div>
 
             {/* Scrollable messages area */}
-            <div 
+            <div
               ref={scrollRef}
-              className="flex-grow my-4 overflow-y-auto pr-1 text-left flex flex-col gap-2.5 custom-scrollbar"
+              className="flex-grow my-3 overflow-y-auto pr-1 text-left flex flex-col gap-2.5 custom-scrollbar"
             >
-              {chatMessages.map(msg => {
-                const isSystem = msg.user === 'System';
-                return (
-                  <div key={msg.id} className="text-[9px] leading-relaxed">
-                    <span className="text-zinc-600 mr-1.5">[{msg.time}]</span>
-                    {isSystem ? (
-                      <span className="text-emerald-500 font-bold uppercase">{msg.text}</span>
-                    ) : (
-                      <>
-                        <span className="text-primary font-black uppercase mr-1">{msg.user}:</span>
-                        <span className="text-zinc-300 font-medium">{msg.text}</span>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+              {chatMessages.map(msg => (
+                <div key={msg.id} className="text-[10px] leading-relaxed">
+                  <span className="text-zinc-600 mr-2 text-[9px]">[{msg.time}]</span>
+                  <span className={cn(
+                    "font-bold uppercase mr-1.5",
+                    msg.user === 'You' ? "text-emerald-400" : "text-[#D8163F]"
+                  )}>
+                    {msg.user}:
+                  </span>
+                  <span className="text-zinc-300 font-normal">{msg.text}</span>
+                </div>
+              ))}
             </div>
 
-            {/* Input prompt line (skeuomorphic mock input) */}
-            <div className="border-t border-zinc-900 pt-3 flex items-center gap-1.5">
-              <span className="text-[9px] text-primary font-bold animate-pulse">&gt;</span>
-              <input 
-                type="text" 
-                placeholder="TRANSMISSION CHAT MUTE / OFFLINE..."
-                disabled
-                className="w-full bg-transparent border-0 font-mono text-[9.5px] text-zinc-600 focus:outline-none placeholder-zinc-700"
+            {/* Message input */}
+            <form onSubmit={handleSendMessage} className="border-t border-white/[0.06] pt-3 flex items-center gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                placeholder="Send message..."
+                maxLength={140}
+                className="w-full bg-black border border-white/[0.08] px-2.5 py-1.5 font-mono text-[10px] text-white focus:outline-none focus:border-[#D8163F] placeholder-zinc-600 transition-colors"
               />
-            </div>
-
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-[#D8163F] text-white text-[10px] font-bold uppercase tracking-wider hover:bg-[#b51033] transition-colors cursor-pointer"
+              >
+                Send
+              </button>
+            </form>
           </div>
-
         </div>
 
-        {/* Past Broadcasts History Section */}
+        {/* Broadcast History Section */}
         {history.length > 0 && (
           <div className="relative z-10 w-full max-w-5xl mx-auto mt-12 md:mt-16 text-left select-none font-mono">
-            <div className="flex items-center gap-3 mb-6 border-b border-zinc-900 pb-3">
-              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">
-                PAST TRANSMISSION ARCHIVES
+            <div className="flex items-center gap-3 mb-6 border-b border-white/[0.08] pb-3">
+              <span className="text-xs text-white font-bold uppercase tracking-[0.2em]">
+                BROADCAST ARCHIVE // PAST SETS
               </span>
               <div className="h-[1px] flex-grow bg-zinc-900" />
-              <span className="text-[7.5px] text-primary font-black uppercase tracking-widest border border-primary/20 px-2 py-0.5 rounded-none bg-primary/5">
-                {history.length} VODS AVAILABLE
+              <span className="text-[9px] text-[#D8163F] font-bold uppercase tracking-widest border border-[#D8163F]/30 px-2 py-0.5 bg-[#D8163F]/5">
+                {history.length} RECORDINGS
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {history.map((item) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {history.map(item => {
                 const isSelected = activeStream.playbackId === item.playbackId;
                 return (
                   <div
                     key={item.id}
                     onClick={() => {
                       playClick(750, 'sine', 0.02);
-                      setActiveStream({
+                      setActiveStream(prev => ({
+                        ...prev,
                         title: item.title,
                         playbackId: item.playbackId,
-                        viewerUserId: "user-id-007",
-                        status: "archived",
-                        scheduledTime: null,
-                        endedAt: item.endedAt || null,
-                        resolution: item.resolution,
-                        latency: "Standard Latency"
-                      });
+                        status: 'archive',
+                      }));
+                      window.scrollTo({ top: 120, behavior: 'smooth' });
                     }}
                     className={cn(
-                      "group bg-black border rounded-none p-4 flex flex-col justify-between gap-4 cursor-pointer transition-all duration-300 relative overflow-hidden",
+                      'group bg-[#09090b] border p-3 flex flex-col justify-between gap-3 cursor-pointer transition-all duration-300 relative overflow-hidden',
                       isSelected
-                        ? "border-primary scale-[1.01]"
-                        : "border-zinc-900 hover:border-zinc-800"
+                        ? 'border-[#D8163F] shadow-[0_0_15px_rgba(216,22,63,0.3)]'
+                        : 'border-white/[0.06] hover:border-white/[0.18]'
                     )}
                   >
-                    {/* Color bars placeholder thumb */}
-                    <div className="relative w-full aspect-video rounded-none bg-black border border-zinc-900 overflow-hidden flex flex-col items-center justify-center">
-                      <div className="flex h-1.5 w-24 rounded-none overflow-hidden mb-2 border border-zinc-900/60 opacity-40">
-                        <div className="w-[14.28%] h-full bg-zinc-100" />
-                        <div className="w-[14.28%] h-full bg-yellow-400" />
-                        <div className="w-[14.28%] h-full bg-cyan-400" />
-                        <div className="w-[14.28%] h-full bg-green-500" />
-                        <div className="w-[14.28%] h-full bg-pink-500" style={{ backgroundColor: '#ec4899' }} />
-                        <div className="w-[14.28%] h-full bg-red-500" />
-                        <div className="w-[14.28%] h-full bg-blue-600" />
+                    {/* Thumbnail Viewport */}
+                    <div className="relative w-full aspect-video bg-black border border-white/[0.06] overflow-hidden flex items-center justify-center">
+                      <img
+                        src={item.thumbnail}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          // Fallback on image load error
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-black/80 border border-white/20 flex items-center justify-center group-hover:border-[#D8163F] transition-colors">
+                          <Play className="w-4 h-4 text-white group-hover:text-[#D8163F] fill-current ml-0.5 transition-colors" />
+                        </div>
                       </div>
-                      <span className="text-[6.5px] text-zinc-600 font-bold uppercase tracking-wider">PREVIEW_NOT_LOADED</span>
+
+                      {/* Duration Tag */}
+                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/90 text-white text-[8px] font-mono font-bold flex items-center gap-1 border border-white/10">
+                        <Clock className="w-2.5 h-2.5 text-[#D8163F]" />
+                        {item.duration}
+                      </div>
+
                       {isSelected && (
-                        <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
-                          <span className="text-primary text-[8px] font-black tracking-widest border border-primary bg-black px-2 py-1 rounded-none">
-                            NOW PLAYING
-                          </span>
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#D8163F] text-white text-[8px] font-bold tracking-wider">
+                          NOW PLAYING
                         </div>
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-zinc-500 text-[7px] tracking-widest font-black uppercase">
-                        RECORDED: {item.date}
-                      </span>
-                      <span className="text-white text-[9.5px] font-bold tracking-wide uppercase line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                    <div className="flex flex-col gap-1 text-left">
+                      <div className="flex items-center justify-between text-[8px] text-zinc-500 font-bold uppercase tracking-wider">
+                        <span>{item.date}</span>
+                        <span>{item.resolution}</span>
+                      </div>
+                      <span className="text-white text-xs font-bold tracking-wide uppercase line-clamp-2 leading-snug group-hover:text-[#D8163F] transition-colors">
                         {item.title}
                       </span>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-zinc-900/60 pt-2 text-[6.5px] text-zinc-500 font-black uppercase tracking-widest">
-                      <span>{item.resolution}</span>
-                      <span className="text-zinc-600 group-hover:text-zinc-400 transition-colors">LOAD FEED &gt;</span>
                     </div>
                   </div>
                 );
@@ -573,7 +508,6 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
             </div>
           </div>
         )}
-
       </main>
     </PageShell>
   );

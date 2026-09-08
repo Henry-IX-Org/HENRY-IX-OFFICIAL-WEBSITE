@@ -1,10 +1,11 @@
 import LiveClient from './live-client';
 import { Metadata } from 'next';
+import { getLiveInputStatus, getBroadcastHistory } from '@/lib/cloudflareStream';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Live Stream & Studio Sessions | HENRY IX',
+  title: 'Live Stream & Broadcasts | HENRY IX',
   description: 'Tune in to live streaming DJ sets, studio rehearsals, and multi-camera live broadcasts from DJ Henry IX in London.',
   keywords: [
     'HENRY IX Live',
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     canonical: 'https://henryix.com/live',
   },
   openGraph: {
-    title: 'Live Stream & Studio Sessions | HENRY IX',
+    title: 'Live Stream & Broadcasts | HENRY IX',
     description: 'Tune in to live streaming DJ sets, studio rehearsals, and multi-camera live broadcasts from DJ Henry IX in London.',
     url: 'https://henryix.com/live',
     siteName: 'HENRY IX DJ',
@@ -27,44 +28,26 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const streams: any[] = [];
+  const [liveStatus, broadcastHistory] = await Promise.all([
+    getLiveInputStatus().catch(() => ({
+      isLive: false,
+      status: 'offline' as const,
+      playbackId: '',
+      title: 'HENRY IX // LIVE',
+    })),
+    getBroadcastHistory().catch(() => []),
+  ]);
 
-  const activeStream = 
-    streams.find((s: any) => s.status === 'live') || 
-    streams.find((s: any) => s.status === 'upcoming') || 
-    streams.find((s: any) => s.status === 'ended') || 
-    streams[0];
-  
   const initialSettings = {
-    title: activeStream?.title || "Transmission Standby",
-    playbackId: activeStream?.playbackId || "",
-    viewerUserId: activeStream?.viewerUserId || "user-id-007",
-    status: activeStream?.status || "standby",
-    scheduledTime: activeStream?.scheduledTime || null,
-    endedAt: activeStream?.endedAt || null,
-    resolution: activeStream?.diagnosticsResolution || "1080P60 HD",
-    latency: activeStream?.diagnosticsLatency || "Low Latency"
+    title: liveStatus.title || 'HENRY IX // LIVE',
+    playbackId: liveStatus.playbackId || (broadcastHistory[0]?.playbackId ?? ''),
+    viewerUserId: 'listener-' + Math.random().toString(36).substring(2, 7),
+    status: liveStatus.status,
+    scheduledTime: null as string | null,
+    endedAt: null as string | null,
+    resolution: '1080P60 HD',
+    latency: 'Low Latency',
   };
 
-  // Build history list
-  const activeId = activeStream?._id;
-  const dbHistory = streams
-    .filter((s: any) => s._id !== activeId && s.status === 'archived')
-    .map((s: any) => ({
-      id: s._id,
-      title: s.title,
-      playbackId: s.playbackId,
-      date: s._createdAt ? new Date(s._createdAt).toISOString().split('T')[0] : "2026-07-16",
-      resolution: s.diagnosticsResolution || "1080P60 HD"
-    }));
-
-  const mockHistory = [
-    { id: 'mock-4', title: "Knight Club: Session 4 - UK Garage Headliner", playbackId: "https://cph-p2p-hls.akamaized.net/hls/live/2000341/test/master.m3u8", date: "2026-07-02", resolution: "1080P60 HD" },
-    { id: 'mock-3', title: "Knight Club: Session 3 - Deep Tech Rehearsal", playbackId: "https://cph-p2p-hls.akamaized.net/hls/live/2000341/test/master.m3u8", date: "2026-06-18", resolution: "1080P60 HD" },
-    { id: 'mock-2', title: "Knight Club: Session 2 - Liquid DnB Blend", playbackId: "https://cph-p2p-hls.akamaized.net/hls/live/2000341/test/master.m3u8", date: "2026-06-04", resolution: "1080P60 HD" }
-  ];
-
-  const history = dbHistory.length > 0 ? dbHistory : mockHistory;
-
-  return <LiveClient initialSettings={initialSettings} history={history} />;
+  return <LiveClient initialSettings={initialSettings} history={broadcastHistory} />;
 }
