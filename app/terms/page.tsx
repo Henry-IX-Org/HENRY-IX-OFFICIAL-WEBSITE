@@ -57,6 +57,10 @@ export default function TermsPage() {
               The HENRY IX Studio integrates with approved third-party developer APIs to manage creative assets, media moodboards, and promotional workflows:
             </p>
             <div className="flex flex-col gap-3 font-mono text-xs text-zinc-300">
+              <div className="border-l-2 border-[#D8163F] pl-3 py-1">
+                <strong className="text-white block">Google OAuth &amp; Developer APIs:</strong>
+                <span className="text-zinc-400 font-sans text-xs">Used strictly to authenticate authorized operators via email, display name, and avatar, and manage operational Google Drive stems in full compliance with the Google API Services User Data Policy and Limited Use requirements.</span>
+              </div>
               <div className="border-l-2 border-red-500 pl-3 py-1">
                 <strong className="text-white block">Pinterest Developer API:</strong>
                 <span className="text-zinc-400 font-sans text-xs">Used strictly by authorized Studio operators to view, curate, and reference personal visual moodboards, stage aesthetics, and artwork designs. The Studio complies with the Pinterest Developer Terms of Service and Community Guidelines. No content retrieved via the Pinterest API is redistributed or sold.</span>

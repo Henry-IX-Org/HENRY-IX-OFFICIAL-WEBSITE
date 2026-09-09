@@ -47,8 +47,9 @@ export default function PrivacyPage() {
               We act as the <strong className="text-zinc-200">Data Controller</strong> under the <strong className="text-zinc-200">UK General Data Protection Regulation (UK GDPR)</strong> and the <strong className="text-zinc-200">Data Protection Act 2018</strong>.
             </p>
             <div className="bg-black border border-zinc-900 rounded-none p-4 font-mono text-xs text-zinc-400 flex flex-col gap-1">
-              <span className="text-zinc-500 uppercase tracking-widest font-bold">Data Protection Contact</span>
-              <span className="text-zinc-200">Email: henryixdj@gmail.com</span>
+              <span className="text-zinc-500 uppercase tracking-widest font-bold">Data Protection & Developer Contact</span>
+              <span className="text-zinc-200">Email: Management@henryix.com / admin@henryix.com</span>
+              <span className="text-zinc-500">Applications: HENRY IX (henryix.com) &amp; HENRY IX Studio (studio.henryix.com)</span>
               <span className="text-zinc-500">Location: London, United Kingdom</span>
             </div>
           </section>
@@ -131,10 +132,92 @@ export default function PrivacyPage() {
             </div>
           </section>
 
-          {/* Section 5: Cookie Policy */}
+          {/* Section 5: Google OAuth & User Data Policy */}
           <section className="bg-black border border-zinc-900 rounded-none p-6 md:p-8 flex flex-col gap-4">
             <h2 className="text-lg font-mono font-bold text-white uppercase tracking-wider text-primary border-b border-zinc-900 pb-2">
-              05 // COOKIE POLICY (PECR COMPLIANCE)
+              05 // GOOGLE API &amp; USER DATA POLICY (HENRY IX STUDIO)
+            </h2>
+            <p className="text-zinc-300">
+              <strong className="text-white font-mono">HENRY IX Studio</strong> (<strong className="text-primary font-mono">studio.henryix.com</strong>) integrates with Google Identity Services (Google OAuth 2.0) to provide secure administrative authentication and team operator identity verification.
+            </p>
+
+            <div className="flex flex-col gap-4 font-mono text-xs">
+              <div className="bg-[#0b0c10] border border-zinc-800 p-4 space-y-2">
+                <span className="text-primary font-bold uppercase tracking-wider block">A. Google User Data We Access</span>
+                <p className="text-zinc-400 font-sans text-xs">
+                  When you sign in to HENRY IX Studio using Google, we request authorization to access the following standard profile scopes:
+                </p>
+                <ul className="list-disc list-inside text-zinc-300 font-mono text-xs space-y-1 pl-1">
+                  <li><strong className="text-white">Email Address (.../auth/userinfo.email):</strong> Used as your unique operator account identifier and for critical account security notices.</li>
+                  <li><strong className="text-white">Basic Profile Information (.../auth/userinfo.profile):</strong> Your public display name and Google profile picture URL, used exclusively to display your identity in the Studio console.</li>
+                  <li><strong className="text-white">OpenID Identifier (openid):</strong> Cryptographic user subject identifier used to securely authenticate your active workstation session.</li>
+                </ul>
+              </div>
+
+              <div className="bg-[#0b0c10] border border-zinc-800 p-4 space-y-2">
+                <span className="text-cyan-400 font-bold uppercase tracking-wider block">B. Purpose of Processing Google Data</span>
+                <p className="text-zinc-400 font-sans text-xs">
+                  We process Google user data strictly for internal application functionality:
+                </p>
+                <ul className="list-disc list-inside text-zinc-300 font-sans text-xs space-y-1 pl-1">
+                  <li>Authenticating authorized operators, media crew, and sound engineers into the private Studio workspace.</li>
+                  <li>Enforcing Role-Based Access Control (RBAC) permissions.</li>
+                  <li>Displaying your operator avatar and profile badge in the Studio dashboard.</li>
+                </ul>
+              </div>
+
+              <div className="bg-[#0b0c10] border border-zinc-800 p-4 space-y-2">
+                <span className="text-emerald-400 font-bold uppercase tracking-wider block">C. Data Protection, Sharing &amp; AI Prohibitions</span>
+                <ul className="list-disc list-inside text-zinc-300 font-sans text-xs space-y-1.5 pl-1">
+                  <li><strong className="text-white font-mono">No Selling or Commercial Transfers:</strong> We do NOT sell, rent, monetize, or trade any Google user data or credentials under any circumstances.</li>
+                  <li><strong className="text-white font-mono">No Third-Party Advertising:</strong> Google user data is never shared with third-party advertising platforms, data brokers, or marketing aggregators.</li>
+                  <li><strong className="text-white font-mono">No AI Model Training:</strong> Google user data is strictly prohibited from being used to train, fine-tune, or improve generalized artificial intelligence (AI) or machine learning (ML) models.</li>
+                  <li><strong className="text-white font-mono">Secure Cloud Storage:</strong> Stored under encrypted edge storage (AES-256 at rest, TLS 1.3 in transit) with restricted administrative access.</li>
+                </ul>
+              </div>
+
+              <div className="bg-[#12131a] border border-primary/40 p-4 space-y-2">
+                <span className="text-[#D8163F] font-bold uppercase tracking-wider block">D. Google API Limited Use Disclosure</span>
+                <p className="text-zinc-300 font-sans text-xs leading-relaxed">
+                  HENRY IX Studio&apos;s use and transfer to any other app of information received from Google APIs will adhere to the{' '}
+                  <a 
+                    href="https://developers.google.com/terms/api-services-user-data-policy" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-primary underline font-mono font-semibold"
+                  >
+                    Google API Services User Data Policy
+                  </a>
+                  , including the Limited Use requirements.
+                </p>
+              </div>
+
+              <div className="bg-[#0b0c10] border border-zinc-800 p-4 space-y-2">
+                <span className="text-amber-400 font-bold uppercase tracking-wider block">E. Data Retention, Revocation &amp; Deletion</span>
+                <p className="text-zinc-400 font-sans text-xs leading-relaxed">
+                  You have full control over your Google data at all times:
+                </p>
+                <ul className="list-disc list-inside text-zinc-300 font-sans text-xs space-y-1 pl-1">
+                  <li>
+                    <strong className="text-white">Revoke Access:</strong> You can revoke HENRY IX Studio&apos;s access to your Google account at any time via{' '}
+                    <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-primary underline font-mono">
+                      Google Security Account Permissions
+                    </a>.
+                  </li>
+                  <li>
+                    <strong className="text-white">Request Deletion:</strong> You may request complete erasure of your Studio operator profile and all associated data by contacting{' '}
+                    <a href="mailto:Management@henryix.com" className="text-primary underline font-mono">Management@henryix.com</a> or{' '}
+                    <a href="mailto:admin@henryix.com" className="text-primary underline font-mono">admin@henryix.com</a>. Deletion requests are fulfilled within 48 hours.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 6: Cookie Policy */}
+          <section className="bg-black border border-zinc-900 rounded-none p-6 md:p-8 flex flex-col gap-4">
+            <h2 className="text-lg font-mono font-bold text-white uppercase tracking-wider text-primary border-b border-zinc-900 pb-2">
+              06 // COOKIE POLICY (PECR COMPLIANCE)
             </h2>
             <p>
               In accordance with the <strong className="text-zinc-200">Privacy and Electronic Communications Regulations (PECR)</strong>, we obtain prior consent before placing non-essential cookies or tracking technologies on your device.
@@ -146,11 +229,11 @@ export default function PrivacyPage() {
                 <span className="text-zinc-400 font-sans text-xs">Essential for audio DSP playback, crossfader state, volume faders, and IndexedDB waveform peak rendering. Consent is not legally required for strictly necessary functionality.</span>
               </div>
               <div className="bg-black border border-zinc-900 rounded-none p-3">
-                <span className="text-cyan-400 font-bold uppercase tracking-wider block mb-1">2. Analytics & Performance (Optional)</span>
+                <span className="text-cyan-400 font-bold uppercase tracking-wider block mb-1">2. Analytics &amp; Performance (Optional)</span>
                 <span className="text-zinc-400 font-sans text-xs">Anonymous telemetry used to measure mix playback performance and monitor site load speed. Requires explicit user opt-in consent.</span>
               </div>
               <div className="bg-black border border-zinc-900 rounded-none p-3">
-                <span className="text-amber-400 font-bold uppercase tracking-wider block mb-1">3. External Widgets & Marketing (Optional)</span>
+                <span className="text-amber-400 font-bold uppercase tracking-wider block mb-1">3. External Widgets &amp; Marketing (Optional)</span>
                 <span className="text-zinc-400 font-sans text-xs">Third-party embedded player cookies (such as SoundCloud). Requires explicit user opt-in consent.</span>
               </div>
             </div>
@@ -159,10 +242,10 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          {/* Section 6: User Rights Under UK GDPR */}
+          {/* Section 7: User Rights Under UK GDPR */}
           <section className="bg-black border border-zinc-900 rounded-none p-6 md:p-8 flex flex-col gap-4">
             <h2 className="text-lg font-mono font-bold text-white uppercase tracking-wider text-primary border-b border-zinc-900 pb-2">
-              06 // YOUR LEGAL RIGHTS UNDER UK GDPR
+              07 // YOUR LEGAL RIGHTS UNDER UK GDPR
             </h2>
             <p>As a UK / EU data subject, you hold statutory rights regarding your personal data:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
@@ -184,14 +267,14 @@ export default function PrivacyPage() {
               </div>
             </div>
             <p className="text-xs text-zinc-400 mt-2">
-              To exercise any of your rights, please submit a request to <a href="mailto:henryixdj@gmail.com" className="text-primary underline font-mono">henryixdj@gmail.com</a>. We will respond within one calendar month.
+              To exercise any of your rights, please submit a request to <a href="mailto:Management@henryix.com" className="text-primary underline font-mono">Management@henryix.com</a> or <a href="mailto:admin@henryix.com" className="text-primary underline font-mono">admin@henryix.com</a>. We will respond within one calendar month.
             </p>
           </section>
 
-          {/* Section 7: ICO Regulatory Contact */}
+          {/* Section 8: ICO Regulatory Contact */}
           <section className="bg-black border border-zinc-900 rounded-none p-6 md:p-8 flex flex-col gap-4">
             <h2 className="text-lg font-mono font-bold text-white uppercase tracking-wider text-primary border-b border-zinc-900 pb-2">
-              07 // RIGHT TO LODGE A COMPLAINT (ICO)
+              08 // RIGHT TO LODGE A COMPLAINT (ICO)
             </h2>
             <p>
               If you have concerns regarding our data processing practices, we encourage you to contact us first so we can resolve the issue directly.
