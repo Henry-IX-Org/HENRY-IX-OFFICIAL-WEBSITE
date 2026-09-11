@@ -202,7 +202,8 @@ export async function GET(request: NextRequest) {
   }
 
   let uploadCount = 0;
-  const MAX_UPLOADS_PER_RUN = 2; // Prevent worker execution time/CPU limit timeout
+  // Scaled for Cloudflare Workers Paid runtime (30s CPU execution budget)
+  const MAX_UPLOADS_PER_RUN = 10;
 
   interface R2FileInfo {
     exists: boolean;
