@@ -17,8 +17,8 @@ export const siteContent = {
     title: "HENRY IX",
     subtitle: "ELECTRONIC MUSIC PRODUCER & DJ",
     tagline: "HYBRID LIVE SETS // ANALOG AUDIO DSP // ELECTRONIC MUSIC CULTIVATION",
-    location: "LONDON / GLOBAL TRANSMISSIONS",
-    statusBadge: "LIVE TRANSMISSION READY",
+    location: "LONDON, UK",
+    statusBadge: "LIVE STREAM READY",
     deckStatus: "DECK 01 ONLINE",
   },
 
@@ -49,20 +49,20 @@ export const siteContent = {
       all: "ALL SETS",
       club: "CLUB SETS",
       radio: "RADIO SHOWS",
-      live: "LIVE TRANSMISSIONS",
+      live: "LIVE RECORDINGS",
     },
   },
 
   // --------------------------------------------------------------------------
-  // 4. LIVE STREAMING & TRANSMISSION PAGE
+  // 4. LIVE STREAMING & BROADCAST PAGE
   // --------------------------------------------------------------------------
   live: {
-    title: "LIVE TRANSMISSION",
+    title: "LIVE STREAM",
     badge: "LIVE BROADCAST",
-    offlineMessage: "STUDIO OFFLINE — STANDBY FOR NEXT TRANSMISSION",
+    offlineMessage: "STUDIO OFFLINE — STANDBY FOR NEXT BROADCAST",
     onlineMessage: "LIVE STREAM ACTIVE — HIGH FIDELITY STEREO FEED",
-    chatTitle: "TELEMETRY CHAT & COMMENTS",
-    chatPlaceholder: "ENTER TRANSMISSION MESSAGE...",
+    chatTitle: "LIVE CHAT",
+    chatPlaceholder: "ENTER MESSAGE...",
     sendButton: "SEND",
   },
 
@@ -82,7 +82,7 @@ export const siteContent = {
   // 6. GALLERY & MEDIA PAGE
   // --------------------------------------------------------------------------
   gallery: {
-    title: "GALLERY / VISUAL TELEMETRY",
+    title: "GALLERY / VISUAL ARCHIVE",
     description: "Behind the scenes, live performances, analog equipment, and stage production snapshots.",
     filterAll: "ALL MEDIA",
     filterLive: "LIVE SHOWS",

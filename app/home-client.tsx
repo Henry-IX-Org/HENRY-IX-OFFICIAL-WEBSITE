@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useSpring, useTransform, useMotionValueEvent, animate } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from 'framer-motion';
 import { useAudioStore } from '@/store/audioStore';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -81,17 +81,16 @@ const HeroNode = React.memo(function HeroNode({
         className="absolute bottom-1/4 left-8 md:left-16 font-mono text-[10px] tracking-[0.2em] opacity-20 text-primary z-10 select-none pointer-events-none hidden sm:flex flex-col gap-1.5"
         style={styleFloatLeft}
       >
-        <span>SYS_STATUS: ACTIVE</span>
-        <span>REFRESH: 144HZ</span>
+        <span>LONDON // UK</span>
+        <span>4-DECK CDJ-3000 // DJM-A9</span>
       </motion.div>
 
       <motion.div 
         className="absolute top-1/4 right-8 md:right-16 font-mono text-[10px] tracking-[0.2em] opacity-20 text-primary z-10 select-none pointer-events-none hidden sm:flex flex-col gap-1.5"
         style={styleFloatRight}
       >
-        <span>LOC: LONDON, UK</span>
-        <span>COORD_X: 51.5074° N</span>
-        <span>COORD_Y: 0.1278° W</span>
+        <span>UKG // SPEED GARAGE</span>
+        <span>UNDERGROUND BASSLINE</span>
       </motion.div>
 
       {/* Social links have been extracted to SiteHeader */}
@@ -185,7 +184,7 @@ const NavigationNode = React.memo(function NavigationNode() {
         {[
           { label: 'MIXES', href: '/mixes', desc: 'Enter the CDJ Portfolio' },
           { label: 'GALLERY', href: '/gallery', desc: 'Visual Archives' },
-          { label: 'LIVE', href: '/live', desc: 'Watch Broadcast Transmissions' },
+          { label: 'LIVE', href: '/live', desc: 'Live Sets & Broadcasts' },
           { label: 'EVENTS', href: '/events', desc: 'Upcoming Shows' },
           { label: 'CONTACT', href: '/contact', desc: 'Bookings & Info' },
         ].map(({ label, href, desc }) => (
@@ -217,146 +216,13 @@ const NavigationNode = React.memo(function NavigationNode() {
 export default function HomeClient() {
   const isDepth = true;
   const preloaderComplete = useAudioStore(s => s.preloaderComplete);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    let isAnimating = false;
-    let currentSection = 0; // 0 = Hero, 1 = Tabs
-    let activeAnimation: any = null;
-
-    // Keep track of scroll position to sync if the user scrolls using scrollbar or keyboard
-    const syncSection = () => {
-      if (isAnimating) return;
-      const threshold = window.innerHeight / 2;
-      currentSection = window.scrollY > threshold ? 1 : 0;
-    };
-    window.addEventListener('scroll', syncSection, { passive: true });
-
-    const scrollToSection = (sectionIndex: number) => {
-      if (sectionIndex < 0 || sectionIndex > 1) return;
-      
-      if (activeAnimation) {
-        activeAnimation.stop();
-      }
-      
-      isAnimating = true;
-      currentSection = sectionIndex;
-      
-      const targetY = sectionIndex * window.innerHeight;
-      
-      // Animate scroll position using Framer Motion's optimized spring solver
-      activeAnimation = animate(window.scrollY, targetY, {
-        type: "spring",
-        stiffness: 90,
-        damping: 17,
-        mass: 0.95,
-        onUpdate: (value) => {
-          window.scrollTo(0, value);
-        },
-        onComplete: () => {
-          isAnimating = false;
-          activeAnimation = null;
-        }
-      });
-
-      return activeAnimation;
-    };
-
-    const handleWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) < 10) return;
-      
-      e.preventDefault();
-      
-      if (isAnimating) return;
-      
-      if (e.deltaY > 0 && currentSection === 0) {
-        scrollToSection(1);
-      } else if (e.deltaY < 0 && currentSection === 1) {
-        scrollToSection(0);
-      }
-    };
-
-    let touchStartY = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isAnimating) {
-        e.preventDefault();
-        return;
-      }
-      
-      const touchEndY = e.touches[0].clientY;
-      const deltaY = touchStartY - touchEndY;
-      
-      if (Math.abs(deltaY) < 30) return; // Threshold for swipe
-      
-      if (deltaY > 0 && currentSection === 0) {
-        e.preventDefault();
-        scrollToSection(1);
-      } else if (deltaY < 0 && currentSection === 1) {
-        e.preventDefault();
-        scrollToSection(0);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isAnimating) return;
-      
-      if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) {
-        if (currentSection === 0) {
-          e.preventDefault();
-          scrollToSection(1);
-        }
-      } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) {
-        if (currentSection === 1) {
-          e.preventDefault();
-          scrollToSection(0);
-        }
-      }
-    };
-
-    const handleResize = () => {
-      if (activeAnimation) {
-        activeAnimation.stop();
-        activeAnimation = null;
-      }
-      isAnimating = false;
-      
-      const currentScroll = window.scrollY;
-      const height = window.innerHeight;
-      const target = currentScroll > height / 2 ? height : 0;
-      currentSection = target > 0 ? 1 : 0;
-      window.scrollTo(0, target);
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      if (activeAnimation) {
-        activeAnimation.stop();
-      }
-      window.removeEventListener('scroll', syncSection);
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
   
   return (
     <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1.5 }}
-      className="home-snap-container relative w-full text-zinc-100 min-h-[200vh] overflow-x-hidden selection:bg-primary/30 selection:text-primary font-sans"
+      className="home-snap-container relative w-full text-zinc-100 min-h-[200vh] overflow-x-hidden selection:bg-primary/30 selection:text-primary font-sans snap-y snap-mandatory"
     >
       <HeroNode isDepth={isDepth} preloaderComplete={preloaderComplete} />
       <NavigationNode />

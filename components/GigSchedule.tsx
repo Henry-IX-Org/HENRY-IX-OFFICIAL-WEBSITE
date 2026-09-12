@@ -188,14 +188,14 @@ export function GigSchedule({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs md:text-sm font-black text-white tracking-widest uppercase block">
-                WORLD TOUR DISPATCH SYSTEM
+                LIVE PERFORMANCE & TOUR DATES
               </span>
               <span className="px-1.5 py-0.5 text-[8px] bg-primary/20 border border-primary text-primary font-bold tracking-wider">
                 {eventSource === 'notion' ? 'NOTION STUDIO SYNC' : eventSource === 'calendar' ? 'GCAL SYNC' : 'VERIFIED DATES'}
               </span>
             </div>
             <span className="text-[10px] text-zinc-500 tracking-wider font-tertiary">
-              Confirmed gig telemetry synced live with Resident Advisor ticketing & CDJ USB rider specs.
+              Confirmed tour dates synced live with Resident Advisor ticketing & technical rider specifications.
             </span>
           </div>
         </div>

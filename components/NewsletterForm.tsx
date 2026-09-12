@@ -39,19 +39,19 @@ export function NewsletterForm() {
       }
     } catch (err: any) {
       setStatus('error');
-      setErrorMessage(err.message || 'Transmission failed');
+      setErrorMessage(err.message || 'Subscription failed');
       turnstileRef.current?.reset();
       setTurnstileToken('');
     }
   };
 
   const validation = useMemo(() => {
-    if (!email) return { status: 'waiting' as const, message: 'ENTER_INQUIRY...' };
+    if (!email) return { status: 'waiting' as const, message: 'ENTER_EMAIL...' };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(email)) {
-      return { status: 'success' as const, message: 'ADDRESS_VERIFIED // TARGET_STAGED' };
+      return { status: 'success' as const, message: 'VALID_EMAIL // READY' };
     } else {
-      return { status: 'warning' as const, message: 'VALIDATION_FAILED - RESUBMIT_REQUIRED' };
+      return { status: 'warning' as const, message: 'ENTER_VALID_EMAIL' };
     }
   }, [email]);
 
@@ -83,7 +83,7 @@ export function NewsletterForm() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </motion.div>
-            <p className="font-mono text-xs tracking-widest uppercase text-primary">Transmission Received</p>
+            <p className="font-mono text-xs tracking-widest uppercase text-primary">Subscription Confirmed</p>
             <p className="text-xs text-zinc-500 font-mono">{email}</p>
           </motion.div>
         ) : (

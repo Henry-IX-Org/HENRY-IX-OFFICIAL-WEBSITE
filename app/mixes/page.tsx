@@ -1,6 +1,5 @@
 import MixesClient from './mixes-client';
 import { Metadata } from 'next';
-import { getStorageUrl } from '@/lib/storage';
 
 export const dynamic = 'force-static';
 
@@ -95,10 +94,6 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(mixesJsonLd) }}
       />
-      <link rel="preload" as="image" href={getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%201.jpg')} />
-      <link rel="preload" as="image" href={getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%202.jpg')} />
-      <link rel="preload" as="image" href={getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%203.jpg')} />
-      <link rel="preload" as="image" href={getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%204.jpg')} />
       <MixesClient />
     </>
   );

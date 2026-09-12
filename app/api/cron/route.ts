@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
     }
     if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized key transmission' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized key' }, { status: 401 });
     }
   } else {
     console.warn('Bypassing cron authorization check (development mode)');

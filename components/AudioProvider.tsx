@@ -235,7 +235,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             navigator.mediaSession.metadata = new MediaMetadata({
               title: playingDeck.title,
               artist: playingDeck.artist || 'HENRY IX',
-              album: playingDeck.genre ? `HENRY IX // ${playingDeck.genre.toUpperCase()}` : 'HENRY IX TRANSMISSION',
+              album: playingDeck.genre ? `HENRY IX // ${playingDeck.genre.toUpperCase()}` : 'HENRY IX LIVE',
               artwork: playingDeck.artwork ? [
                 { src: playingDeck.artwork, sizes: '512x512', type: 'image/jpeg' },
               ] : [

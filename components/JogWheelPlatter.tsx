@@ -120,18 +120,17 @@ export function JogWheelPlatter({
         )}
         style={{
           width: `${jogSize}px`,
-          height: `${jogSize}px`,
-          transform: isCompact ? 'translate(0px, 0px)' : 'translate(-8px, -12px)'
+          height: `${jogSize}px`
         }}
       >
         {/* Grooves & Position Stripes */}
-        <div className="absolute inset-3 border border-dashed border-zinc-700/60 rounded-full pointer-events-none" />
-        <div className="absolute inset-7 border border-zinc-700/40 rounded-full pointer-events-none" />
-        <div className="absolute inset-11 border border-dashed border-zinc-700/60 rounded-full pointer-events-none" />
+        <div className="absolute inset-2 border border-dashed border-zinc-700/60 rounded-full pointer-events-none" />
+        <div className="absolute inset-5 border border-zinc-700/40 rounded-full pointer-events-none" />
+        <div className="absolute inset-8 border border-dashed border-zinc-700/40 rounded-full pointer-events-none" />
 
         {/* Platter Marker Needle Ring */}
         <div 
-          className="absolute top-0 w-0.5 h-4 pointer-events-none z-20 transition-colors duration-300"
+          className="absolute top-0 w-0.5 h-3.5 pointer-events-none z-20 transition-colors duration-300"
           style={{ 
             backgroundColor: isScratching ? '#EAB308' : isPlaying ? themeColor : 'rgb(244, 63, 94)',
             transform: `rotate(${rotationDeg}deg)`,
@@ -151,10 +150,14 @@ export function JogWheelPlatter({
           style={{ 
             width: `${innerPlatterSize}px`,
             height: `${innerPlatterSize}px`,
-            backgroundImage: `url(${sessionImg})`,
+            backgroundImage: sessionImg ? `url(${sessionImg})` : undefined,
             transform: `rotate(${rotationDeg}deg)`
           }}
         >
+          {/* Subtle concentric label rings in case image is missing */}
+          <div className="absolute inset-2 border border-zinc-800/40 rounded-full pointer-events-none" />
+          <div className="absolute inset-4 border border-dashed border-zinc-800/30 rounded-full pointer-events-none" />
+
           {/* Center Spindle Hole */}
           <div className="w-3 h-3 rounded-full bg-black border border-zinc-800 z-10 flex items-center justify-center shadow-md">
             <div 

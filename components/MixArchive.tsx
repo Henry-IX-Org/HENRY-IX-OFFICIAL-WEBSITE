@@ -97,7 +97,7 @@ export default function MixArchive({
   const archiveRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const [deckCount, setDeckCount] = useState<2 | 4>(4);
+  const [deckCount, setDeckCount] = useState<2 | 4>(2);
   const [isMobile, setIsMobile] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -119,15 +119,20 @@ export default function MixArchive({
 
   const effectiveMixGroups = useMemo(() => {
     if (!usbTracks || usbTracks.length === 0) return mixGroups;
-    const usbGroup = {
-      title: `📁 USB: ${usbFolderName || 'LOCAL MUSIC'}`,
-      mixes: usbTracks,
-    };
-    return [...mixGroups, usbGroup];
+    return [
+      {
+        title: `USB: ${usbFolderName || 'EXTERNAL DRIVE'}`,
+        mixes: usbTracks
+      },
+      ...mixGroups
+    ];
   }, [mixGroups, usbTracks, usbFolderName]);
 
   useEffect(() => {
-    return setRecorder.subscribe(setRecordingState);
+    const unsub = setRecorder.subscribe((state) => {
+      setRecordingState(state);
+    });
+    return () => unsub();
   }, []);
 
   const handleDeckCountChange = (count: 2 | 4) => {
@@ -161,6 +166,10 @@ export default function MixArchive({
       if (mobile) {
         setDeckCount(2);
         setStacked(true);
+      } else {
+        // Under 1440px on desktop/laptop, use stacked mode so jog wheels & mixer get 100% vertical space
+        const isWindowStacked = window.innerWidth < 1440;
+        setStacked(isWindowStacked);
       }
       
       setIsPortrait(window.innerHeight > window.innerWidth);
@@ -1021,7 +1030,7 @@ function StackedWaveformDeckItem({
 
         {/* Mixer Channels Grid */}
         <div className={cn(
-          "grid gap-1.5 md:gap-2.5 my-2 items-stretch justify-center z-10 flex-grow min-h-0 select-none",
+          "grid gap-1 md:gap-2 my-1 items-stretch justify-center z-10 flex-grow min-h-0 select-none",
           deckCount === 2 ? "grid-cols-2" : "grid-cols-4"
         )}>
           {(deckCount === 2 ? [1, 2] : [3, 1, 2, 4]).map(id => {
@@ -1039,7 +1048,6 @@ function StackedWaveformDeckItem({
             return (
               <div 
                 key={id}
-                style={{ containerType: 'inline-size' }}
                 onClick={() => {
                   if (isStacked) {
                     if (isLeft && leftActiveDeck !== id) {
@@ -1050,33 +1058,36 @@ function StackedWaveformDeckItem({
                   }
                 }}
                 className={cn(
-                  "w-full flex flex-col items-center justify-between gap-2 py-2 px-1 rounded-none transition-all border bg-black h-full min-h-0",
+                  "w-full flex flex-col items-center justify-between py-1 px-1 rounded-none transition-all border bg-black h-full min-h-0 overflow-hidden",
                   isStacked && !isActive
                     ? "border-zinc-900 opacity-60 hover:opacity-100 hover:border-zinc-700 cursor-pointer"
                     : "border-zinc-800/80 opacity-100 hover:border-zinc-700"
                 )}
               >
-                <span 
-                  className="font-mono text-[7.5px] font-black tracking-widest uppercase leading-none"
-                  style={{ color: channelColor }}
-                >
-                  CH {id}
-                </span>
+                {/* Channel Header & VU Meter */}
+                <div className="flex flex-col items-center gap-0.5 w-full shrink-0">
+                  <span 
+                    className="font-mono text-[7px] md:text-[7.5px] font-black tracking-widest uppercase leading-none"
+                    style={{ color: channelColor }}
+                  >
+                    CH {id}
+                  </span>
 
-                <div className="flex flex-col gap-1.5 w-full items-center">
-                  {/* Dedicated LED VU Volume Meter for this deck, positioned above TRIM */}
                   <ChannelVUMeter 
                     deckId={id}
                     trim={deck.trim ?? 50}
                     volume={deck.volume}
                     isPlaying={deck.isPlaying}
                   />
+                </div>
 
+                {/* Middle: 5 Precision Rotary Knobs */}
+                <div className="flex flex-col gap-0.5 w-full items-center justify-center shrink min-h-0 my-auto">
                   {!isMobile && (
                     <RotaryKnob 
                       label="TRIM"
                       value={deck.trim ?? 50}
-                      size="flex"
+                      size="sm"
                       onChange={(val) => {
                         audioEngine.setTrim(id, val);
                         setDecks((prev: any) => ({
@@ -1090,11 +1101,9 @@ function StackedWaveformDeckItem({
                   <RotaryKnob 
                     label="HI"
                     value={deck.eqHi}
-                    size="flex"
+                    size="sm"
                     onChange={(val) => {
-                      // 1. Instant audio DSP update (zero latency)
                       audioEngine.setEQ(id, 'high', val);
-                      // 2. Update Zustand for UI display
                       setDecks((prev: any) => ({
                         ...prev,
                         [id]: { ...prev[id], eqHi: val }
@@ -1105,11 +1114,9 @@ function StackedWaveformDeckItem({
                   <RotaryKnob 
                     label="MID"
                     value={deck.eqMid}
-                    size="flex"
+                    size="sm"
                     onChange={(val) => {
-                      // 1. Instant audio DSP update (zero latency)
                       audioEngine.setEQ(id, 'mid', val);
-                      // 2. Update Zustand for UI display
                       setDecks((prev: any) => ({
                         ...prev,
                         [id]: { ...prev[id], eqMid: val }
@@ -1120,11 +1127,9 @@ function StackedWaveformDeckItem({
                   <RotaryKnob 
                     label="LOW"
                     value={deck.eqLow}
-                    size="flex"
+                    size="sm"
                     onChange={(val) => {
-                      // 1. Instant audio DSP update (zero latency)
                       audioEngine.setEQ(id, 'low', val);
-                      // 2. Update Zustand for UI display
                       setDecks((prev: any) => ({
                         ...prev,
                         [id]: { ...prev[id], eqLow: val }
@@ -1136,11 +1141,9 @@ function StackedWaveformDeckItem({
                     <RotaryKnob 
                       label="FLT"
                       value={deck.filter}
-                      size="flex"
+                      size="sm"
                       onChange={(val) => {
-                        // 1. Instant audio DSP update (zero latency)
                         audioEngine.setFilter(id, val);
-                        // 2. Update Zustand for UI display
                         setDecks((prev: any) => ({
                           ...prev,
                           [id]: { ...prev[id], filter: val }
@@ -1151,57 +1154,57 @@ function StackedWaveformDeckItem({
                   )}
                 </div>
 
-                {/* Vertical Fader */}
-                <div className="flex flex-col items-center gap-1 mt-1 relative w-[50cqw] max-w-[40px] min-w-[20px] flex-grow min-h-0 h-full">
-                  <span className="text-[min(8px,max(5.5px,7cqw))] text-zinc-500 font-mono uppercase tracking-widest leading-none font-bold shrink-0">
+                {/* Bottom: Vertical Channel Fader & Crossfader Assign */}
+                <div className="flex flex-col items-center gap-0.5 w-full shrink-0 pt-0.5">
+                  <span className="text-[6.5px] text-zinc-500 font-mono uppercase tracking-widest leading-none font-bold shrink-0">
                     VOL
                   </span>
                   
-                  <VolumeFader
-                    deckId={id}
-                    volume={deck.volume}
-                    isLocked={isLocked}
-                    channelColor={channelColor}
-                    onChange={(val) => handleVolumeChange(id, val)}
-                    onLockout={playLockoutBlip}
-                    isPlaying={deck.isPlaying}
-                  />
+                  <div className="h-16 sm:h-20 w-6 flex items-center justify-center">
+                    <VolumeFader
+                      deckId={id}
+                      volume={deck.volume}
+                      isLocked={isLocked}
+                      channelColor={channelColor}
+                      onChange={(val) => handleVolumeChange(id, val)}
+                      onLockout={playLockoutBlip}
+                      isPlaying={deck.isPlaying}
+                    />
+                  </div>
+
+                  {/* headphones cue fader assign */}
+                  <button
+                    onClick={() => {
+                      if (isLocked) {
+                        playLockoutBlip();
+                        return;
+                      }
+                      playClick(750, 'sine', 0.02);
+                      const nextAssign = 
+                        deck.crossfaderAssign === 'L' ? 'R' :
+                        deck.crossfaderAssign === 'R' ? 'THRU' : 'L';
+                      
+                      const state = useAudioStore.getState();
+                      const cfMult = audioEngine.computeCrossfaderGain(nextAssign, state.crossfader);
+                      audioEngine.setGain(id, deck.volume, cfMult, state.isMuted);
+
+                      setDecks((prev: any) => ({
+                        ...prev,
+                        [id]: { ...prev[id], crossfaderAssign: nextAssign }
+                      }));
+                    }}
+                    className={cn(
+                      "mt-0.5 px-1.5 py-0.5 rounded text-[7px] font-mono font-bold tracking-widest border transition-colors cursor-pointer leading-none",
+                      isLocked
+                        ? "bg-zinc-950 border-zinc-900/50 text-zinc-800 cursor-not-allowed"
+                        : deck.crossfaderAssign === 'L' ? "bg-primary/20 border-primary/30 text-primary"
+                        : deck.crossfaderAssign === 'R' ? "bg-cyan-500/20 border-cyan-500/30 text-cyan-400"
+                        : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+                    )}
+                  >
+                    {deck.crossfaderAssign}
+                  </button>
                 </div>
-
-                {/* headphones cue fader assign */}
-                <button
-                  onClick={() => {
-                    if (isLocked) {
-                      playLockoutBlip();
-                      return;
-                    }
-                    playClick(750, 'sine', 0.02);
-                    const nextAssign = 
-                      deck.crossfaderAssign === 'L' ? 'R' :
-                      deck.crossfaderAssign === 'R' ? 'THRU' : 'L';
-                    
-                    // 1. Instant audio DSP update (zero latency)
-                    const state = useAudioStore.getState();
-                    const cfMult = audioEngine.computeCrossfaderGain(nextAssign, state.crossfader);
-                    audioEngine.setGain(id, deck.volume, cfMult, state.isMuted);
-
-                    // 2. Update Zustand for UI display
-                    setDecks((prev: any) => ({
-                      ...prev,
-                      [id]: { ...prev[id], crossfaderAssign: nextAssign }
-                    }));
-                  }}
-                  className={cn(
-                    "mt-2 px-2 py-0.5 rounded text-[7.5px] font-mono font-bold tracking-widest border transition-colors cursor-pointer leading-none",
-                    isLocked
-                      ? "bg-zinc-950 border-zinc-900/50 text-zinc-800 cursor-not-allowed"
-                      : deck.crossfaderAssign === 'L' ? "bg-primary/20 border-primary/30 text-primary"
-                      : deck.crossfaderAssign === 'R' ? "bg-cyan-500/20 border-cyan-500/30 text-cyan-400"
-                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
-                  )}
-                >
-                  {deck.crossfaderAssign}
-                </button>
               </div>
             );
           })}
@@ -1553,23 +1556,6 @@ function StackedWaveformDeckItem({
         )}
       >
 
-        {/* Forced Landscape Overlay */}
-        <AnimatePresence>
-          {isMobile && isPortrait && activeView === 'cdj' && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-center p-8 text-center"
-            >
-              <div className="w-16 h-16 rounded-full border border-zinc-800 flex items-center justify-center mb-6 animate-pulse">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              </div>
-              <h2 className="text-xl font-bold text-zinc-200 mb-2 font-mono uppercase tracking-widest">Rotate to Landscape</h2>
-              <p className="text-sm text-zinc-500 font-mono">The CDJ layout requires a landscape orientation on mobile devices.</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Mobile Hamburger Menu Toggle */}
         {isMobile && activeView === 'tracklist' && (
@@ -1747,38 +1733,16 @@ function StackedWaveformDeckItem({
                 }
               }
 
-              /* Standard Desktop & Laptop Mode (1024px to 1399px) */
-              @media (min-width: 1024px) and (max-width: 1399px) {
+              /* Desktop & Laptop Mode (Screens >= 1024px) */
+              @media (min-width: 1024px) {
                 .dj-grid-container {
                   gap: 8px;
                   ${isStacked ? `
-                    grid-template-columns: minmax(0, 1fr) minmax(160px, 1.1fr) minmax(0, 1fr);
+                    grid-template-columns: minmax(0, 1.8fr) minmax(200px, 1.2fr) minmax(0, 1.8fr);
                     grid-template-rows: 1fr;
                     grid-template-areas: "deckL mixer deckR";
                   ` : deckCount === 2 ? `
                     grid-template-columns: minmax(0, 1.8fr) minmax(200px, 1.2fr) minmax(0, 1.8fr);
-                    grid-template-rows: 1fr;
-                    grid-template-areas: "deck1 mixer deck2";
-                  ` : `
-                    grid-template-columns: minmax(0, 1fr) minmax(180px, 1.2fr) minmax(0, 1fr);
-                    grid-template-rows: 1fr 1fr;
-                    grid-template-areas: 
-                      "deck3 mixer deck4"
-                      "deck1 mixer deck2";
-                  `}
-                }
-              }
-
-              /* Ultra-Wide Desktop Mode (>= 1400px) */
-              @media (min-width: 1400px) {
-                .dj-grid-container {
-                  gap: 8px;
-                  ${isStacked ? `
-                    grid-template-columns: minmax(0, 1fr) minmax(180px, 1.1fr) minmax(0, 1fr);
-                    grid-template-rows: 1fr;
-                    grid-template-areas: "deckL mixer deckR";
-                  ` : deckCount === 2 ? `
-                    grid-template-columns: minmax(0, 1.8fr) minmax(220px, 1.2fr) minmax(0, 1.8fr);
                     grid-template-rows: 1fr;
                     grid-template-areas: "deck1 mixer deck2";
                   ` : `
@@ -1946,8 +1910,8 @@ function StackedWaveformDeckItem({
                           onSeek={(sec) => seekDeckToTime(id, sec)}
                         />
 
-                        {/* Middle: Scrolling Waveform (Enlarged Height) */}
-                        <div className="w-full h-12 sm:h-14 md:h-16 lg:h-20 relative bg-black rounded-none border border-zinc-900 flex items-center justify-center overflow-hidden shadow-inner">
+                        {/* Middle: Scrolling Waveform */}
+                        <div className="w-full h-8 sm:h-10 md:h-12 lg:h-14 relative bg-black rounded-none border border-zinc-900 flex items-center justify-center overflow-hidden shadow-inner">
                           {isStacked ? renderStackedWaveform(id) : (
                             <SingleDeckWaveform 
                               deckId={id} 

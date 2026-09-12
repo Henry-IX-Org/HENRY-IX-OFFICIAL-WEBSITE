@@ -124,11 +124,11 @@ export default function CDJHardware({ deckId }: CDJHardwareProps) {
         const padding = isCompact ? 10 : 16;
         const availWidth = width - leftColWidth - rightColWidth - padding;
         
-        const topBarsHeight = isCompact ? 64 : 84; // Hot cues + Loop/Mode bar
-        const availHeight = (height - topBarsHeight - padding) * 0.95;
+        const topBarsHeight = isCompact ? 54 : 76; // Hot cues + Loop/Mode bar
+        const availHeight = (height - topBarsHeight - padding) * 0.70;
         
         const size = Math.min(availWidth, availHeight);
-        const targetSize = Math.max(52, Math.min(260, size));
+        const targetSize = Math.max(48, Math.min(260, Math.floor(size)));
         setJogSize(targetSize);
       }
     });
@@ -1011,7 +1011,7 @@ export default function CDJHardware({ deckId }: CDJHardwareProps) {
                     BEAT 1
                   </button>
                 </div>
-              ) : cdjHeight >= 260 ? (
+              ) : cdjHeight >= 290 ? (
                 /* Compact 2-Button Quick Jump for tight spaces */
                 <div className="flex flex-col items-center gap-1 mb-auto border border-zinc-800 rounded-none p-1 bg-black select-none w-full">
                   <span className="text-[6px] text-zinc-300 font-mono font-black uppercase tracking-wider leading-none">JUMP</span>

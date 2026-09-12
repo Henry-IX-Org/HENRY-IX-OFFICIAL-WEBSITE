@@ -84,25 +84,6 @@ interface ChatMessage {
   time: string;
 }
 
-const LIVE_CHAT_SEED: ChatMessage[] = [
-  { id: '1', user: 'Alex_LDN', text: 'Locked in! Sounding heavy.', time: '22:01' },
-  { id: '2', user: 'DubPlate_99', text: 'Track ID on this bassline?', time: '22:03' },
-  { id: '3', user: 'SouthLondoner', text: '4-deck mixing is crazy tonight 🔥', time: '22:05' },
-];
-
-const INCOMING_CHAT_SIM = [
-  'Transition was lethal 🔥',
-  'Volume turned all the way up in Bristol.',
-  'That vocal chop is insane.',
-  'CDJ work on point tonight.',
-  'Is this getting released anytime soon?',
-  'Unreal energy right now.',
-];
-
-const INCOMING_USERS = [
-  'Elena_K', 'Marcus_T', 'BasslineJunkie', 'VaultSessions', 'Sub_Bass_01'
-];
-
 interface LiveClientProps {
   initialSettings: {
     title: string;
@@ -121,7 +102,7 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
   const [activeStream, setActiveStream] = useState(initialSettings);
   const [currentTrack, setCurrentTrack] = useState('HENRY IX - DUBPLATE SPECIAL [UNRELEASED]');
   const [currentBpm, setCurrentBpm] = useState<number>(138);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(LIVE_CHAT_SEED);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [preCountdownSecs, setPreCountdownSecs] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -187,28 +168,6 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [chatMessages]);
-
-  // Subtle background chat simulation
-  useEffect(() => {
-    const addMessageInterval = setInterval(() => {
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      const newUser = INCOMING_USERS[Math.floor(Math.random() * INCOMING_USERS.length)];
-      const newText = INCOMING_CHAT_SIM[Math.floor(Math.random() * INCOMING_CHAT_SIM.length)];
-
-      const newMsg: ChatMessage = {
-        id: performance.now().toString(),
-        user: newUser,
-        text: newText,
-        time: timeStr,
-      };
-
-      setChatMessages(prev => [...prev.slice(-25), newMsg]);
-      playTick();
-    }, 9000 + Math.random() * 8000);
-
-    return () => clearInterval(addMessageInterval);
-  }, []);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -393,18 +352,51 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
               ref={scrollRef}
               className="flex-grow my-3 overflow-y-auto pr-1 text-left flex flex-col gap-2.5 custom-scrollbar"
             >
-              {chatMessages.map(msg => (
-                <div key={msg.id} className="text-[10px] leading-relaxed">
-                  <span className="text-zinc-600 mr-2 text-[9px]">[{msg.time}]</span>
-                  <span className={cn(
-                    "font-bold uppercase mr-1.5",
-                    msg.user === 'You' ? "text-emerald-400" : "text-[#D8163F]"
-                  )}>
-                    {msg.user}:
+              {chatMessages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-zinc-600 text-[10px] py-8 px-4">
+                  <span className="text-zinc-500 font-bold mb-1 uppercase tracking-wider">LIVE BROADCAST FEED</span>
+                  <span className="text-zinc-600 text-[9px] leading-relaxed">
+                    Leave a session message below or join the stream chat directly on Twitch or YouTube.
                   </span>
-                  <span className="text-zinc-300 font-normal">{msg.text}</span>
                 </div>
-              ))}
+              ) : (
+                chatMessages.map(msg => (
+                  <div key={msg.id} className="text-[10px] leading-relaxed">
+                    <span className="text-zinc-600 mr-2 text-[9px]">[{msg.time}]</span>
+                    <span className={cn(
+                      "font-bold uppercase mr-1.5",
+                      msg.user === 'You' ? "text-emerald-400" : "text-[#D8163F]"
+                    )}>
+                      {msg.user}:
+                    </span>
+                    <span className="text-zinc-300 font-normal">{msg.text}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* External Platform Chat Links */}
+            <div className="border-t border-white/[0.06] pt-2 mb-2 flex items-center justify-between text-[8px] text-zinc-500 uppercase tracking-widest font-mono">
+              <span>STREAM CHAT:</span>
+              <div className="flex items-center gap-2.5">
+                <a
+                  href="https://twitch.tv/henryixdj"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors cursor-pointer"
+                >
+                  TWITCH
+                </a>
+                <span className="text-zinc-700">•</span>
+                <a
+                  href="https://youtube.com/@HenryIXDJ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors cursor-pointer"
+                >
+                  YOUTUBE
+                </a>
+              </div>
             </div>
 
             {/* Message input */}

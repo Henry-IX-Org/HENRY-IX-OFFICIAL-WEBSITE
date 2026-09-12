@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', 'motion'],
+    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion'],
   },
   eslint: {
     ignoreDuringBuilds: true,

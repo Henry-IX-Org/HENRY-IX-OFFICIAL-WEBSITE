@@ -63,6 +63,12 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* Native CSS Scroll Snapping for Home Page */
+.home-snap-container {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
 /* ─── CRT / VHS PAGE OVERLAY (Disabled for Rework) ──────────────────── */
 /*
 .crt-scanlines {

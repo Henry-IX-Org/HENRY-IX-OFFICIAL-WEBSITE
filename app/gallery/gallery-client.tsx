@@ -116,11 +116,11 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
   {
     id: 'cam_09',
     camTag: 'CAM 09',
-    title: 'STUDIO TRANSMISSIONS',
-    description: 'Darkroom transmissions and studio visuals.',
+    title: 'STUDIO SESSIONS',
+    description: 'Darkroom photography and studio visuals.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%203.jpg')), title: 'STUDIO TRANSMISSION 03' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%202%20Track%20Artwork.jpg')), title: 'STUDIO TRANSMISSION 02' },
+      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%203.jpg')), title: 'STUDIO SESSION 03' },
+      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%202%20Track%20Artwork.jpg')), title: 'STUDIO SESSION 02' },
     ],
   },
   {
