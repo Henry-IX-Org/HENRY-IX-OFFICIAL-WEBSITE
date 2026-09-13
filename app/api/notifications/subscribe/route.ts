@@ -1,10 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from 'next-sanity';
+import { createNotionSubscriberLead } from '@/lib/notion';
+import { verifyTurnstileToken } from '@/lib/turnstile';
+import { Resend } from 'resend';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json().catch(() => ({}))) as { subscription?: any; email?: string };
+    const body = (await req.json().catch(() => ({}))) as {
+      subscription?: any;
+      email?: string;
+      turnstileToken?: string;
+      'cf-turnstile-response'?: string;
+    };
     const { subscription, email } = body;
+    const token = body.turnstileToken || body['cf-turnstile-response'];
+
+    // Gate on Turnstile bot verification (Action: 'subscribe')
+    const clientIp = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+    const turnstileCheck = await verifyTurnstileToken(token, 'subscribe', clientIp);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { error: 'Security verification failed. Please refresh and try again.' },
+        { status: 403 }
+      );
+    }
 
     if (!subscription && !email) {
       return NextResponse.json({ error: 'Missing subscription details or email' }, { status: 400 });
@@ -19,27 +39,35 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email ? String(email).trim().slice(0, 150) : null;
 
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'r6mln4n3';
-    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-    const token = process.env.SANITY_API_WRITE_TOKEN || process.env.SANITY_API_TOKEN;
-
-    if (token && cleanEmail) {
-      const writeClient = createClient({
-        projectId,
-        dataset,
-        apiVersion: '2023-01-01',
-        token,
-        useCdn: false,
+    if (cleanEmail) {
+      // 1. Save subscriber lead to Notion Bookings & Leads DB
+      await createNotionSubscriberLead(cleanEmail).catch(err => {
+        console.warn('[Subscribe API] Notion lead creation warning:', err);
       });
 
-      // Save email subscriber if provided
-      const existing = await writeClient.fetch<any>(`*[_type == "subscriber" && email == $email][0]`, { email: cleanEmail });
-      if (!existing) {
-        await writeClient.create({
-          _type: 'subscriber',
-          email: cleanEmail,
-          subscribedAt: new Date().toISOString(),
-        });
+      // 2. Add contact to Resend Audience & Topics if configured
+      if (process.env.RESEND_API_KEY) {
+        try {
+          const audienceId = process.env.RESEND_AUDIENCE_ID || '8790686e-ed87-41f6-a038-ef2d8ea248b1';
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          await resend.contacts.create({
+            email: cleanEmail,
+            unsubscribed: false,
+            audienceId,
+          });
+
+          // If topics are passed, assign them
+          const topicsArray = (body as any)?.topics;
+          if (Array.isArray(topicsArray) && topicsArray.length > 0) {
+            await (resend.contacts.topics.update as any)({
+              audienceId,
+              email: cleanEmail,
+              topics: topicsArray.map((t: string) => ({ id: t, subscription: 'opt_in' })),
+            }).catch(() => {});
+          }
+        } catch (resendErr) {
+          console.warn('[Subscribe API] Resend contact creation warning:', resendErr);
+        }
       }
     }
 

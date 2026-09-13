@@ -17,11 +17,12 @@ const navLinks = [
 ];
 
 
-const SocialLink = ({ href, icon, className }: { href: string; icon: React.ReactNode; className?: string }) => (
+const SocialLink = ({ href, icon, className, label }: { href: string; icon: React.ReactNode; className?: string; label: string }) => (
   <a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
+    aria-label={label}
     className={`group flex items-center justify-center text-zinc-500 hover:text-primary transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${className || ''}`}
     onMouseEnter={() => playTick()}
     onClick={() => playClick(800, 'sine', 0.03)}
@@ -76,14 +77,14 @@ export default function SiteHeader() {
       <div className="flex w-auto items-center gap-4 md:gap-5 select-none pointer-events-auto relative" ref={dropdownRef}>
         {/* Desktop Social Links */}
         <div className="hidden xl:flex items-center gap-4 md:gap-5">
-          <SocialLink href="https://www.facebook.com/HenryIXDJ/" icon={<SiFacebook />} />
-          <SocialLink href="https://x.com/HenryIXDJ" icon={<SiX className="scale-[0.95]" />} />
-          <SocialLink href="https://www.instagram.com/henryixdj/" icon={<SiInstagram />} />
-          <SocialLink href="https://www.tiktok.com/@henryixdj" icon={<SiTiktok />} />
-          <SocialLink href="https://www.youtube.com/@HenryIXDJ" icon={<SiYoutube className="scale-[1.1]" />} />
-          <SocialLink href="https://www.twitch.tv/henryixdj" icon={<SiTwitch />} />
-          <SocialLink href="https://soundcloud.com/henryixdj" icon={<SiSoundcloud className="scale-[1.35] origin-center -translate-y-[1px]" />} />
-          <SocialLink href="https://www.mixcloud.com/HenryIXDJ/" icon={<SiMixcloud className="scale-[1.7] origin-center" />} className="ml-1 md:ml-1.5" />
+          <SocialLink href="https://www.facebook.com/HenryIXDJ/" icon={<SiFacebook />} label="Facebook" />
+          <SocialLink href="https://x.com/HenryIXDJ" icon={<SiX className="scale-[0.95]" />} label="X (Twitter)" />
+          <SocialLink href="https://www.instagram.com/henryixdj/" icon={<SiInstagram />} label="Instagram" />
+          <SocialLink href="https://www.tiktok.com/@henryixdj" icon={<SiTiktok />} label="TikTok" />
+          <SocialLink href="https://www.youtube.com/@HenryIXDJ" icon={<SiYoutube className="scale-[1.1]" />} label="YouTube" />
+          <SocialLink href="https://www.twitch.tv/henryixdj" icon={<SiTwitch />} label="Twitch" />
+          <SocialLink href="https://soundcloud.com/henryixdj" icon={<SiSoundcloud className="scale-[1.35] origin-center -translate-y-[1px]" />} label="SoundCloud" />
+          <SocialLink href="https://www.mixcloud.com/HenryIXDJ/" icon={<SiMixcloud className="scale-[1.7] origin-center" />} className="ml-1 md:ml-1.5" label="Mixcloud" />
         </div>
 
         {/* Mobile Menu Button (Visible below xl on all pages) */}
@@ -94,6 +95,8 @@ export default function SiteHeader() {
           }}
           initial={shouldAnimate ? "hidden" : "show"}
           animate="show"
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isOpen}
           onClick={() => {
             playClick();
             setIsOpen(!isOpen);
@@ -124,14 +127,14 @@ export default function SiteHeader() {
               <div className="flex flex-col py-1 font-mono">
                 {/* Integrated Social Links inside the Mobile Dropdown (At Top) */}
                 <div className="flex items-center justify-center gap-3 border-b border-zinc-900/80 pb-2.5 pt-1.5 px-3 mb-1.5">
-                  <SocialLink href="https://www.facebook.com/HenryIXDJ/" icon={<SiFacebook />} className="text-[13px]" />
-                  <SocialLink href="https://x.com/HenryIXDJ" icon={<SiX className="scale-[0.9]" />} className="text-[13px]" />
-                  <SocialLink href="https://www.instagram.com/henryixdj/" icon={<SiInstagram />} className="text-[13px]" />
-                  <SocialLink href="https://www.tiktok.com/@henryixdj" icon={<SiTiktok />} className="text-[13px]" />
-                  <SocialLink href="https://www.youtube.com/@HenryIXDJ" icon={<SiYoutube className="scale-[1.05]" />} className="text-[13px]" />
-                  <SocialLink href="https://www.twitch.tv/henryixdj" icon={<SiTwitch />} className="text-[13px]" />
-                  <SocialLink href="https://soundcloud.com/henryixdj" icon={<SiSoundcloud className="scale-[1.2] origin-center" />} className="text-[13px]" />
-                  <SocialLink href="https://www.mixcloud.com/HenryIXDJ/" icon={<SiMixcloud className="scale-[1.5] origin-center" />} className="text-[13px] ml-0.5" />
+                  <SocialLink href="https://www.facebook.com/HenryIXDJ/" icon={<SiFacebook />} className="text-[13px]" label="Facebook" />
+                  <SocialLink href="https://x.com/HenryIXDJ" icon={<SiX className="scale-[0.9]" />} className="text-[13px]" label="X (Twitter)" />
+                  <SocialLink href="https://www.instagram.com/henryixdj/" icon={<SiInstagram />} className="text-[13px]" label="Instagram" />
+                  <SocialLink href="https://www.tiktok.com/@henryixdj" icon={<SiTiktok />} className="text-[13px]" label="TikTok" />
+                  <SocialLink href="https://www.youtube.com/@HenryIXDJ" icon={<SiYoutube className="scale-[1.05]" />} className="text-[13px]" label="YouTube" />
+                  <SocialLink href="https://www.twitch.tv/henryixdj" icon={<SiTwitch />} className="text-[13px]" label="Twitch" />
+                  <SocialLink href="https://soundcloud.com/henryixdj" icon={<SiSoundcloud className="scale-[1.2] origin-center" />} className="text-[13px]" label="SoundCloud" />
+                  <SocialLink href="https://www.mixcloud.com/HenryIXDJ/" icon={<SiMixcloud className="scale-[1.5] origin-center" />} className="text-[13px] ml-0.5" label="Mixcloud" />
                 </div>
 
                 {/* Standalone Back to Homepage Link */}

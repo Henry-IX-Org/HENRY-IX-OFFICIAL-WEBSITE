@@ -35,7 +35,7 @@ function GlobalBackgroundGrid() {
   );
 }
 
-export default function ClientLayoutWrappers({ children }: { children?: React.ReactNode }) {
+function PublicChromeLayout({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
   const preloaderComplete = useAudioStore(s => s.preloaderComplete);
   const setPreloaderComplete = useAudioStore(s => s.setPreloaderComplete);
@@ -90,4 +90,8 @@ export default function ClientLayoutWrappers({ children }: { children?: React.Re
       {!isCDJView && <SiteFooter />}
     </div>
   );
+}
+
+export default function ClientLayoutWrappers({ children }: { children?: React.ReactNode }) {
+  return <PublicChromeLayout>{children}</PublicChromeLayout>;
 }

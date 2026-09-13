@@ -65,7 +65,7 @@ export function PlayheadScrubber({
       {showTimestamps && (
         <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 tracking-wider select-none">
           <span>{formatTime(progress)}</span>
-          <span className="text-zinc-500">{formatTime(duration)}</span>
+          <span className="text-zinc-400">{formatTime(duration)}</span>
         </div>
       )}
     </div>

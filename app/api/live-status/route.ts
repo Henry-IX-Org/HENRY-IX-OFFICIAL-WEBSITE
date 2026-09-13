@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from 'next-sanity';
 import { Resend } from 'resend';
+import { getNotionBookings } from '@/lib/notion';
+import { getLiveInputStatus } from '@/lib/cloudflareStream';
+
+export const dynamic = 'force-dynamic';
 
 function safeCompare(a: string, b: string): boolean {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
@@ -14,10 +17,68 @@ function safeCompare(a: string, b: string): boolean {
   return result === 0 && a.length === b.length;
 }
 
+// Fallback/cache state for live broadcast metadata
+let liveBroadcastState = {
+  status: 'offline' as 'offline' | 'upcoming' | 'live',
+  title: 'HENRY IX // LIVE',
+  playbackId: '',
+  obsStreamKey: '',
+  countdownMinutes: 5,
+  scheduledTime: null as string | null,
+  endedAt: null as string | null,
+  currentTrack: 'CRYSTAL CASTLES - KEPT [MAJA + OKTE REWORK]',
+  bpm: 150,
+  lastUpdated: new Date().toISOString(),
+};
+
+export async function GET() {
+  try {
+    // 1. Check live ingest status from Cloudflare Stream
+    const cfStream = await getLiveInputStatus();
+
+    // If Cloudflare Stream reports connected OBS feed, dynamically mark live
+    const isActuallyLive = cfStream.isLive || liveBroadcastState.status === 'live';
+    const effectiveStatus = isActuallyLive
+      ? 'live'
+      : liveBroadcastState.status === 'upcoming'
+      ? 'upcoming'
+      : 'offline';
+
+    const effectivePlaybackId = cfStream.playbackId || liveBroadcastState.playbackId;
+
+    return NextResponse.json({
+      success: true,
+      state: {
+        ...liveBroadcastState,
+        status: effectiveStatus,
+        playbackId: effectivePlaybackId,
+        title: cfStream.title || liveBroadcastState.title,
+        isLive: isActuallyLive,
+      },
+    });
+  } catch (error) {
+    return NextResponse.json({
+      success: true,
+      state: liveBroadcastState,
+    });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body: any = await req.json().catch(() => ({}));
-    const { secret, action, streamUrl, obsStreamKey, countdownMinutes = 5, multiPlatformTargets, notifySubscribers = true } = body;
+    const {
+      secret,
+      action,
+      streamUrl,
+      playbackId,
+      obsStreamKey,
+      countdownMinutes = 5,
+      notifySubscribers = true,
+      currentTrack,
+      bpm,
+      title,
+    } = body;
 
     const configuredSecret = process.env.LIVE_STATUS_SECRET;
     const isProduction = process.env.NODE_ENV === 'production';
@@ -30,102 +91,77 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'r6mln4n3';
-    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-    const token = process.env.SANITY_API_WRITE_TOKEN || process.env.SANITY_API_TOKEN;
-
-    if (!token) {
-      console.warn('Sanity write token missing in env; operating in dev fallback mode.');
-    }
-
-    const writeClient = token
-      ? createClient({
-          projectId,
-          dataset,
-          apiVersion: '2023-01-01',
-          token,
-          useCdn: false,
-        })
-      : null;
-
-    let activeOrUpcoming = null;
-    if (writeClient) {
-      activeOrUpcoming = await writeClient.fetch<any>(
-        `*[_type == "liveStream" && (status == "live" || status == "upcoming" || status == "ended")] | order(_updatedAt desc)[0]`
-      );
-
-      if (!activeOrUpcoming) {
-        const lastStream = await writeClient.fetch<any>(
-          `*[_type == "liveStream"] | order(_createdAt desc)[0]`
-        );
-        activeOrUpcoming = lastStream;
-      }
-    }
-
-    const docId = activeOrUpcoming?._id || 'drafts.liveStreamSettings';
-
     const parsedCountdown = parseInt(String(countdownMinutes), 10);
     const offsetMs = isNaN(parsedCountdown) ? 5 * 60 * 1000 : parsedCountdown * 60 * 1000;
-    const isImmediate = parsedCountdown === 0 || action === 'immediate';
+    const isImmediate = parsedCountdown === 0 || action === 'immediate' || action === 'live';
+
+    if (currentTrack) liveBroadcastState.currentTrack = currentTrack;
+    if (bpm) liveBroadcastState.bpm = Number(bpm) || 140;
+    if (title) liveBroadcastState.title = title;
 
     if (action === 'publish' || action === 'live' || action === 'upcoming' || action === 'immediate') {
       const targetStatus = isImmediate ? 'live' : 'upcoming';
-      const scheduledTime = isImmediate ? new Date().toISOString() : new Date(Date.now() + offsetMs).toISOString();
+      const scheduledTime = isImmediate
+        ? new Date().toISOString()
+        : new Date(Date.now() + offsetMs).toISOString();
 
-      const patches: any = {
-        status: targetStatus,
-        countdownMinutes: parsedCountdown,
-        scheduledTime,
-        endedAt: null,
-      };
-
-      if (streamUrl) patches.playbackId = streamUrl;
-      if (obsStreamKey) patches.obsStreamKey = obsStreamKey;
-      if (multiPlatformTargets) patches.multiPlatformTargets = multiPlatformTargets;
-
-      if (writeClient && activeOrUpcoming) {
-        await writeClient.patch(docId).set(patches).commit();
-      }
+      liveBroadcastState.status = targetStatus;
+      liveBroadcastState.countdownMinutes = parsedCountdown;
+      liveBroadcastState.scheduledTime = scheduledTime;
+      liveBroadcastState.endedAt = null;
+      if (playbackId || streamUrl) liveBroadcastState.playbackId = playbackId || streamUrl;
+      if (obsStreamKey) liveBroadcastState.obsStreamKey = obsStreamKey;
+      liveBroadcastState.lastUpdated = new Date().toISOString();
 
       // Resend Email Alert Dispatch (@henryix.com)
       if (notifySubscribers && process.env.RESEND_API_KEY) {
         try {
           const resend = new Resend(process.env.RESEND_API_KEY);
           const fromEmail = process.env.RESEND_FROM_EMAIL || 'HENRY IX Broadcasts <broadcasts@henryix.com>';
-          const streamTitle = activeOrUpcoming?.title || 'Live Transmission Broadcast';
+          const streamTitle = liveBroadcastState.title;
 
-          // Fetch subscribers if writeClient available
-          let subscribers: any[] = [];
-          if (writeClient) {
-            subscribers = await writeClient.fetch<any[]>(`*[_type == "subscriber"]{ email }`);
-          }
-
-          const recipientEmails = subscribers.map(s => s.email).filter(Boolean);
+          // Fetch subscriber leads from Notion
+          const bookings = await getNotionBookings().catch(() => []);
+          const recipientEmails = bookings
+            .filter(b => b.eventType === 'VIP Guestlist' && b.contactEmail)
+            .map(b => b.contactEmail);
 
           if (recipientEmails.length > 0) {
             const subjectText = isImmediate
-              ? `🔴 LIVE NOW: ${streamTitle} | HENRY IX`
-              : `🚨 BROADCAST ALERT: Going Live in ${parsedCountdown} Minutes! | HENRY IX`;
+              ? `LIVE NOW: ${streamTitle} | HENRY IX`
+              : `Going Live in ${parsedCountdown} Minutes | HENRY IX`;
 
             const bodyHtml = `
-              <div style="background-color:#000000; color:#ffffff; font-family:'OCR A', monospace; padding:30px; border:2px solid #D8163F;">
-                <h1 style="color:#D8163F; letter-spacing:2px;">HENRY IX TRANSMISSION SIGNAL</h1>
-                <p style="font-size:16px;">${subjectText}</p>
-                <p style="color:#a1a1aa;">Tune in directly on the official site for real-time low-latency visuals and high-fidelity audio.</p>
-                <div style="margin-top:25px;">
-                  <a href="https://henryix.com/live" style="background-color:#D8163F; color:#ffffff; padding:12px 24px; text-decoration:none; font-weight:bold; display:inline-block;">TUNE IN TO LIVE TRANSMISSION</a>
+              <div style="background-color:#000000; color:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding:36px; border:1px solid #27272a; max-width:560px; margin:0 auto; border-radius:12px;">
+                <div style="margin-bottom:24px;">
+                  <span style="font-family:'Courier New', monospace; font-size:11px; font-weight:700; letter-spacing:2px; color:#D8163F; text-transform:uppercase;">HENRY IX // LIVE BROADCAST</span>
                 </div>
-                <p style="margin-top:30px; font-size:11px; color:#52525b;">HENRY IX DJ STUDIO // BROADCAST CENTER</p>
+                <h1 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 12px 0; line-height:1.3;">${streamTitle}</h1>
+                <p style="color:#a1a1aa; font-size:14px; line-height:1.6; margin:0 0 24px 0;">Live streaming now with low-latency visuals and high-fidelity audio.</p>
+                <div>
+                  <a href="https://henryix.com/live" style="background-color:#D8163F; color:#ffffff; padding:12px 28px; text-decoration:none; font-weight:600; font-size:13px; border-radius:8px; display:inline-block; letter-spacing:0.5px;">WATCH LIVE STREAM</a>
+                </div>
+                <div style="margin-top:40px; padding-top:20px; border-top:1px solid #18181b; font-size:11px; color:#71717a; font-family:'Courier New', monospace;">
+                  <p style="margin:0 0 6px 0; color:#52525b;">HENRY IX OFFICIAL BROADCAST</p>
+                  <p style="margin:0;">
+                    <a href="https://henryix.com/preferences" style="color:#a1a1aa; text-decoration:underline;">Email Preferences</a>
+                    &nbsp;•&nbsp;
+                    <a href="https://henryix.com/unsubscribe" style="color:#a1a1aa; text-decoration:underline;">Unsubscribe</a>
+                  </p>
+                </div>
               </div>
             `;
 
             await resend.emails.send({
               from: fromEmail,
-              to: recipientEmails.slice(0, 50), // Batch up to 50 recipients
+              to: recipientEmails.slice(0, 50),
               subject: subjectText,
               html: bodyHtml,
+              headers: {
+                'List-Unsubscribe': '<https://henryix.com/unsubscribe>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
             });
-            console.log(`Email alert sent via Resend from ${fromEmail} to ${recipientEmails.length} subscribers.`);
           }
         } catch (emailErr) {
           console.warn('Resend email notification warning:', emailErr);
@@ -137,20 +173,16 @@ export async function POST(req: NextRequest) {
         message: isImmediate ? 'Broadcast status set to LIVE NOW' : `Countdown scheduled for ${parsedCountdown} minutes`,
         status: targetStatus,
         scheduledTime,
+        state: liveBroadcastState,
       });
     }
 
-    if (action === 'done' || action === 'ended' || action === 'archive') {
-      if (writeClient && activeOrUpcoming) {
-        await writeClient
-          .patch(docId)
-          .set({
-            status: 'ended',
-            endedAt: new Date().toISOString(),
-          })
-          .commit();
-      }
-      return NextResponse.json({ success: true, message: 'Broadcast concluded' });
+    if (action === 'done' || action === 'ended' || action === 'offline' || action === 'archive') {
+      liveBroadcastState.status = 'offline';
+      liveBroadcastState.endedAt = new Date().toISOString();
+      liveBroadcastState.lastUpdated = new Date().toISOString();
+
+      return NextResponse.json({ success: true, message: 'Broadcast concluded', state: liveBroadcastState });
     }
 
     return NextResponse.json({ error: 'Invalid action provided' }, { status: 400 });

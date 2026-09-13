@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, createContext, useContext, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAudioStore } from '@/store/audioStore';
 import { audioEngine } from '@/lib/AudioEngine';
 import { playLockoutBlip } from '@/lib/audioUtils';
@@ -11,11 +12,15 @@ export const AudioContext = createContext<any>(null);
 export const useAudio = () => useContext(AudioContext);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const preloaderComplete = useAudioStore(s => s.preloaderComplete);
   const [mountedDecks, setMountedDecks] = React.useState<number[]>([]);
 
-  // ── Preload track waveforms dynamically on client mount ───────────
+  // ── Preload track waveforms dynamically only on Mixes / CDJ view ────────
+  const isCDJView = useAudioStore(s => s.isCDJView);
   useEffect(() => {
+    if (pathname !== '/mixes' && !isCDJView) return;
+
     import('@/app/trackWaveforms.json')
       .then((m) => {
         const trackWaveforms = m.default as Record<string, number[]>;
@@ -33,11 +38,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(err => console.error('Failed to import trackWaveforms:', err));
-  }, []);
+  }, [pathname, isCDJView]);
 
-  // ── Body scroll lock while preloader is active ────────────────────
+  // ── Body scroll lock while preloader is active ─────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
     if (!preloaderComplete) {
       document.body.style.overflow = 'hidden';
       window.scrollTo(0, 0);
@@ -47,9 +53,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [preloaderComplete]);
 
-  // ── Load saved state from LocalStorage on mount ───────────────────
+  // ── Load saved state from LocalStorage on mount ────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
     try {
       const saved = localStorage.getItem('henryix_audio_settings');
       if (saved) {
@@ -65,9 +72,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // ── Save settings to LocalStorage on store change ──────────────────
+  // ── Save settings to LocalStorage on store change ──────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
     const unsubscribe = useAudioStore.subscribe(
       state => ({
         crossfader: state.crossfader,
@@ -85,7 +93,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  // ── First gesture user interaction unlock to satisfy browser security ──
+  // ── First gesture user interaction unlock to satisfy browser security ──────
   useEffect(() => {
     const unlockAudio = () => {
       audioEngine.initAudioDSP();
@@ -124,7 +132,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // ── Preload local audio tracks after preloader is done ───────────
+  // ── Preload local audio tracks after preloader is done ─────────────────────
   useEffect(() => {
     if (preloaderComplete) {
       const timer = setTimeout(() => {
@@ -133,10 +141,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           const audio = audioEngine.audioElements[deckId];
           const deck = useAudioStore.getState().decks[deckId];
           if (audio && deck?.url && !audioEngine.loadedUrls[deckId]) {
-            audio.preload = 'auto';
+            audio.preload = 'none';
             audio.src = new URL(deck.url, window.location.origin).href;
             audioEngine.loadedUrls[deckId] = deck.url;
-            audio.load();
           }
         });
       }, 500);
@@ -144,7 +151,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [preloaderComplete]);
 
-  // ── Subscribe to decks scMode to lazily mount SoundCloud players ────
+  // ── Subscribe to decks scMode to lazily mount SoundCloud players ───────────
   useEffect(() => {
     const unsubscribe = useAudioStore.subscribe(
       state => [1, 2, 3, 4].map(id => state.decks[id]?.scMode ?? false),
@@ -170,7 +177,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [mountedDecks]);
 
-  // ── Lazy load SoundCloud API Script and initialize widgets ─────────
+  // ── Lazy load SoundCloud API Script and initialize widgets ─────────────────
   useEffect(() => {
     const loadAndInit = () => {
       if ((window as any).SC) {
@@ -197,7 +204,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [mountedDecks]);
 
-  // ── Global media session toggler registry ────────────────────────
+  // ── Global media session toggler registry ──────────────────────────────────
   useEffect(() => {
     (window as any).togglePlayGlobal = (deckIdInput?: number) => {
       const { decks: d, leftActiveDeck: lad } = useAudioStore.getState();
@@ -228,7 +235,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             navigator.mediaSession.metadata = new MediaMetadata({
               title: playingDeck.title,
               artist: playingDeck.artist || 'HENRY IX',
-              album: playingDeck.genre ? `HENRY IX // ${playingDeck.genre.toUpperCase()}` : 'HENRY IX TRANSMISSION',
+              album: playingDeck.genre ? `HENRY IX // ${playingDeck.genre.toUpperCase()}` : 'HENRY IX LIVE',
               artwork: playingDeck.artwork ? [
                 { src: playingDeck.artwork, sizes: '512x512', type: 'image/jpeg' },
               ] : [
@@ -267,45 +274,39 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  // ── Construct Context value mapped to AudioEngine refs and math ────
-  const contextValue = useMemo(() => ({
-    // Refs
-    audioElementsRef: { current: audioEngine.audioElements },
-    playPendingRef: { current: audioEngine.playPending },
-    scratchingRef: { current: audioEngine.scratching },
-    widgetRefs: { current: audioEngine.widgetRefs },
-    
-    // Core functions
-    initAudioDSP: () => audioEngine.initAudioDSP(),
-    loadLocalFile: (deckId: number, file: File) => audioEngine.loadLocalFile(deckId, file),
-    seekLocalBuffer: (deckId: number, seekTime: number) => audioEngine.seekLocalBuffer(deckId, seekTime),
-    togglePlayGlobal: (deckId: number) => audioEngine.togglePlayGlobal(deckId),
-    handleCueDown: (deckId: number) => audioEngine.handleCueDown(deckId),
-    handleCueUp: (deckId: number) => audioEngine.handleCueUp(deckId),
-    setTemporaryCue: (deckId: number, targetTime?: number) => audioEngine.setTemporaryCue(deckId, targetTime),
-    halveLoop: (deckId: number) => audioEngine.halveLoop(deckId),
-    doubleLoop: (deckId: number) => audioEngine.doubleLoop(deckId),
-    loadTrack: (track: any, targetDeckId?: number) => audioEngine.loadTrack(track, targetDeckId),
-    playTrack: (track: any, targetDeckId?: number, autoplay?: boolean) => audioEngine.playTrack(track, targetDeckId, autoplay),
-    alignSyncPlayback: (deckId: number) => audioEngine.alignSyncPlayback(deckId),
-    playLockoutBlip,
-
-    // App state getters/setters
-    get isMuted() { return useAudioStore.getState().isMuted; },
-    setIsMuted: useAudioStore.getState().setIsMuted,
-    get preloaderComplete() { return useAudioStore.getState().preloaderComplete; },
-    setPreloaderComplete: useAudioStore.getState().setPreloaderComplete,
-
-    get decks() { return useAudioStore.getState().decks; },
-    setDecks: useAudioStore.getState().setDecks,
-    get crossfader() { return useAudioStore.getState().crossfader; },
-    get leftActiveDeck() { return useAudioStore.getState().leftActiveDeck; },
-    get rightActiveDeck() { return useAudioStore.getState().rightActiveDeck; },
-
-    // Web Audio visualizer getters
-    get analyserNode() { return audioEngine.getAnalyserNode(); },
-    get deckAnalysers() { return audioEngine.getDeckAnalysers(); }
-  }), []);
+  // ── Construct Context value mapped to AudioEngine refs and math ───────────
+  const contextValue = useMemo(() => {
+    return {
+      audioElementsRef: { current: audioEngine.audioElements },
+      playPendingRef: { current: audioEngine.playPending },
+      scratchingRef: { current: audioEngine.scratching },
+      widgetRefs: { current: audioEngine.widgetRefs },
+      initAudioDSP: () => audioEngine.initAudioDSP(),
+      loadLocalFile: (deckId: number, file: File) => audioEngine.loadLocalFile(deckId, file),
+      seekLocalBuffer: (deckId: number, seekTime: number) => audioEngine.seekLocalBuffer(deckId, seekTime),
+      togglePlayGlobal: (deckId: number) => audioEngine.togglePlayGlobal(deckId),
+      handleCueDown: (deckId: number) => audioEngine.handleCueDown(deckId),
+      handleCueUp: (deckId: number) => audioEngine.handleCueUp(deckId),
+      setTemporaryCue: (deckId: number, targetTime?: number) => audioEngine.setTemporaryCue(deckId, targetTime),
+      halveLoop: (deckId: number) => audioEngine.halveLoop(deckId),
+      doubleLoop: (deckId: number) => audioEngine.doubleLoop(deckId),
+      loadTrack: (track: any, targetDeckId?: number) => audioEngine.loadTrack(track, targetDeckId),
+      playTrack: (track: any, targetDeckId?: number, autoplay?: boolean) => audioEngine.playTrack(track, targetDeckId, autoplay),
+      alignSyncPlayback: (deckId: number) => audioEngine.alignSyncPlayback(deckId),
+      playLockoutBlip,
+      get isMuted() { return useAudioStore.getState().isMuted; },
+      setIsMuted: useAudioStore.getState().setIsMuted,
+      get preloaderComplete() { return useAudioStore.getState().preloaderComplete; },
+      setPreloaderComplete: useAudioStore.getState().setPreloaderComplete,
+      get decks() { return useAudioStore.getState().decks; },
+      setDecks: useAudioStore.getState().setDecks,
+      get crossfader() { return useAudioStore.getState().crossfader; },
+      get leftActiveDeck() { return useAudioStore.getState().leftActiveDeck; },
+      get rightActiveDeck() { return useAudioStore.getState().rightActiveDeck; },
+      get analyserNode() { return audioEngine.getAnalyserNode(); },
+      get deckAnalysers() { return audioEngine.getDeckAnalysers(); }
+    };
+  }, []);
 
   return (
     <AudioContext.Provider value={contextValue}>
@@ -327,5 +328,3 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     </AudioContext.Provider>
   );
 }
-
-

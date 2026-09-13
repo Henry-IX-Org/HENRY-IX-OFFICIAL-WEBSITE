@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useAudioStore } from '@/store/audioStore';
-import { safeSanityFetch } from '@/sanity/lib/client';
 import { STATIC_MIX_GROUPS, proxyUrl } from '@/lib/mixes';
-import { getStorageUrl } from '@/lib/storage';
 import { audioEngine } from '@/lib/AudioEngine';
 
 const MixArchive = dynamic(() => import('./MixArchive'), { ssr: false });
@@ -108,95 +106,12 @@ export default function MixPortfolio({
   useEffect(() => {
     async function loadDynamicMixes() {
       try {
-        const [groupsData, standaloneMixesData] = await Promise.all([
-          safeSanityFetch<any[]>(`*[_type == "mixGroup"]{
-            title,
-            slug,
-            description,
-            mixes[]->{
-              _id,
-              title,
-              slug,
-              bpm,
-              genre,
-              tags,
-              soundcloudLink,
-              audioFile,
-              audioUrl,
-              artworkFile,
-              artworkUrl,
-              tracklist,
-              cuePoints
-            }
-          }`),
-          safeSanityFetch<any[]>(`*[_type == "mix"] | order(publishedAt desc, _createdAt desc){
-            _id,
-            title,
-            slug,
-            bpm,
-            genre,
-            tags,
-            soundcloudLink,
-            audioFile,
-            audioUrl,
-            artworkFile,
-            artworkUrl,
-            tracklist,
-            cuePoints
-          }`)
-        ]);
+        const res = await fetch('/api/mixes');
+        const data: any = await res.json();
+        if (data && data.groups && data.groups.length > 0) {
+          setMixGroups(data.groups);
 
-        const groupFormatted = (groupsData || [])
-          .map((group: any) => {
-            const filteredMixes = (group.mixes || [])
-              .filter((mix: any) => mix.audioFile || mix.audioUrl || mix.soundcloudLink)
-              .map((mix: any) => ({
-                id: mix._id,
-                title: mix.title,
-                url: mix.audioUrl ? mix.audioUrl : (mix.audioFile ? proxyUrl(getStorageUrl(mix.audioFile)) : mix.soundcloudLink || ''),
-                link: mix.soundcloudLink || '',
-                bpm: mix.bpm || 120,
-                genre: mix.genre || 'UK Garage',
-                tags: mix.tags || [],
-                cuePoints: mix.cuePoints || [],
-                tracklist: mix.tracklist || '',
-                artworkUrl: mix.artworkUrl ? mix.artworkUrl : (mix.artworkFile ? getStorageUrl(mix.artworkFile) : undefined)
-              }));
-            return {
-              title: group.title,
-              mixes: filteredMixes
-            };
-          })
-          .filter((group: any) => group.mixes.length > 0);
-
-        if (standaloneMixesData && standaloneMixesData.length > 0) {
-          const formattedStandalone = standaloneMixesData
-            .filter((mix: any) => mix.audioFile || mix.audioUrl || mix.soundcloudLink)
-            .map((mix: any) => ({
-              id: mix._id,
-              title: mix.title,
-              url: mix.audioUrl ? mix.audioUrl : (mix.audioFile ? proxyUrl(getStorageUrl(mix.audioFile)) : mix.soundcloudLink || ''),
-              link: mix.soundcloudLink || '',
-              bpm: mix.bpm || 120,
-              genre: mix.genre || 'UK Garage',
-              tags: mix.tags || [],
-              cuePoints: mix.cuePoints || [],
-              tracklist: mix.tracklist || '',
-              artworkUrl: mix.artworkUrl ? mix.artworkUrl : (mix.artworkFile ? getStorageUrl(mix.artworkFile) : undefined)
-            }));
-
-          if (formattedStandalone.length > 0) {
-            groupFormatted.unshift({
-              title: 'STUDIO UPLOADS & RELEASES',
-              mixes: formattedStandalone
-            });
-          }
-        }
-
-        if (groupFormatted.length > 0) {
-          setMixGroups(groupFormatted);
-
-          const allMixes = groupFormatted.flatMap((g: any) => g.mixes);
+          const allMixes = data.groups.flatMap((g: any) => g.mixes);
           setDecks((prevDecks: any) => {
             const updated = { ...prevDecks };
             const kc1 = allMixes.find((m: any) => m.title.includes('Knight Club') && m.title.includes('Session 1')) || allMixes[0];
@@ -217,7 +132,7 @@ export default function MixPortfolio({
           });
         }
       } catch (err) {
-        console.warn('Dynamic mix portfolio fetch skipped or offline:', err);
+        console.warn('Mixes catalog fetch skipped or offline:', err);
       }
     }
     loadDynamicMixes();

@@ -1,6 +1,8 @@
 import GalleryClient from './gallery-client';
 import { Metadata } from 'next';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Gallery | HENRY IX',
   description: 'Browse high-resolution photographs, event crowd captures, deck layouts, and official cover art archives from the world of Henry IX.',

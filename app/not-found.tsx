@@ -24,8 +24,8 @@ export default function NotFound() {
           404
         </h1>
 
-        <p className="font-mono text-sm text-zinc-400 mb-6 uppercase tracking-wider">
-          TRANSMISSION FREQUENCY OUT OF RANGE OR UNASSIGNED
+        <p className="font-mono text-xs text-zinc-400 mb-6 uppercase tracking-widest">
+          PAGE NOT FOUND // THIS URL DOES NOT EXIST
         </p>
 
         {/* Navigation Action */}
@@ -34,7 +34,7 @@ export default function NotFound() {
             href="/"
             className="w-full sm:w-auto px-6 py-3 bg-[#D8163F] hover:bg-[#b01032] text-white font-bold tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(216,22,63,0.5)] active:scale-95 uppercase"
           >
-            &lt; RETURN TO CONSOLE
+            &lt; RETURN HOME
           </Link>
           <Link
             href="/mixes"

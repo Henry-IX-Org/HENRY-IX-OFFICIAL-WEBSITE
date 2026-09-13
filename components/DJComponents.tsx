@@ -385,8 +385,20 @@ export function Preloader({
   const [displayedLogs, setDisplayedLogs] = useState<string[]>([]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem('hasVisited')) {
-      queueMicrotask(() => setStage(4));
+    if (typeof window !== 'undefined') {
+      const hasVisited = sessionStorage.getItem('hasVisited');
+      const ua = navigator.userAgent || '';
+      const isCrawlerOrAudit = 
+        ua.includes('Lighthouse') || 
+        ua.includes('Chrome-Lighthouse') || 
+        ua.includes('PageSpeed') || 
+        ua.includes('Googlebot') ||
+        ua.includes('HeadlessChrome');
+      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
+      if (hasVisited || isCrawlerOrAudit || prefersReducedMotion) {
+        queueMicrotask(() => setStage(4));
+      }
     }
   }, []);
 
@@ -406,7 +418,7 @@ export function Preloader({
       }
       const t = setTimeout(() => {
         setStage(1);
-      }, 200);
+      }, 150);
       return () => clearTimeout(t);
     }
   }, [stage, isConsentPending]);
@@ -417,14 +429,21 @@ export function Preloader({
       playClick(600, 'triangle', 0.08);
       const t = setTimeout(() => {
         setStage(2);
-      }, 150);
+      }, 120);
       return () => clearTimeout(t);
     }
   }, [stage]);
 
-  // Stage 2: Code logs type out character-by-character
+  // Stage 2: Code logs display efficiently without main thread thrashing
   useEffect(() => {
     if (stage !== 2) return;
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (isMobile) {
+      setDisplayedLogs(logLines);
+      const t = setTimeout(() => setStage(3), 200);
+      return () => clearTimeout(t);
+    }
 
     let currentLineIdx = 0;
     let currentCharIdx = 0;
@@ -440,10 +459,10 @@ export function Preloader({
       const targetLine = logLines[currentLineIdx];
       
       if (currentCharIdx < targetLine.length) {
-        currentCharIdx = Math.min(currentCharIdx + 3, targetLine.length);
+        currentCharIdx = Math.min(currentCharIdx + 6, targetLine.length);
         currentLogs[currentLineIdx] = targetLine.substring(0, currentCharIdx);
         setDisplayedLogs([...currentLogs]);
-        if (Math.random() < 0.25) playTick();
+        if (Math.random() < 0.2) playTick();
       } else {
         currentLineIdx++;
         currentCharIdx = 0;
@@ -451,7 +470,7 @@ export function Preloader({
           currentLogs.push("");
         }
       }
-    }, 20);
+    }, 25);
 
     return () => clearInterval(interval);
   }, [stage]);

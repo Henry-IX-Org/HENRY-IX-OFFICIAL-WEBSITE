@@ -1,47 +1,57 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playClick, playTick } from '@/lib/audioUtils';
 import siteContent from '@/lib/siteContent';
-
-async function mockSignupAction(email: string) {
-  await new Promise(r => setTimeout(r, 600));
-  return { success: true };
-}
+import { TurnstileWidget, TurnstileWidgetHandle } from './TurnstileWidget';
 
 export function NewsletterForm() {
   const [email, setEmail] = useState('');
   const [joined, setJoined] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !turnstileToken) return;
     setStatus('loading');
     setErrorMessage('');
     playClick(1000, 'sine', 0.1);
 
     try {
-      await mockSignupAction(email);
-      setStatus('success');
-      setJoined(true);
+      const res = await fetch('/api/notifications/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, turnstileToken }),
+      });
+
+      if (res.ok) {
+        setStatus('success');
+        setJoined(true);
+      } else {
+        const data = (await res.json().catch(() => ({}))) as any;
+        throw new Error(data.error || 'Verification or subscription failed');
+      }
     } catch (err: any) {
       setStatus('error');
-      setErrorMessage(err.message || 'Transmission failed');
+      setErrorMessage(err.message || 'Subscription failed');
+      turnstileRef.current?.reset();
+      setTurnstileToken('');
     }
   };
 
   const validation = useMemo(() => {
-    if (!email) return { status: 'waiting' as const, message: 'ENTER_INQUIRY...' };
+    if (!email) return { status: 'waiting' as const, message: 'ENTER_EMAIL...' };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(email)) {
-      return { status: 'success' as const, message: 'ADDRESS_VERIFIED // TARGET_STAGED' };
+      return { status: 'success' as const, message: 'VALID_EMAIL // READY' };
     } else {
-      return { status: 'warning' as const, message: 'VALIDATION_FAILED - RESUBMIT_REQUIRED' };
+      return { status: 'warning' as const, message: 'ENTER_VALID_EMAIL' };
     }
   }, [email]);
 
@@ -73,7 +83,7 @@ export function NewsletterForm() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </motion.div>
-            <p className="font-mono text-xs tracking-widest uppercase text-primary">Transmission Received</p>
+            <p className="font-mono text-xs tracking-widest uppercase text-primary">Subscription Confirmed</p>
             <p className="text-xs text-zinc-500 font-mono">{email}</p>
           </motion.div>
         ) : (
@@ -115,10 +125,19 @@ export function NewsletterForm() {
               </div>
             </div>
 
+            <TurnstileWidget
+              ref={turnstileRef}
+              action="subscribe"
+              onVerify={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken('')}
+              onExpire={() => setTurnstileToken('')}
+              className="my-1"
+            />
+
             <button
               type="submit"
-              disabled={status === 'loading'}
-              className="bg-primary hover:bg-primary/90 text-black font-mono text-xs font-bold tracking-[0.2em] uppercase px-6 py-3 transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 rounded-none self-start sm:self-auto"
+              disabled={status === 'loading' || !turnstileToken}
+              className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-black font-mono text-xs font-bold tracking-[0.2em] uppercase px-6 py-3 transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 rounded-none self-start sm:self-auto"
             >
               <span>{status === 'loading' ? 'SENDING...' : 'JOIN'}</span>
               <ArrowRight className="w-4 h-4" />

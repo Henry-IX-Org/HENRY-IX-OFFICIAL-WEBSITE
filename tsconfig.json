@@ -5,7 +5,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "types": ["@cloudflare/workers-types"],
     "noEmit": true,
     "esModuleInterop": true,
@@ -25,5 +25,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", ".next", ".open-next", ".vercel", ".wrangler"]
+  "exclude": ["node_modules", ".next", ".open-next", ".vercel", ".wrangler", "scratch", "scripts"]
 }

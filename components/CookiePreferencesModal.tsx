@@ -72,14 +72,15 @@ export default function CookiePreferencesModal({
               </div>
               <button
                 onClick={onClose}
-                className="text-zinc-500 hover:text-white transition-colors cursor-pointer p-1"
+                aria-label="Close preferences"
+                className="text-zinc-400 hover:text-white transition-colors cursor-pointer p-1"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-zinc-400 font-sans mb-6 leading-relaxed">
-              We respect your legal data rights under <strong className="text-zinc-200">UK GDPR</strong> and <strong className="text-zinc-200">PECR</strong>. Customize your preference settings below. Strictly necessary cookies are required for basic Web Audio DSP features.
+            <p className="text-xs text-zinc-300 font-sans mb-6 leading-relaxed">
+              We respect your legal data rights under <strong className="text-zinc-100">UK GDPR</strong> and <strong className="text-zinc-100">PECR</strong>. Customize your preference settings below. Strictly necessary cookies are required for basic Web Audio DSP features.
             </p>
 
             {/* Categories */}
@@ -94,7 +95,7 @@ export default function CookiePreferencesModal({
                       ALWAYS ACTIVE
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 font-sans leading-normal">
+                  <p className="text-[11px] text-zinc-400 font-sans leading-normal">
                     Required for core Web Audio DSP nodes, crossfader state, local volume settings, and IndexedDB waveform peak caches.
                   </p>
                 </div>
@@ -109,8 +110,8 @@ export default function CookiePreferencesModal({
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-white uppercase tracking-wider">2. ANALYTICS & PERFORMANCE</span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 font-sans leading-normal">
-                    Anonymous telemetry used to measure mix playback performance, load speeds, and Cloudflare CDN response rates.
+                  <p className="text-[11px] text-zinc-400 font-sans leading-normal">
+                    Anonymous metrics used to measure mix playback performance, load speeds, and Cloudflare CDN response rates.
                   </p>
                 </div>
                 <button
@@ -119,13 +120,14 @@ export default function CookiePreferencesModal({
                     playClick(700, 'sine', 0.02);
                     setPrefs(prev => ({ ...prev, analytics: !prev.analytics }));
                   }}
+                  aria-label="Toggle analytics cookies"
                   className={`w-11 h-6 rounded-none transition-colors p-1 cursor-pointer flex items-center border ${
                     prefs.analytics ? 'bg-primary border-primary justify-end' : 'bg-zinc-900 border-zinc-800 justify-start'
                   }`}
                 >
                   <motion.div
                     layout
-                    className={`w-4 h-4 rounded-none ${prefs.analytics ? 'bg-black' : 'bg-zinc-500'}`}
+                    className={`w-4 h-4 rounded-none ${prefs.analytics ? 'bg-white' : 'bg-zinc-500'}`}
                   />
                 </button>
               </div>
@@ -134,10 +136,10 @@ export default function CookiePreferencesModal({
               <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-none flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">3. EXTERNAL WIDGETS & MARKETING</span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">3. EXTERNAL WIDGETS & MEDIA</span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 font-sans leading-normal">
-                    Third-party embedded SoundCloud audio players, newsletter signup tracking, and promotional stream alerts.
+                  <p className="text-[11px] text-zinc-400 font-sans leading-normal">
+                    Third-party embedded SoundCloud audio players, newsletter signup tracking, and stream alerts.
                   </p>
                 </div>
                 <button
@@ -146,13 +148,14 @@ export default function CookiePreferencesModal({
                     playClick(700, 'sine', 0.02);
                     setPrefs(prev => ({ ...prev, marketing: !prev.marketing }));
                   }}
+                  aria-label="Toggle external widgets and media cookies"
                   className={`w-11 h-6 rounded-none transition-colors p-1 cursor-pointer flex items-center border ${
                     prefs.marketing ? 'bg-cyan-500 border-cyan-500 justify-end' : 'bg-zinc-900 border-zinc-800 justify-start'
                   }`}
                 >
                   <motion.div
                     layout
-                    className={`w-4 h-4 rounded-none ${prefs.marketing ? 'bg-black' : 'bg-zinc-500'}`}
+                    className={`w-4 h-4 rounded-none ${prefs.marketing ? 'bg-white' : 'bg-zinc-500'}`}
                   />
                 </button>
               </div>
@@ -161,13 +164,14 @@ export default function CookiePreferencesModal({
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-900 pt-4">
-              <span className="text-[9px] text-zinc-600 uppercase tracking-widest flex items-center gap-1">
-                <Info className="w-3 h-3 text-zinc-600" />
+              <span className="text-[9px] text-zinc-400 uppercase tracking-widest flex items-center gap-1">
+                <Info className="w-3 h-3 text-zinc-400" />
                 CHOICES ARE SAVED LOCALLY
               </span>
               <button
                 onClick={handleSave}
-                className="w-full sm:w-auto px-6 py-2.5 bg-primary hover:bg-red-600 text-black font-black uppercase text-xs tracking-widest rounded-none transition-colors cursor-pointer active:scale-95 shadow-[0_0_15px_rgba(216,22,63,0.3)] flex items-center justify-center gap-2"
+                aria-label="Save cookie preferences"
+                className="w-full sm:w-auto px-6 py-2.5 bg-primary hover:bg-red-600 text-white font-black uppercase text-xs tracking-widest rounded-none transition-colors cursor-pointer active:scale-95 shadow-[0_0_15px_rgba(216,22,63,0.3)] flex items-center justify-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 SAVE PREFERENCES

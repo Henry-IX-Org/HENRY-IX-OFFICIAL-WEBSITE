@@ -5,7 +5,7 @@ import { Resend } from 'resend';
 export async function signupAction(email: string) {
   try {
     if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return { error: 'Invalid email address transmission' };
+      return { error: 'Invalid email address' };
     }
 
     // Mock local signup process simulation
