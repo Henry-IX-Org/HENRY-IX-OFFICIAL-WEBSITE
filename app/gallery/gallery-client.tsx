@@ -397,19 +397,20 @@ export default function GalleryClient() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[100] flex flex-col justify-center items-center bg-black/95 p-4 md:p-8 select-none font-mono"
+            className="fixed inset-0 z-[100] flex flex-col justify-center items-center bg-black/95 p-4 pb-36 sm:pb-8 md:p-8 select-none font-mono"
             onClick={closeCarousel}
           >
             {/* Top Navigation Bar */}
-            <div className="absolute top-4 left-4 right-4 md:top-8 md:left-8 md:right-8 z-50 flex justify-between items-center">
-              <div className="flex items-center gap-2 bg-black border border-zinc-900 px-3 py-1.5 rounded-none text-xs font-bold text-primary tracking-widest">
-                <span className="w-2 h-2 rounded-full bg-[#D30F31] animate-pulse" />
-                <span>{selectedAlbum.camTag} {'//'} {selectedAlbum.title}</span>
+            <div className="absolute top-14 left-4 right-4 md:top-28 md:left-8 md:right-8 z-50 flex justify-between items-center pointer-events-auto">
+              <div className="flex items-center gap-2 bg-black border border-zinc-900 px-3 py-1.5 rounded-none text-xs font-bold text-primary tracking-widest min-w-0 max-w-[calc(100%-3.5rem)] md:max-w-none">
+                <span className="w-2 h-2 rounded-full bg-[#D30F31] animate-pulse shrink-0" />
+                <span className="truncate">{selectedAlbum.camTag} {'//'} {selectedAlbum.title}</span>
               </div>
 
               <button
                 onClick={closeCarousel}
-                className="w-10 h-10 rounded-none bg-black border border-zinc-900 hover:border-primary/50 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors active:scale-90"
+                aria-label="Close image preview"
+                className="w-10 h-10 shrink-0 rounded-none bg-black border border-zinc-900 hover:border-primary/50 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors active:scale-90"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -419,7 +420,7 @@ export default function GalleryClient() {
 
             {/* Main Media Carousel Stage */}
             <div 
-              className="relative flex items-center justify-center w-full max-w-5xl h-[75vh] mx-auto mt-10"
+              className="relative flex items-center justify-center w-full max-w-5xl h-[46vh] sm:h-[62vh] md:h-[68vh] mx-auto mt-12 md:mt-16"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Carousel Prev Nav Button */}
@@ -464,8 +465,8 @@ export default function GalleryClient() {
             </div>
 
             {/* Bottom Caption Bar */}
-            <div className="mt-4 text-center z-50 flex flex-col items-center gap-1 select-none">
-              <div className="text-xs md:text-sm font-black text-white tracking-widest uppercase">
+            <div className="mt-3 md:mt-4 text-center z-50 flex flex-col items-center gap-1 select-none px-4">
+              <div className="text-xs md:text-sm font-black text-white tracking-widest uppercase truncate max-w-full">
                 {currentItem.title}
               </div>
               <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
