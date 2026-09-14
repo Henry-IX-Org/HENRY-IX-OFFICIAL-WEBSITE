@@ -19,10 +19,14 @@ interface CCTVAlbum {
   items: GalleryItem[];
 }
 
-const proxyUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('/api/assets')) return url;
-  return `/api/assets?url=${encodeURIComponent(url)}`;
+const proxyUrl = (pathOrKey: string) => {
+  if (!pathOrKey) return '';
+  if (pathOrKey.startsWith('/api/assets')) return pathOrKey;
+  if (pathOrKey.startsWith('http://') || pathOrKey.startsWith('https://')) {
+    return `/api/assets?url=${encodeURIComponent(pathOrKey)}`;
+  }
+  const cleanKey = pathOrKey.startsWith('/') ? pathOrKey.slice(1) : pathOrKey;
+  return `/api/assets?key=${encodeURIComponent(cleanKey)}`;
 };
 
 /* ==========================================================================
@@ -35,11 +39,11 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'KNIGHT CLUB SESSIONS',
     description: 'Official promotional mix artwork covers and digital banners from Knight Club.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%201.jpg')), title: 'KNIGHT CLUB: SESSION 1' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%202.jpg')), title: 'KNIGHT CLUB: SESSION 2' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%203.jpg')), title: 'KNIGHT CLUB: SESSION 3' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%204.jpg')), title: 'KNIGHT CLUB: SESSION 4' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%205.jpg')), title: 'KNIGHT CLUB: SESSION 5' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 1.jpg'), title: 'KNIGHT CLUB: SESSION 1' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 2.jpg'), title: 'KNIGHT CLUB: SESSION 2' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 3.jpg'), title: 'KNIGHT CLUB: SESSION 3' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 4.jpg'), title: 'KNIGHT CLUB: SESSION 4' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 5.jpg'), title: 'KNIGHT CLUB: SESSION 5' },
     ],
   },
   {
@@ -48,8 +52,8 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'ROYAL COURT RESIDENCY',
     description: 'Exclusive track artwork covers from the Royal Court series.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%201%20Track%20Artwork.jpg')), title: 'ROYAL COURT: SESSION 1' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%202%20Track%20Artwork.jpg')), title: 'ROYAL COURT: SESSION 2' },
+      { src: proxyUrl('Mixes/Royal Court/Mix Artwork/Royal Court Session 1 Track Artwork.jpg'), title: 'ROYAL COURT: SESSION 1' },
+      { src: proxyUrl('Mixes/Royal Court/Mix Artwork/Royal Court Session 2 Track Artwork.jpg'), title: 'ROYAL COURT: SESSION 2' },
     ],
   },
   {
@@ -58,29 +62,31 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'CORNER NEW CROSS GIGS',
     description: 'Underground club gig track artwork covers from Corner New Cross.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N1%20Artwork.png')), title: 'CORNER NEW CROSS: NIGHT 1' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N2%20Artwork.png')), title: 'CORNER NEW CROSS: NIGHT 2' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N1 Artwork.png'), title: 'CORNER NEW CROSS: NIGHT 1' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N2 Artwork.png'), title: 'CORNER NEW CROSS: NIGHT 2' },
     ],
   },
   {
     id: 'cam_04',
     camTag: 'CAM 04',
-    title: 'KNIGHT CLUB ARCHIVE',
-    description: 'Retrospective visual archive of the Knight Club series.',
+    title: 'KNIGHT CLUB EXTENDED',
+    description: 'Extended track artwork covers from Knight Club Sessions 6 through 9.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%201.jpg')), title: 'KNIGHT CLUB S1 ARCHIVE' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%203.jpg')), title: 'KNIGHT CLUB S3 ARCHIVE' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%205.jpg')), title: 'KNIGHT CLUB S5 ARCHIVE' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 6.jpg'), title: 'KNIGHT CLUB: SESSION 6' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 7.jpg'), title: 'KNIGHT CLUB: SESSION 7' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 8.jpg'), title: 'KNIGHT CLUB: SESSION 8' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 9.jpg'), title: 'KNIGHT CLUB: SESSION 9' },
     ],
   },
   {
     id: 'cam_05',
     camTag: 'CAM 05',
-    title: 'ROYAL COURT ARCHIVE',
-    description: 'High-resolution artwork stream for Royal Court sets.',
+    title: 'STUDIO PORTRAITS // ME ARCHIVE',
+    description: 'Official verified studio photographic portraits and identity archive.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%202%20Track%20Artwork.jpg')), title: 'ROYAL COURT S2 ARCHIVE' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%201%20Track%20Artwork.jpg')), title: 'ROYAL COURT S1 ARCHIVE' },
+      { src: proxyUrl('gallery/Me/IMG_0495.jpg'), title: 'STUDIO PORTRAIT: TAKE 01' },
+      { src: proxyUrl('gallery/Me/IMG_3540.jpg'), title: 'STUDIO PORTRAIT: TAKE 02' },
+      { src: proxyUrl('gallery/Me/Official Red Background With PFP Cutout - No Text.png'), title: 'OFFICIAL IDENTITY PFP' },
     ],
   },
   {
@@ -89,8 +95,8 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'CORNER NEW CROSS ARCHIVE',
     description: 'Underground venue captures and artwork covers.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N2%20Artwork.png')), title: 'CORNER NEW CROSS N2 ARCHIVE' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N1%20Artwork.png')), title: 'CORNER NEW CROSS N1 ARCHIVE' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N2 Artwork.png'), title: 'CORNER NEW CROSS N2 ARCHIVE' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N1 Artwork.png'), title: 'CORNER NEW CROSS N1 ARCHIVE' },
     ],
   },
   {
@@ -99,8 +105,9 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'TRACK ARTWORK CATALOG 01',
     description: 'Combined promotional cover art catalog.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%202.jpg')), title: 'KNIGHT CLUB S2' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%201%20Track%20Artwork.jpg')), title: 'ROYAL COURT S1' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 2.jpg'), title: 'KNIGHT CLUB S2' },
+      { src: proxyUrl('Mixes/Royal Court/Mix Artwork/Royal Court Session 1 Track Artwork.jpg'), title: 'ROYAL COURT S1' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 8.jpg'), title: 'KNIGHT CLUB S8' },
     ],
   },
   {
@@ -109,18 +116,20 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'TRACK ARTWORK CATALOG 02',
     description: 'Additional artwork releases.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N1%20Artwork.png')), title: 'CORNER NEW CROSS N1' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%204.jpg')), title: 'KNIGHT CLUB S4' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N1 Artwork.png'), title: 'CORNER NEW CROSS N1' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 4.jpg'), title: 'KNIGHT CLUB S4' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 7.jpg'), title: 'KNIGHT CLUB S7' },
     ],
   },
   {
     id: 'cam_09',
     camTag: 'CAM 09',
-    title: 'STUDIO SESSIONS',
+    title: 'STUDIO SESSIONS // ME VISUALS',
     description: 'Darkroom photography and studio visuals.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%203.jpg')), title: 'STUDIO SESSION 03' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%202%20Track%20Artwork.jpg')), title: 'STUDIO SESSION 02' },
+      { src: proxyUrl('gallery/Me/IMG_3540.jpg'), title: 'STUDIO SESSION: FRAME 02' },
+      { src: proxyUrl('gallery/Me/IMG_0495.jpg'), title: 'STUDIO SESSION: FRAME 01' },
+      { src: proxyUrl('gallery/Me/Official Red Background With PFP Cutout - No Text.png'), title: 'MASTER BRAND PFP' },
     ],
   },
   {
@@ -129,8 +138,9 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'BOOTH & DECK CAPTURES',
     description: 'Hardware visuals and stage deck archives.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%205.jpg')), title: 'DECK VISUAL S5' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N2%20Artwork.png')), title: 'BOOTH VISUAL CNC' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 5.jpg'), title: 'DECK VISUAL S5' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N2 Artwork.png'), title: 'BOOTH VISUAL CNC' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 3.jpg'), title: 'DECK VISUAL S3' },
     ],
   },
   {
@@ -139,8 +149,9 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'LIVE PERFORMANCE STREAM',
     description: 'Live set imagery and crowd visuals.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%201%20Track%20Artwork.jpg')), title: 'LIVE STREAM RC' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%201.jpg')), title: 'LIVE STREAM KC' },
+      { src: proxyUrl('Mixes/Royal Court/Mix Artwork/Royal Court Session 1 Track Artwork.jpg'), title: 'LIVE STREAM RC1' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 1.jpg'), title: 'LIVE STREAM KC1' },
+      { src: proxyUrl('Mixes/Royal Court/Mix Artwork/Royal Court Session 2 Track Artwork.jpg'), title: 'LIVE STREAM RC2' },
     ],
   },
   {
@@ -149,9 +160,10 @@ const INITIAL_CCTV_ALBUMS: CCTVAlbum[] = [
     title: 'MASTER SURVEILLANCE FEED',
     description: 'Master CCTV security monitor composite stream.',
     items: [
-      { src: proxyUrl(getStorageUrl('/Mixes/Knight%20Club/Mix%20Artwork/Knight%20Club%20Track%20Artwork%20Session%204.jpg')), title: 'MASTER FEED KC4' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Corner%20New%20Cross/Mix%20Artwork/CNC%20N1%20Artwork.png')), title: 'MASTER FEED CNC1' },
-      { src: proxyUrl(getStorageUrl('/Mixes/Royal%20Court/Mix%20Artwork/Royal%20Court%20Session%202%20Track%20Artwork.jpg')), title: 'MASTER FEED RC2' },
+      { src: proxyUrl('Mixes/Knight Club/Mix Artwork/Knight Club Track Artwork Session 4.jpg'), title: 'MASTER FEED KC4' },
+      { src: proxyUrl('Mixes/Corner New Cross/Mix Artwork/CNC N1 Artwork.png'), title: 'MASTER FEED CNC1' },
+      { src: proxyUrl('Mixes/Royal Court/Mix Artwork/Royal Court Session 2 Track Artwork.jpg'), title: 'MASTER FEED RC2' },
+      { src: proxyUrl('gallery/Me/Official Red Background With PFP Cutout - No Text.png'), title: 'MASTER BRAND OVERVIEW' },
     ],
   },
 ];

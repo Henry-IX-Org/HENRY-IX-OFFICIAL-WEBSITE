@@ -6,6 +6,10 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 
+if (process.env.NODE_ENV !== 'production' || process.platform === 'win32') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const accountId = process.env.R2_ACCOUNT_ID;
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
@@ -34,30 +38,79 @@ if (isR2) {
   }
 }
 
+function getMimeType(path: string): string {
+  const lower = path.toLowerCase();
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.svg')) return 'image/svg+xml';
+  if (lower.endsWith('.mp3')) return 'audio/mpeg';
+  if (lower.endsWith('.wav')) return 'audio/wav';
+  if (lower.endsWith('.mp4')) return 'video/mp4';
+  if (lower.endsWith('.mov')) return 'video/quicktime';
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  return 'application/octet-stream';
+}
+
 async function handleAssetRequest(request: Request) {
   const { searchParams } = new URL(request.url);
+  const rawKey = searchParams.get('key');
   const url = searchParams.get('url');
   
-  if (!url) {
-    return new NextResponse('Missing url parameter', { status: 400 });
+  if (!rawKey && !url) {
+    return new NextResponse('Missing key or url parameter', { status: 400 });
   }
 
-  let parsedUrl: URL;
+  const r2PublicDomain = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  const storageBaseUrl = process.env.NEXT_PUBLIC_STORAGE_BASE_URL;
+
+  let pathname = '';
+  if (rawKey) {
+    pathname = rawKey.startsWith('/') ? rawKey.slice(1) : rawKey;
+  } else if (url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url);
+      } catch (e) {
+        return new NextResponse('Invalid URL parameter', { status: 400 });
+      }
+
+      const allowedHosts = [
+        'tegbbmt42xpyzcnx.private.blob.vercel-storage.com',
+        'pub-930b5248e181432aa6e2f5a31832fd8d.r2.dev',
+        'pub-c7c5ff43a8ae174ad91e2668de0ad7f0.r2.dev'
+      ];
+      if (r2PublicDomain) {
+        try { allowedHosts.push(new URL(r2PublicDomain).host.toLowerCase()); } catch(_) {}
+      }
+      if (storageBaseUrl) {
+        try { allowedHosts.push(new URL(storageBaseUrl).host.toLowerCase()); } catch(_) {}
+      }
+
+      const parsedHost = parsedUrl.host.toLowerCase();
+      const isAllowedHost = allowedHosts.some(allowed => parsedHost === allowed || parsedHost.endsWith('.' + allowed));
+      
+      if (!isAllowedHost) {
+        return new NextResponse('Invalid source domain', { status: 400 });
+      }
+
+      pathname = parsedUrl.pathname.startsWith('/') ? parsedUrl.pathname.slice(1) : parsedUrl.pathname;
+    } else {
+      pathname = url.startsWith('/') ? url.slice(1) : url;
+    }
+  }
+
+  // Normalize and recursively decode percent-encodings (e.g. '%2520' -> '%20' -> ' ')
   try {
-    parsedUrl = new URL(url);
-  } catch (e) {
-    return new NextResponse('Invalid URL parameter', { status: 400 });
-  }
-
-  // pathname starts with a slash, we want to strip the leading slash
-  const pathname = decodeURIComponent(parsedUrl.pathname.slice(1));
+    pathname = decodeURIComponent(pathname);
+    if (pathname.includes('%')) {
+      pathname = decodeURIComponent(pathname);
+    }
+  } catch {}
 
   const rangeHeader = request.headers.get('Range');
-
-  // For standard HTTP/HTTPS URLs without a Range header, redirect directly to the R2 CDN to save worker CPU and bandwidth
-  if ((url.startsWith('http://') || url.startsWith('https://')) && !rangeHeader) {
-    return NextResponse.redirect(url, 302);
-  }
 
   // Check cache first (for GET requests without Range header)
   const cache = typeof caches !== 'undefined' ? (caches as any).default : null;
@@ -79,28 +132,6 @@ async function handleAssetRequest(request: Request) {
     } catch (e) {
       console.warn('Cloudflare Cache API match error:', e);
     }
-  }
-
-  const r2PublicDomain = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-  const storageBaseUrl = process.env.NEXT_PUBLIC_STORAGE_BASE_URL;
-  const allowedHosts = [
-    'tegbbmt42xpyzcnx.private.blob.vercel-storage.com',
-    'pub-930b5248e181432aa6e2f5a31832fd8d.r2.dev',
-    'pub-c7c5ff43a8ae174ad91e2668de0ad7f0.r2.dev'
-  ];
-  if (r2PublicDomain) {
-    try { allowedHosts.push(new URL(r2PublicDomain).host.toLowerCase()); } catch(_) {}
-  }
-  if (storageBaseUrl) {
-    try { allowedHosts.push(new URL(storageBaseUrl).host.toLowerCase()); } catch(_) {}
-  }
-
-
-  const parsedHost = parsedUrl.host.toLowerCase();
-  const isAllowedHost = allowedHosts.some(allowed => parsedHost === allowed || parsedHost.endsWith('.' + allowed));
-  
-  if (!isAllowedHost) {
-     return new NextResponse('Invalid source domain', { status: 400 });
   }
 
   // Use native Cloudflare R2 binding if running inside Worker context
@@ -171,10 +202,13 @@ async function handleAssetRequest(request: Request) {
   }
 
   if (!isR2 || !s3Client) {
-    // If Cloudflare R2 is not configured (e.g. in local development), fallback to fetching the source URL directly
     const targetUrl = r2PublicDomain
       ? `${r2PublicDomain.endsWith('/') ? r2PublicDomain : `${r2PublicDomain}/`}${pathname}`
-      : url;
+      : (url || (storageBaseUrl ? `${storageBaseUrl.endsWith('/') ? storageBaseUrl : `${storageBaseUrl}/`}${pathname}` : ''));
+
+    if (!targetUrl) {
+      return new NextResponse('Missing source URL or storage configuration', { status: 400 });
+    }
 
     try {
       const fetchHeaders = new Headers();
@@ -250,7 +284,10 @@ async function handleAssetRequest(request: Request) {
     
     // Set headers
     const headers = new Headers();
-    headers.set('Content-Type', s3Response.ContentType || 'application/octet-stream');
+    const resolvedContentType = (s3Response.ContentType && s3Response.ContentType !== 'application/octet-stream')
+      ? s3Response.ContentType
+      : getMimeType(pathname);
+    headers.set('Content-Type', resolvedContentType);
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     headers.set('Access-Control-Allow-Headers', '*');
