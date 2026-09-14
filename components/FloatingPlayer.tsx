@@ -59,7 +59,7 @@ export function FloatingPlayer() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-[60] bg-zinc-950/95 backdrop-blur-md border ${activeColor.border} text-white shadow-2xl shadow-black/90 transition-all duration-300 ease-in-out select-none w-[270px] sm:w-[290px] p-3 rounded-none`}
+      className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[60] bg-zinc-950/95 backdrop-blur-md border ${activeColor.border} text-white shadow-2xl shadow-black/90 transition-all duration-300 ease-in-out select-none w-[270px] sm:w-[290px] p-3 rounded-none`}
     >
       {/* Dynamic Keyframe Injection for Pause-Scroll Marquee */}
       {scrollOverflow > 0 && (
@@ -72,30 +72,14 @@ export function FloatingPlayer() {
         ` }} />
       )}
 
-      {/* Top Header Row: Dynamic Deck Indicator & Status */}
+      {/* Top Header Row: Dynamic Deck Indicator & Time */}
       <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-zinc-900/90">
         {/* Dynamic Glowing Deck Indicator */}
-        <div className="flex items-center gap-2">
-          <span 
-            className={`text-[9px] font-mono font-bold tracking-widest uppercase px-2 py-0.5 border ${activeColor.badge} ${deck.isPlaying ? activeColor.glow : ''}`}
-          >
-            DECK {activeDeckId}
-          </span>
-          
-          {/* Audio Activity LED / Indicator */}
-          {deck.isPlaying ? (
-            <div className="flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${activeColor.bg} animate-pulse`} />
-              <span className={`text-[8px] font-mono font-bold tracking-widest uppercase ${activeColor.text}`}>
-                PLAYING
-              </span>
-            </div>
-          ) : (
-            <span className="text-[8px] font-mono tracking-widest uppercase text-zinc-500">
-              STANDBY
-            </span>
-          )}
-        </div>
+        <span 
+          className={`text-[9px] font-mono font-bold tracking-widest uppercase px-2 py-0.5 border ${activeColor.badge} ${deck.isPlaying ? activeColor.glow : ''}`}
+        >
+          DECK {activeDeckId}
+        </span>
 
         {/* Elapsed / Total Time */}
         <div className="text-[9px] font-mono text-zinc-400 tracking-wider">
@@ -140,13 +124,13 @@ export function FloatingPlayer() {
       </div>
 
       {/* Tactile Hardware Controls Suite */}
-      <div className="flex items-center justify-between pt-1 border-t border-zinc-900/60">
+      <div className="flex items-center justify-between pt-2 pb-0.5 border-t border-zinc-900/60">
         {/* Rewind 10s */}
         <button
           onClick={() => seekDelta(-10)}
           title="Rewind 10s"
           aria-label="Rewind 10 seconds"
-          className="px-2 py-1 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all font-mono text-[10px] flex items-center gap-1 cursor-pointer active:scale-95"
+          className="px-2.5 py-1 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all font-mono text-[10px] flex items-center gap-1.5 cursor-pointer active:scale-95"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
@@ -180,7 +164,7 @@ export function FloatingPlayer() {
           onClick={() => seekDelta(10)}
           title="Fast Forward 10s"
           aria-label="Fast forward 10 seconds"
-          className="px-2 py-1 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all font-mono text-[10px] flex items-center gap-1 cursor-pointer active:scale-95"
+          className="px-2.5 py-1 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all font-mono text-[10px] flex items-center gap-1.5 cursor-pointer active:scale-95"
         >
           <span className="text-[9px] font-bold">+10s</span>
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

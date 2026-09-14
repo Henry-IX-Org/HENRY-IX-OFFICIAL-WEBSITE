@@ -51,14 +51,14 @@ export default function SiteFooter() {
           isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-6 pr-0 lg:pr-[310px]">
           {/* Copyright */}
-          <div className="font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+          <div className="font-bold text-zinc-500 uppercase tracking-widest text-[9px] shrink-0 text-center lg:text-left">
             HENRY IX © {new Date().getFullYear()} ALL RIGHTS RESERVED
           </div>
 
           {/* Legal Links & Modals */}
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:gap-x-4 uppercase tracking-widest font-bold text-[9px]">
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-4 gap-y-1.5 uppercase tracking-widest font-bold text-[9px]">
             <button
               onClick={openDisclaimer}
               className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer uppercase text-[9px]"
