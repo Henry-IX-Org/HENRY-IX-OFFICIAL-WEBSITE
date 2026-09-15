@@ -95,6 +95,7 @@ export default function MixArchive({
   useEffect(() => { decksRef.current = decks; }, [decks]);
 
   const archiveRef = useRef<HTMLDivElement>(null);
+  const vaultRef = useRef<HTMLElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const [deckCount, setDeckCount] = useState<2 | 4>(2);
@@ -1533,8 +1534,8 @@ function StackedWaveformDeckItem({
   };
 
   return (
-    <section id="vault" className={cn(
-      "w-full h-full flex-1 relative mx-auto flex flex-col justify-start md:justify-center @container",
+    <section id="vault" ref={vaultRef} className={cn(
+      "w-full h-full flex-1 relative mx-auto flex flex-col justify-start md:justify-center bg-black @container",
       activeView === 'cdj' ? "overflow-hidden" : "overflow-y-auto"
     )}>
       {activeView === 'cdj' && (
@@ -1693,6 +1694,7 @@ function StackedWaveformDeckItem({
                   playClick(900, 'sine', 0.02);
                   setIsRecordModalOpen(true);
                 }}
+                targetContainerRef={vaultRef}
               />
             )}
           </div>

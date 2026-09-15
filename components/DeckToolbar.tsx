@@ -22,6 +22,7 @@ interface DeckToolbarProps {
   onOpenShortcuts: () => void;
   onOpenStageFX?: () => void;
   onOpenRecordModal?: () => void;
+  targetContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
 export function DeckToolbar({
@@ -38,31 +39,48 @@ export function DeckToolbar({
   onOpenShortcuts,
   onOpenStageFX,
   onOpenRecordModal,
+  targetContainerRef,
 }: DeckToolbarProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const uiSoundMuted = useAudioStore(s => s.uiSoundMuted);
   const setUiSoundMuted = useAudioStore(s => s.setUiSoundMuted);
+  const setIsCDJView = useAudioStore(s => s.setIsCDJView);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      setIsCDJView(isFs);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+  }, [setIsCDJView]);
 
   const toggleFullscreen = () => {
+    const target = targetContainerRef?.current || document.getElementById('vault');
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.warn('Fullscreen request failed:', err);
-      });
+      if (target && target.requestFullscreen) {
+        target.requestFullscreen().then(() => {
+          setIsFullscreen(true);
+          setIsCDJView(true);
+        }).catch(err => {
+          console.warn('Target fullscreen request failed, falling back to in-page mode:', err);
+          setIsFullscreen(true);
+          setIsCDJView(true);
+        });
+      } else {
+        setIsFullscreen(true);
+        setIsCDJView(true);
+      }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(err => {
           console.warn('Exit fullscreen failed:', err);
         });
       }
+      setIsFullscreen(false);
+      setIsCDJView(false);
     }
   };
 
