@@ -149,7 +149,7 @@ export function GigSchedule({
   return (
     <motion.section
       id="schedule"
-      className="w-full relative py-12 md:py-24 px-4 sm:px-6 max-w-7xl mx-auto scroll-mt-24 font-mono select-none"
+      className="w-full relative pt-6 pb-16 md:pt-8 md:pb-24 px-4 sm:px-6 max-w-7xl mx-auto scroll-mt-24 font-mono select-none"
       onViewportEnter={() => {
         playClick(700, 'sine', 0.05);
       }}

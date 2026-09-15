@@ -258,7 +258,7 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
 
   return (
     <PageShell>
-      <main className="min-h-[100dvh] text-zinc-100 selection:bg-[#D8163F]/30 selection:text-[#D8163F] pt-24 pb-20 px-4 md:px-8 w-full relative overflow-y-auto custom-scrollbar">
+      <div className="w-full text-zinc-100 selection:bg-[#D8163F]/30 selection:text-[#D8163F] pt-6 pb-16 md:pt-8 md:pb-24 px-4 md:px-8 relative overflow-y-auto custom-scrollbar">
         {/* Section Header */}
         <div className="relative z-10 mb-8 md:mb-10 flex flex-col items-center text-center">
           <motion.div
@@ -266,7 +266,7 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <h1 className="font-avathe font-bold text-white text-[clamp(2rem,5vw,4.5rem)] leading-none tracking-wider uppercase select-none">
+            <h1 className="font-avathe font-bold text-white text-2xl md:text-4xl leading-none tracking-wider uppercase select-none">
               LIVE STREAM
             </h1>
             <p className="font-mono text-xs text-zinc-500 uppercase tracking-[0.25em] mt-3">
@@ -500,7 +500,7 @@ export default function LiveClient({ initialSettings, history }: LiveClientProps
             </div>
           </div>
         )}
-      </main>
+      </div>
     </PageShell>
   );
 }

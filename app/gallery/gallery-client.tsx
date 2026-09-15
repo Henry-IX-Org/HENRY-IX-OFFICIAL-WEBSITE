@@ -330,7 +330,7 @@ export default function GalleryClient() {
   const currentItem = selectedAlbum ? selectedAlbum.items[lightboxItemIndex] : null;
 
   return (
-    <main className="fixed inset-0 pt-12 md:pt-24 pb-2 px-2 md:px-3 w-full h-full flex flex-col bg-transparent selection:bg-primary/30 selection:text-primary font-mono select-none overflow-hidden">
+    <div className="fixed inset-0 pt-12 md:pt-24 pb-2 px-2 md:px-3 w-full h-full flex flex-col bg-transparent selection:bg-primary/30 selection:text-primary font-mono select-none overflow-hidden">
       {/* Fullscreen 12-Screen CCTV Matrix (2 Cols x 6 Rows on Mobile, 4 Cols x 3 Rows on Desktop) */}
       <div className="flex-1 w-full h-full p-1 md:p-1.5 bg-black rounded-none border border-zinc-900 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr sm:grid-rows-4 lg:grid-rows-3 gap-1 md:gap-1.5 overflow-y-auto md:overflow-hidden custom-scrollbar">
         {albums.map((album, screenIndex) => {
@@ -476,6 +476,6 @@ export default function GalleryClient() {
           </motion.div>
         )}
       </AnimatePresence>
-    </main>
+    </div>
   );
 }

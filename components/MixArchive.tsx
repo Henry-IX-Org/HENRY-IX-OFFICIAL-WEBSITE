@@ -1534,7 +1534,7 @@ function StackedWaveformDeckItem({
 
   return (
     <section id="vault" className={cn(
-      "w-full flex-1 relative pt-2 pb-2 px-2 md:px-4 mx-auto flex flex-col justify-start md:justify-center @container",
+      "w-full h-full flex-1 relative mx-auto flex flex-col justify-start md:justify-center @container",
       activeView === 'cdj' ? "overflow-hidden" : "overflow-y-auto"
     )}>
       {activeView === 'cdj' && (
