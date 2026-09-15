@@ -73,7 +73,7 @@ export function ContactForm({ isDepth = false }: ContactFormProps) {
   return (
     <motion.section 
       id="contact" 
-      className="w-full relative py-16 md:py-32 px-6 max-w-4xl mx-auto scroll-mt-24 font-mono select-none"
+      className="w-full relative pt-6 pb-16 md:pt-8 md:pb-24 px-4 sm:px-6 max-w-4xl mx-auto scroll-mt-24 font-mono select-none"
       onViewportEnter={() => {
         playClick(700, 'sine', 0.05);
       }}
@@ -85,7 +85,7 @@ export function ContactForm({ isDepth = false }: ContactFormProps) {
         transition={{ ...SPRING_CONFIG }}
         className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
       >
-        <h2 className="font-mono text-lg md:text-xl tracking-[0.2em] font-semibold uppercase">04 / Contact & Booking Console</h2>
+        <h2 className="font-avathe text-xl md:text-3xl tracking-widest font-bold uppercase text-white">04 / Contact & Booking Console</h2>
         <div className={cn("h-[1px] flex-grow w-full md:w-auto md:ml-8", isDepth ? "bg-zinc-800" : "bg-black/20")} />
       </motion.div>
 
